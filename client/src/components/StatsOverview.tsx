@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScreenerStats, FilterState } from '../types';
-import { Target, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Layers } from 'lucide-react';
+import { Target, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Layers, Zap } from 'lucide-react';
 
 interface StatsOverviewProps {
   stats: ScreenerStats | null;
@@ -20,7 +20,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
   const isUnder5Active = filters.enablePercentFilter && filters.maxPercent === 5 && filters.selectedTimeframe === 'h24';
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
       {/* 1. Filter < 5% 24 Jam */}
       <button
         onClick={() => {
@@ -217,6 +217,38 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
         </div>
         <p className="text-[11px] text-zinc-500 mt-1 truncate">
           Tertahan di R1 menuju P
+        </p>
+      </button>
+
+      {/* 7. 3TF Confluence (Area Selaras) */}
+      <button
+        onClick={() => {
+          onFilterChange({
+            onlyConfluence: !filters.onlyConfluence
+          });
+        }}
+        className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group ${
+          filters.onlyConfluence
+            ? 'bg-amber-500/15 border-amber-500/50 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/50'
+            : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/80 hover:border-zinc-700'
+        }`}
+      >
+        <div className="flex items-center justify-between text-xs mb-2">
+          <div className="flex items-center gap-1.5 text-zinc-400 font-medium">
+            <span className="p-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400">
+              <Zap className="w-3 h-3 stroke-[2.2] fill-amber-400/40" />
+            </span>
+            <span className="text-zinc-300 text-xs">3TF Confluence</span>
+          </div>
+          {filters.onlyConfluence && (
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#fbbf24]"></span>
+          )}
+        </div>
+        <div className="text-2xl font-bold font-mono tabular-nums text-amber-400 tracking-tight">
+          {stats.confluence3tf ?? 0}
+        </div>
+        <p className="text-[11px] text-zinc-500 mt-1 truncate">
+          Daily + 1H + 5M Selaras
         </p>
       </button>
     </div>

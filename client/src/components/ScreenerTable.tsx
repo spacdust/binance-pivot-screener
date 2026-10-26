@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CoinData, SelectedTimeframe, TopMoverCategory } from '../types';
 import { PivotVisualizer } from './PivotVisualizer';
-import { ArrowUpDown, ArrowUp, ArrowDown, ExternalLink, Eye, Info } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, Eye, Info, Zap } from 'lucide-react';
+import { checkPivotConfluence } from '../utils/pivotConfluence';
 
 interface ScreenerTableProps {
   coins: CoinData[];
@@ -144,6 +145,14 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   });
 
   const totalPages = Math.ceil(sortedCoins.length / pageSize) || 1;
+
+  // Auto-reset page if out of bounds after filter change
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(1);
+    }
+  }, [page, totalPages]);
+
   const paginatedCoins = sortedCoins.slice((page - 1) * pageSize, page * pageSize);
 
   const formatPrice = (val: number) => {
@@ -349,23 +358,37 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               paginatedCoins.map((coin, idx) => {
                 const rank = (page - 1) * pageSize + idx + 1;
                 const flash = priceFlashMap.get(coin.symbol);
+                const confluence = checkPivotConfluence(coin);
                 return (
                   <tr
                     key={coin.symbol}
                     onClick={() => onSelectCoin(coin)}
-                    className="hover:bg-zinc-800/40 cursor-pointer transition-colors group"
+                    className={`cursor-pointer transition-all group ${
+                      confluence.hasConfluence
+                        ? confluence.rowHighlight
+                        : 'hover:bg-zinc-800/40 border-l-4 border-l-transparent'
+                    }`}
                   >
                     <td className="py-3 px-3 text-center text-zinc-500 font-mono tabular-nums text-[11px]">
                       {rank}
                     </td>
 
-                    {/* Symbol & Volume */}
+                    {/* Symbol & Volume & Confluence Badge */}
                     <td className="py-3 px-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-bold text-zinc-100 text-sm group-hover:text-amber-400 transition-colors">
                           {coin.baseAsset}
                         </span>
                         <span className="text-[10px] text-zinc-500 font-mono">/USDT</span>
+                        {confluence.hasConfluence && (
+                          <span
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border tracking-tight ${confluence.badgeStyle}`}
+                            title={confluence.label}
+                          >
+                            <Zap className="w-2.5 h-2.5 fill-current" />
+                            {confluence.badgeText}
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-zinc-500 font-mono tabular-nums">
                         ${(coin.volume24h / 1e6).toFixed(2)}M
@@ -399,16 +422,16 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h24' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h24, 'h24')}</td>
 
                     {/* Pivot 5M Visualizer */}
-                    <td className="py-2.5 px-2 text-center">
+                    <td className="py-2 px-1.5 text-center">
                       {coin.pivots5m ? (
-                        <div className="flex flex-col items-center gap-1">
+                        <div className={`flex flex-col items-center gap-1 p-1 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
                           <PivotVisualizer
                             pivots={coin.pivots5m}
                             currentPrice={coin.price}
                             rangePercent={coin.pivotStatus5m?.rangePercent ?? 50}
                           />
                           {coin.pivotStatus5m && (
-                            <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none">
+                            <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block">
                               {coin.pivotStatus5m.label} ({coin.pivotStatus5m.distP > 0 ? '+' : ''}{coin.pivotStatus5m.distP}%)
                             </span>
                           )}
@@ -419,16 +442,16 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Pivot 1H Visualizer */}
-                    <td className="py-2.5 px-2 text-center">
+                    <td className="py-2 px-1.5 text-center">
                       {coin.pivots1h ? (
-                        <div className="flex flex-col items-center gap-1">
+                        <div className={`flex flex-col items-center gap-1 p-1 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
                           <PivotVisualizer
                             pivots={coin.pivots1h}
                             currentPrice={coin.price}
                             rangePercent={coin.pivotStatus1h?.rangePercent ?? 50}
                           />
                           {coin.pivotStatus1h && (
-                            <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none">
+                            <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block">
                               {coin.pivotStatus1h.label} ({coin.pivotStatus1h.distP > 0 ? '+' : ''}{coin.pivotStatus1h.distP}%)
                             </span>
                           )}
@@ -439,14 +462,14 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Pivot Daily Visualizer */}
-                    <td className="py-2.5 px-2 text-center">
-                      <div className="flex flex-col items-center gap-1">
+                    <td className="py-2 px-1.5 text-center">
+                      <div className={`flex flex-col items-center gap-1 p-1 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
                         <PivotVisualizer
                           pivots={coin.pivots}
                           currentPrice={coin.price}
                           rangePercent={coin.pivotStatus.rangePercent}
                         />
-                        <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none">
+                        <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block">
                           {coin.pivotStatus.label} ({coin.pivotStatus.distP > 0 ? '+' : ''}{coin.pivotStatus.distP}%)
                         </span>
                       </div>

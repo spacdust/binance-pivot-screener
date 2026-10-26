@@ -290,12 +290,28 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       <div className="h-px bg-zinc-800/70" />
 
-      {/* Row 4: Daily Pivot Point Conditions */}
+      {/* Row 4: Daily Pivot Point Conditions & 3TF Confluence Toggle */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
-          <Target className="w-3.5 h-3.5 text-sky-400 stroke-[2.2]" />
-          Filter Kondisi Pivot Point Harian (Daily Pivots):
-        </label>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <label className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
+            <Target className="w-3.5 h-3.5 text-sky-400 stroke-[2.2]" />
+            Filter Kondisi Pivot Point (Daily, 1H, 5M):
+          </label>
+          <button
+            onClick={() => onFilterChange({ onlyConfluence: !filters.onlyConfluence })}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all ${
+              filters.onlyConfluence
+                ? 'bg-amber-400 text-zinc-950 border-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)]'
+                : 'bg-zinc-950/90 text-amber-400 border-amber-500/30 hover:border-amber-400/60 hover:bg-amber-500/10'
+            }`}
+          >
+            <Zap className={`w-3.5 h-3.5 ${filters.onlyConfluence ? 'fill-zinc-950' : 'fill-amber-400'}`} />
+            <span>3TF Confluence (Area Selaras)</span>
+            {filters.onlyConfluence && (
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-950 animate-pulse" />
+            )}
+          </button>
+        </div>
         <div className="flex flex-wrap gap-1.5">
           {PIVOT_CONDITIONS.map((cond) => {
             const isSelected = filters.pivotCondition === cond.value;

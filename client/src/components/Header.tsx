@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-xs text-zinc-400 tracking-normal">
-              Multi-Timeframe Momentum (1m - 24j) & Daily Pivot Points (P, S1-S3, R1-R3)
+              Multi-Timeframe Momentum (1m - 24j) & Multi-Timeframe Pivots 5M, 1H, Daily (S4 ➔ R4)
             </p>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { StatsOverview } from './components/StatsOverview';
 import { FilterBar } from './components/FilterBar';
 import { ScreenerTable } from './components/ScreenerTable';
 import { CoinDetailModal } from './components/CoinDetailModal';
+import { checkPivotConfluence } from './utils/pivotConfluence';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 const initialFilters: FilterState = {
@@ -17,6 +18,7 @@ const initialFilters: FilterState = {
   filterMode: 'absolute_below',
   pivotCondition: 'ALL',
   minVolume: 0,
+  onlyConfluence: false,
 };
 
 export const App: React.FC = () => {
@@ -73,6 +75,12 @@ export const App: React.FC = () => {
         if (coin.pivotStatus.condition !== filters.pivotCondition) {
           return false;
         }
+      }
+
+      // 5. Multi-Timeframe Confluence filter (Daily, 1H, 5M in same area)
+      if (filters.onlyConfluence) {
+        const conf = checkPivotConfluence(coin);
+        if (!conf.hasConfluence) return false;
       }
 
       return true;

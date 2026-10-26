@@ -108,6 +108,7 @@ export interface ScreenerStats {
   belowS2: number;
   belowS3?: number;
   belowS4?: number;
+  confluence3tf?: number;
 }
 
 export type SelectedTimeframe = 'h24' | 'h12' | 'h6' | 'h3' | 'h1' | 'm30' | 'm15' | 'm5' | 'm1';
@@ -128,4 +129,5 @@ export interface FilterState {
   filterMode: 'below' | 'above' | 'absolute_below'; // absolute_below means |change| < 5%
   pivotCondition: PivotConditionType;
   minVolume: number; // in USDT, e.g. 1000000
+  onlyConfluence?: boolean; // Filter only coins with 3TF Confluence (Daily, 1H, 5M in same area)
 }

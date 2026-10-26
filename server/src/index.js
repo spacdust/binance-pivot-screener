@@ -45,6 +45,7 @@ app.get('/api/screener', (req, res) => {
     belowS2: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S2' || c.pivotStatus?.condition === 'S2_TO_S3' || c.pivotStatus?.condition === 'S3_TO_S4' || c.pivotStatus?.condition === 'BELOW_S3' || c.pivotStatus?.condition === 'BELOW_S4').length,
     belowS3: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S3' || c.pivotStatus?.condition === 'S3_TO_S4' || c.pivotStatus?.condition === 'BELOW_S4').length,
     belowS4: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S4').length,
+    confluence3tf: coins.filter(c => c.pivotStatus && c.pivotStatus1h && c.pivotStatus5m && (c.pivotStatus.condition === c.pivotStatus1h.condition && c.pivotStatus.condition === c.pivotStatus5m.condition)).length,
   };
 
   res.json({
