@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CoinData, Pivots } from '../types';
 import { X, ExternalLink, Target, Layers } from 'lucide-react';
 import { classifyPriceZone, getConditionLabel } from '../utils/pivotConfluence';
+import { CoinIcon } from './CoinIcon';
 
 interface CoinDetailModalProps {
   coin: CoinData | null;
@@ -82,9 +83,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
         {/* Header Modal */}
         <div className="p-3.5 sm:p-4 border-b border-[#2b313a] flex items-center justify-between sticky top-0 bg-[#181a20] z-20">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xs bg-[#f0b90b]/10 border border-[#f0b90b]/30 flex items-center justify-center font-bold text-[#f0b90b] text-xs font-mono">
-              {coin.baseAsset.slice(0, 3)}
-            </div>
+            <CoinIcon symbol={coin.baseAsset} size="lg" className="w-8 h-8 sm:w-9 sm:h-9" />
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-[#eaecef]">{symbol}</h2>
