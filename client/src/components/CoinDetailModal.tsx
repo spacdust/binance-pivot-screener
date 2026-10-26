@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CoinData, Pivots } from '../types';
-import { X, ExternalLink, Target, TrendingUp, TrendingDown, Layers, Clock } from 'lucide-react';
+import { X, ExternalLink, Target, Layers } from 'lucide-react';
 import { classifyPriceZone, getConditionLabel } from '../utils/pivotConfluence';
 
 interface CoinDetailModalProps {
@@ -45,52 +45,42 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
     return val.toFixed(8);
   };
 
-  const formatDist = (targetPrice: number) => {
-    const dist = ((price - targetPrice) / targetPrice) * 100;
-    const sign = dist > 0 ? '+' : '';
-    return `${sign}${dist.toFixed(2)}%`;
-  };
-
-  const getDistColor = (targetPrice: number) => {
-    const dist = price - targetPrice;
-    return dist >= 0 ? 'text-emerald-400' : 'text-rose-400';
-  };
-
   const r4Val = currentPivots.R4 ?? (currentPivots.R3 + (currentPivots.R3 - currentPivots.R2));
   const s4Val = currentPivots.S4 ?? (currentPivots.S3 - (currentPivots.S2 - currentPivots.S3));
 
+  // Ordered strictly from highest resistance to lowest support
   const pivotLevels = [
-    { name: 'R4', label: 'Resistance 4 (Super Ceiling)', val: r4Val, color: 'text-[#0ecb81] font-bold', bg: 'bg-[#0ecb81]/15' },
-    { name: 'R3', label: 'Resistance 3', val: currentPivots.R3, color: 'text-[#0ecb81]', bg: 'bg-[#0ecb81]/10' },
-    { name: 'R2', label: 'Resistance 2', val: currentPivots.R2, color: 'text-[#0ecb81]', bg: 'bg-[#0ecb81]/08' },
-    { name: 'R1', label: 'Resistance 1', val: currentPivots.R1, color: 'text-[#0ecb81]', bg: 'bg-[#0ecb81]/05' },
-    { name: 'P', label: 'Pivot Center', val: currentPivots.P, color: 'text-[#f0b90b] font-bold', bg: 'bg-[#f0b90b]/15' },
-    { name: 'S1', label: 'Support 1', val: currentPivots.S1, color: 'text-[#f6465d]', bg: 'bg-[#f6465d]/05' },
-    { name: 'S2', label: 'Support 2', val: currentPivots.S2, color: 'text-[#f6465d]', bg: 'bg-[#f6465d]/08' },
-    { name: 'S3', label: 'Support 3', val: currentPivots.S3, color: 'text-[#f6465d]', bg: 'bg-[#f6465d]/10' },
-    { name: 'S4', label: 'Support 4 (Super Floor)', val: s4Val, color: 'text-[#f6465d] font-bold', bg: 'bg-[#f6465d]/15' },
+    { name: 'R4', label: 'Resistance 4 (Super Ceiling)', val: r4Val, type: 'resistance' as const },
+    { name: 'R3', label: 'Resistance 3', val: currentPivots.R3, type: 'resistance' as const },
+    { name: 'R2', label: 'Resistance 2', val: currentPivots.R2, type: 'resistance' as const },
+    { name: 'R1', label: 'Resistance 1', val: currentPivots.R1, type: 'resistance' as const },
+    { name: 'P', label: 'Pivot Center (Keseimbangan)', val: currentPivots.P, type: 'pivot' as const },
+    { name: 'S1', label: 'Support 1', val: currentPivots.S1, type: 'support' as const },
+    { name: 'S2', label: 'Support 2', val: currentPivots.S2, type: 'support' as const },
+    { name: 'S3', label: 'Support 3', val: currentPivots.S3, type: 'support' as const },
+    { name: 'S4', label: 'Support 4 (Super Floor)', val: s4Val, type: 'support' as const },
   ];
 
   const tfList = [
-    { label: '1 Menit', key: 'm1', change: changes.m1, open: baselines.open1m },
-    { label: '5 Menit', key: 'm5', change: changes.m5, open: baselines.open5m },
-    { label: '15 Menit', key: 'm15', change: changes.m15, open: baselines.open15m },
-    { label: '30 Menit', key: 'm30', change: changes.m30, open: baselines.open30m },
-    { label: '1 Jam', key: 'h1', change: changes.h1, open: baselines.open1h },
-    { label: '3 Jam', key: 'h3', change: changes.h3, open: baselines.open3h },
-    { label: '6 Jam', key: 'h6', change: changes.h6, open: baselines.open6h },
-    { label: '12 Jam', key: 'h12', change: changes.h12, open: baselines.open12h },
-    { label: '24 Jam', key: 'h24', change: changes.h24, open: baselines.open24h },
+    { label: '1m', fullLabel: '1 Menit', key: 'm1', change: changes.m1, open: baselines.open1m },
+    { label: '5m', fullLabel: '5 Menit', key: 'm5', change: changes.m5, open: baselines.open5m },
+    { label: '15m', fullLabel: '15 Menit', key: 'm15', change: changes.m15, open: baselines.open15m },
+    { label: '30m', fullLabel: '30 Menit', key: 'm30', change: changes.m30, open: baselines.open30m },
+    { label: '1j', fullLabel: '1 Jam', key: 'h1', change: changes.h1, open: baselines.open1h },
+    { label: '3j', fullLabel: '3 Jam', key: 'h3', change: changes.h3, open: baselines.open3h },
+    { label: '6j', fullLabel: '6 Jam', key: 'h6', change: changes.h6, open: baselines.open6h },
+    { label: '12j', fullLabel: '12 Jam', key: 'h12', change: changes.h12, open: baselines.open12h },
+    { label: '24j', fullLabel: '24 Jam', key: 'h24', change: changes.h24, open: baselines.open24h },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-150">
       <div
-        className="bg-[#181a20] border border-[#2b313a] rounded-sm w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl custom-scrollbar"
+        className="bg-[#181a20] border border-[#2b313a] rounded-sm w-full max-w-3xl max-h-[92vh] overflow-y-auto shadow-2xl custom-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="p-4 border-b border-[#2b313a] flex items-center justify-between sticky top-0 bg-[#181a20] z-10">
+        {/* Header Modal */}
+        <div className="p-3.5 sm:p-4 border-b border-[#2b313a] flex items-center justify-between sticky top-0 bg-[#181a20] z-20">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xs bg-[#f0b90b]/10 border border-[#f0b90b]/30 flex items-center justify-center font-bold text-[#f0b90b] text-xs font-mono">
               {coin.baseAsset.slice(0, 3)}
@@ -103,7 +93,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
                 </span>
               </div>
               <p className="text-[11px] text-[#848e9c] font-mono">
-                Vol 24j: ${(volume24h / 1e6).toFixed(2)}M USDT
+                Volume 24j: ${(volume24h / 1e6).toFixed(2)}M USDT
               </p>
             </div>
           </div>
@@ -114,7 +104,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
               target="_blank"
               rel="noreferrer"
               className="p-1.5 rounded-xs bg-[#12151a] hover:bg-[#22262e] text-[#848e9c] hover:text-[#eaecef] border border-[#2b313a] transition-colors"
-              title="Buka di Binance"
+              title="Buka grafik di Binance"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -127,82 +117,40 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
           </div>
         </div>
 
-        {/* Body */}
-        <div className="p-4 space-y-4">
-          {/* Price & Current Status Callout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#12151a] border border-[#2b313a] rounded-xs p-3">
+        {/* Body Modal */}
+        <div className="p-3.5 sm:p-4 space-y-4">
+          {/* Card 1: Ringkasan Harga & Status Pivot Terkini */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-[#12151a] border border-[#2b313a] rounded-xs p-3">
             <div>
-              <span className="text-[11px] text-[#848e9c]">Harga Terakhir:</span>
-              <div className="text-xl font-bold font-mono tabular-nums text-[#eaecef] mt-0.5">
-                ${formatPrice(price)}
+              <div className="flex items-center justify-between text-[11px] text-[#848e9c]">
+                <span>Harga Terakhir Spot</span>
+                <span className="font-mono text-[10px] text-[#0ecb81] flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0ecb81] animate-pulse" />
+                  Live WebSocket
+                </span>
               </div>
-              <div className="text-[11px] text-[#848e9c] mt-1">
-                Jarak ke Pivot P ({activePivotTf.toUpperCase()}):{' '}
-                <span className={`font-mono tabular-nums font-semibold ${currentStatus.distP >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
-                  {currentStatus.distP > 0 ? '+' : ''}{currentStatus.distP}%
+              <div className="text-2xl font-bold font-mono tabular-nums text-[#eaecef] mt-0.5 flex items-baseline gap-2">
+                <span>${formatPrice(price)}</span>
+                <span className={`text-xs font-bold ${changes.h24 >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
+                  ({changes.h24 >= 0 ? '+' : ''}{changes.h24}% / 24j)
+                </span>
+              </div>
+              <div className="text-[11px] text-[#848e9c] mt-1.5 flex items-center gap-1.5 flex-wrap">
+                <span>Jarak ke Pivot Center P ({activePivotTf.toUpperCase()}):</span>
+                <span className={`font-mono tabular-nums font-semibold ${liveDistP >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
+                  {liveDistP > 0 ? `▲ +${liveDistP}% (Di atas P)` : liveDistP < 0 ? `▼ ${liveDistP}% (Di bawah P)` : '0.00% (Tepat di P)'}
                 </span>
               </div>
             </div>
 
             <div>
-              <span className="text-[11px] text-[#848e9c]">Status Pivot ({activePivotTf.toUpperCase()}):</span>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-xs text-xs font-bold bg-[#f0b90b]/10 text-[#f0b90b] border border-[#f0b90b]/30">
-                  {currentStatus.label}
-                </span>
-              </div>
-              <p className="text-[11px] text-[#848e9c] mt-1.5 leading-relaxed">
-                {currentStatus.description}
-              </p>
-            </div>
-          </div>
-
-          {/* Multi-Timeframe Changes Breakdown */}
-          <div>
-            <h3 className="text-xs font-bold text-[#848e9c] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-[#f0b90b]" />
-              Perubahan Multi-Timeframe (1m s/d 24j)
-            </h3>
-            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1.5">
-              {tfList.map((tf) => {
-                const isPos = tf.change >= 0;
-                return (
-                  <div
-                    key={tf.key}
-                    className="p-2 bg-[#12151a] border border-[#2b313a] rounded-xs text-center"
-                  >
-                    <div className="text-[10px] text-[#848e9c] font-medium">{tf.label}</div>
-                    <div
-                      className={`text-xs sm:text-sm font-bold font-mono tabular-nums mt-0.5 ${
-                        isPos ? 'text-[#0ecb81]' : 'text-[#f6465d]'
-                      }`}
-                    >
-                      {isPos ? '+' : ''}{tf.change}%
-                    </div>
-                    {tf.open && (
-                      <div className="text-[9px] text-[#474d57] font-mono tabular-nums mt-0.5 truncate">
-                        ${formatPrice(tf.open)}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Multi-Timeframe Pivot Points Table */}
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <Target className="w-3.5 h-3.5 text-[#f0b90b]" />
-                <h3 className="text-xs font-bold text-[#eaecef] uppercase tracking-wider">
-                  Level Pivot Points (S4 ➔ R4)
-                </h3>
-                {/* Timeframe tabs: Daily, 1H, 5M */}
-                <div className="flex items-center bg-[#12151a] border border-[#2b313a] rounded-xs p-0.5 ml-2">
+              <div className="flex items-center justify-between text-[11px] text-[#848e9c]">
+                <span>Kondisi Pivot ({activePivotTf.toUpperCase()})</span>
+                {/* Timeframe Switcher Tabs */}
+                <div className="flex items-center bg-[#181a20] border border-[#2b313a] rounded-xs p-0.5">
                   <button
                     onClick={() => setActivePivotTf('daily')}
-                    className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                    className={`px-2 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
                       activePivotTf === 'daily'
                         ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
                         : 'text-[#848e9c] hover:text-[#eaecef]'
@@ -212,7 +160,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
                   </button>
                   <button
                     onClick={() => setActivePivotTf('1h')}
-                    className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                    className={`px-2 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
                       activePivotTf === '1h'
                         ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
                         : 'text-[#848e9c] hover:text-[#eaecef]'
@@ -222,7 +170,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
                   </button>
                   <button
                     onClick={() => setActivePivotTf('5m')}
-                    className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                    className={`px-2 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
                       activePivotTf === '5m'
                         ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
                         : 'text-[#848e9c] hover:text-[#eaecef]'
@@ -233,58 +181,245 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
                 </div>
               </div>
 
-              <span className="text-[10px] text-[#848e9c] font-mono tabular-nums">
+              <div className="mt-1.5 flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-xs text-xs font-bold bg-[#f0b90b]/10 text-[#f0b90b] border border-[#f0b90b]/30">
+                  {currentStatus.label}
+                </span>
+              </div>
+              <p className="text-[11px] text-[#848e9c] mt-1 leading-relaxed">
+                {currentStatus.description}
+              </p>
+            </div>
+          </div>
+
+          {/* Card 2: Perubahan Multi-Timeframe (Tabel Rapi Tanpa Angka Terpotong) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs font-bold text-[#848e9c] uppercase tracking-wider">
+              <div className="flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-[#f0b90b]" />
+                <span>Perubahan Multi-Timeframe (1m - 24j)</span>
+              </div>
+              <span className="text-[10px] text-[#474d57] normal-case font-normal hidden sm:inline">
+                Candlestick Open vs Harga Terkini
+              </span>
+            </div>
+
+            <div className="border border-[#2b313a] rounded-xs bg-[#12151a] overflow-x-auto custom-scrollbar">
+              <table className="w-full text-center border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-[#2b313a] text-[#848e9c] text-[11px] bg-[#181a20]">
+                    <th className="py-1.5 px-3 text-left font-medium">Metrik</th>
+                    {tfList.map((tf) => (
+                      <th key={tf.key} className="py-1.5 px-2 font-medium font-mono text-[11px]">
+                        {tf.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#22262e] font-mono text-[11px] tabular-nums">
+                  <tr>
+                    <td className="py-2 px-3 text-left font-sans font-medium text-[#848e9c]">
+                      Perubahan
+                    </td>
+                    {tfList.map((tf) => {
+                      const isPos = tf.change > 0;
+                      const isNeg = tf.change < 0;
+                      return (
+                        <td
+                          key={tf.key}
+                          className={`py-2 px-2 font-bold ${
+                            isPos ? 'text-[#0ecb81]' : isNeg ? 'text-[#f6465d]' : 'text-[#848e9c]'
+                          }`}
+                        >
+                          {isPos ? '+' : ''}{tf.change}%
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 px-3 text-left font-sans font-medium text-[#474d57]">
+                      Harga Acuan
+                    </td>
+                    {tfList.map((tf) => (
+                      <td key={tf.key} className="py-1.5 px-2 text-[#848e9c] text-[10px]">
+                        {tf.open != null ? `$${formatPrice(tf.open)}` : '-'}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Card 3: Tangga Level Pivot Points (S4 -> R4) dengan Jarak Target yang Jelas */}
+          <div className="space-y-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-[#848e9c]">
+              <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[#eaecef]">
+                <Target className="w-3.5 h-3.5 text-[#f0b90b]" />
+                <span>Tangga Level Pivot ({activePivotTf.toUpperCase()})</span>
+              </div>
+              <span className="text-[10px] font-mono tabular-nums text-[#848e9c]">
                 Basis Candle: H: ${formatPrice(currentPivots.H)} | L: ${formatPrice(currentPivots.L)} | C: ${formatPrice(currentPivots.C)}
               </span>
             </div>
 
-            <div className="border border-[#2b313a] rounded-xs overflow-hidden divide-y divide-[#22262e]">
-              {pivotLevels.map((lvl) => {
-                const isClosest = Math.abs(price - lvl.val) / lvl.val < 0.005;
-                return (
-                  <div
-                    key={lvl.name}
-                    className={`flex items-center justify-between px-3 py-2 text-xs transition-colors ${lvl.bg} ${
-                      isClosest ? 'ring-1 ring-white/30 font-bold' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className={`w-8 font-mono font-bold ${lvl.color}`}>
-                        {lvl.name}
+            <div className="border border-[#2b313a] rounded-xs bg-[#181a20] overflow-hidden overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead className="bg-[#12151a] border-b border-[#2b313a] text-[#848e9c] text-[11px] font-medium uppercase tracking-wider">
+                  <tr>
+                    <th className="py-2 px-3 w-16">Level</th>
+                    <th className="py-2 px-3">Keterangan Level</th>
+                    <th className="py-2 px-3">Harga Target</th>
+                    <th className="py-2 px-3 text-right">
+                      <span>Jarak dari Harga Terkini</span>
+                      <span className="block text-[9px] text-[#474d57] normal-case font-normal">
+                        (% Gerak yang Dibutuhkan)
                       </span>
-                      <span className="text-[#eaecef]">{lvl.label}</span>
-                      {isClosest && (
-                        <span className="px-1.5 py-0.2 rounded-xs text-[9px] bg-white text-[#181a20] font-bold">
-                          DEKAT
-                        </span>
-                      )}
-                    </div>
+                    </th>
+                    <th className="py-2 px-3 text-right w-28">Posisi</th>
+                  </tr>
+                </thead>
 
-                    <div className="flex items-center gap-5">
-                      <span className="font-mono tabular-nums text-[#eaecef] font-medium">
-                        ${formatPrice(lvl.val)}
-                      </span>
-                      <span
-                        className={`font-mono tabular-nums text-[11px] w-16 text-right ${getDistColor(
-                          lvl.val
-                        )}`}
-                      >
-                        {formatDist(lvl.val)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                <tbody className="divide-y divide-[#22262e]">
+                  {(() => {
+                    const rows: React.ReactNode[] = [];
+                    let hasInsertedCurrentPrice = false;
+
+                    const renderCurrentPriceBanner = () => (
+                      <tr key="current-price-row" className="bg-[#f0b90b]/10 border-y-2 border-[#f0b90b]">
+                        <td colSpan={5} className="py-2 px-3">
+                          <div className="flex items-center justify-between font-mono text-xs flex-wrap gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="relative flex h-2.5 w-2.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#f0b90b] opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#f0b90b]"></span>
+                              </span>
+                              <span className="font-bold text-[#f0b90b] tracking-wider text-[11px] uppercase">
+                                HARGA TERKINI:
+                              </span>
+                              <span className="font-bold text-sm text-[#eaecef]">
+                                ${formatPrice(price)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[11px]">
+                              <span className="text-[#848e9c] font-sans">Sedang berada di area:</span>
+                              <span className="px-2 py-0.5 rounded-xs bg-[#f0b90b]/20 text-[#f0b90b] font-bold border border-[#f0b90b]/30">
+                                {currentStatus.label}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+
+                    // Insert Current Price Row in its exact spatial place between levels
+                    pivotLevels.forEach((lvl) => {
+                      if (!hasInsertedCurrentPrice && price >= lvl.val) {
+                        rows.push(renderCurrentPriceBanner());
+                        hasInsertedCurrentPrice = true;
+                      }
+
+                      const diff = lvl.val - price;
+                      const pct = (diff / price) * 100;
+                      const isAbove = diff > 0;
+                      const isBelow = diff < 0;
+                      const isClosest = Math.abs(pct) < 0.35;
+
+                      rows.push(
+                        <tr
+                          key={lvl.name}
+                          className={`transition-colors hover:bg-[#1e2329] ${
+                            isClosest ? 'bg-[#22262e]/40' : ''
+                          }`}
+                        >
+                          {/* 1. Level Badge */}
+                          <td className="py-2 px-3">
+                            <span
+                              className={`inline-block px-1.5 py-0.5 rounded-xs font-mono font-bold text-xs border ${
+                                lvl.type === 'resistance'
+                                  ? 'text-[#0ecb81] bg-[#0ecb81]/10 border-[#0ecb81]/30'
+                                  : lvl.type === 'pivot'
+                                  ? 'text-[#f0b90b] bg-[#f0b90b]/10 border-[#f0b90b]/30'
+                                  : 'text-[#f6465d] bg-[#f6465d]/10 border-[#f6465d]/30'
+                              }`}
+                            >
+                              {lvl.name}
+                            </span>
+                          </td>
+
+                          {/* 2. Label & Closeness Indicator */}
+                          <td className="py-2 px-3 text-[#eaecef] text-xs">
+                            <div className="flex items-center gap-2">
+                              <span>{lvl.label}</span>
+                              {isClosest && (
+                                <span className="px-1.5 py-0.2 rounded-xs text-[9px] bg-[#f0b90b] text-[#181a20] font-bold font-mono">
+                                  TERDEKAT
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 3. Level Price */}
+                          <td className="py-2 px-3 font-mono tabular-nums text-xs font-semibold text-[#eaecef]">
+                            ${formatPrice(lvl.val)}
+                          </td>
+
+                          {/* 4. Target Distance (% Move Needed to Reach) */}
+                          <td className="py-2 px-3 font-mono tabular-nums text-xs text-right">
+                            <span
+                              className={`font-bold inline-flex items-center gap-1 ${
+                                isAbove
+                                  ? 'text-[#0ecb81]'
+                                  : isBelow
+                                  ? 'text-[#f6465d]'
+                                  : 'text-[#f0b90b]'
+                              }`}
+                            >
+                              {isAbove ? (
+                                <>
+                                  <span>▲ Naik</span>
+                                  <span>+{Math.abs(pct).toFixed(2)}%</span>
+                                </>
+                              ) : isBelow ? (
+                                <>
+                                  <span>▼ Turun</span>
+                                  <span>-{Math.abs(pct).toFixed(2)}%</span>
+                                </>
+                              ) : (
+                                <span>0.00% (Di Level)</span>
+                              )}
+                            </span>
+                          </td>
+
+                          {/* 5. Relative Position */}
+                          <td className="py-2 px-3 text-right text-[11px] font-mono text-[#848e9c]">
+                            {isAbove ? 'Di atas harga' : isBelow ? 'Di bawah harga' : 'Tepat di harga'}
+                          </td>
+                        </tr>
+                      );
+                    });
+
+                    // If price is below S4
+                    if (!hasInsertedCurrentPrice) {
+                      rows.push(renderCurrentPriceBanner());
+                    }
+
+                    return rows;
+                  })()}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-3 border-t border-[#2b313a] bg-[#181a20] flex items-center justify-between text-xs text-[#848e9c]">
-          <span>Formula Classic Standard Pivot Point (H+L+C)/3</span>
+        {/* Footer Modal */}
+        <div className="p-3.5 sm:p-4 border-t border-[#2b313a] bg-[#181a20] flex items-center justify-between text-xs text-[#848e9c]">
+          <span className="text-[11px]">
+            Formula Classic Standard: P = (H+L+C)/3 | S1-S4 & R1-R4
+          </span>
           <button
             onClick={onClose}
-            className="px-3 py-1 rounded-xs bg-[#22262e] hover:bg-[#2b313a] border border-[#2b313a] text-[#eaecef] font-medium transition-colors"
+            className="px-3.5 py-1 rounded-xs bg-[#22262e] hover:bg-[#2b313a] border border-[#2b313a] text-[#eaecef] font-medium transition-colors"
           >
             Tutup
           </button>
