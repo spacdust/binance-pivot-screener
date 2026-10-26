@@ -12,12 +12,16 @@ const REST_MIRRORS = [
   'https://fapi1.binance.com/fapi/v1',
   'https://fapi2.binance.com/fapi/v1',
   'https://fapi3.binance.com/fapi/v1',
+  'https://fapi4.binance.com/fapi/v1',
 ];
 
 const WS_MIRRORS = [
   'wss://fstream.binance.com/market/ws/!miniTicker@arr',
   'wss://fstream.binance.com/ws/!miniTicker@arr',
   'wss://fstream-auth.binance.com/market/ws/!miniTicker@arr',
+  'wss://fstream1.binance.com/market/ws/!miniTicker@arr',
+  'wss://fstream2.binance.com/market/ws/!miniTicker@arr',
+  'wss://fstream3.binance.com/market/ws/!miniTicker@arr',
 ];
 
 export class BinanceService {
@@ -502,13 +506,41 @@ export class BinanceService {
 
   // Initialize service
   async init() {
-    console.log('[BinanceService] Initializing Binance Screener service...');
-    await this.fetchAssetLogos();
-    const topSymbols = await this.fetchTopUsdtSymbols(150);
-    await this.syncAllKlines(topSymbols);
-    this.connectWebSocket();
-    this.startPeriodicSync();
-    console.log('[BinanceService] Binance Screener ready!');
+    try {
+      console.log('[BinanceService] Initializing Binance Screener service...');
+      await this.fetchAssetLogos();
+
+      let topSymbols = [];
+      let attempts = 0;
+      while (topSymbols.length === 0 && attempts < 5) {
+        attempts++;
+        topSymbols = await this.fetchTopUsdtSymbols(150);
+        if (topSymbols.length === 0 && attempts < 5) {
+          console.warn(`[BinanceService] Retrying symbol discovery in 2s (attempt ${attempts}/5)...`);
+          await new Promise(r => setTimeout(r, 2000));
+        }
+      }
+
+      if (topSymbols.length === 0) {
+        const DEFAULT_TOP_PERPS = [
+          'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT', 'ADAUSDT',
+          'AVAXUSDT', 'LINKUSDT', 'SUIUSDT', 'NEARUSDT', 'APTUSDT', 'PEPEUSDT', 'SHIBUSDT',
+          'LTCUSDT', 'BCHUSDT', 'DOTUSDT', 'UNIUSDT', 'TRXUSDT', 'ATOMUSDT', 'ETCUSDT',
+          'FILUSDT', 'XLMUSDT', 'INJUSDT', 'ARBUSDT', 'OPUSDT', 'TIAUSDT', 'FETUSDT',
+          'RENDERUSDT', 'KASUSDT', 'STXUSDT', 'ICPUSDT', 'SEIUSDT', 'WIFUSDT', 'BONKUSDT',
+          'FLOKIUSDT', 'ORDIUSDT', 'RUNEUSDT', 'AAVEUSDT', 'MKRUSDT', 'CRVUSDT', 'SANDUSDT'
+        ];
+        console.warn(`[BinanceService] Using fallback list of ${DEFAULT_TOP_PERPS.length} top USDT Perps.`);
+        topSymbols = DEFAULT_TOP_PERPS;
+      }
+
+      await this.syncAllKlines(topSymbols);
+      this.connectWebSocket();
+      this.startPeriodicSync();
+      console.log('[BinanceService] Binance Screener ready!');
+    } catch (err) {
+      console.error('[BinanceService] Init error:', err);
+    }
   }
 }
 
