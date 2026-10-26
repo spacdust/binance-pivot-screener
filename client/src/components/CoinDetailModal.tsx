@@ -12,14 +12,18 @@ interface CoinDetailModalProps {
 export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose }) => {
   if (!coin) return null;
 
-  const [activePivotTf, setActivePivotTf] = useState<'daily' | '1h' | '5m'>('daily');
-  const { symbol, price, pivots, pivots1h, pivots5m, changes, pivotStatus, pivotStatus1h, pivotStatus5m, baselines, volume24h } = coin;
+  const [activePivotTf, setActivePivotTf] = useState<'daily' | 'weekly' | 'monthly' | '1h' | '5m'>('daily');
+  const { symbol, price, pivots, pivotsWeekly, pivotsMonthly, pivots1h, pivots5m, changes, pivotStatus, pivotStatusWeekly, pivotStatusMonthly, pivotStatus1h, pivotStatus5m, baselines, volume24h } = coin;
 
   const currentPivots: Pivots = (
-    activePivotTf === '5m' && pivots5m
-      ? pivots5m
+    activePivotTf === 'weekly' && pivotsWeekly
+      ? pivotsWeekly
+      : activePivotTf === 'monthly' && pivotsMonthly
+      ? pivotsMonthly
       : activePivotTf === '1h' && pivots1h
       ? pivots1h
+      : activePivotTf === '5m' && pivots5m
+      ? pivots5m
       : pivots
   );
 
@@ -31,10 +35,14 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
     distP: liveDistP,
     label: liveLabel,
     description: (
-      activePivotTf === '5m' && pivotStatus5m
-        ? pivotStatus5m.description
+      activePivotTf === 'weekly' && pivotStatusWeekly
+        ? pivotStatusWeekly.description
+        : activePivotTf === 'monthly' && pivotStatusMonthly
+        ? pivotStatusMonthly.description
         : activePivotTf === '1h' && pivotStatus1h
         ? pivotStatus1h.description
+        : activePivotTf === '5m' && pivotStatus5m
+        ? pivotStatus5m.description
         : pivotStatus.description
     )
   };
@@ -146,36 +154,61 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
               <div className="flex items-center justify-between text-[11px] text-[#848e9c]">
                 <span>Kondisi Pivot ({activePivotTf.toUpperCase()})</span>
                 {/* Timeframe Switcher Tabs */}
-                <div className="flex items-center bg-[#181a20] border border-[#2b313a] rounded-xs p-0.5">
+                <div className="flex items-center bg-[#181a20] border border-[#2b313a] rounded-xs p-0.5 gap-0.5">
                   <button
                     onClick={() => setActivePivotTf('daily')}
-                    className={`px-2 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
+                    className={`px-1.5 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
                       activePivotTf === 'daily'
                         ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
                         : 'text-[#848e9c] hover:text-[#eaecef]'
                     }`}
+                    title="TradingView: Chart 5m & 15m (Auto) menggunakan Pivot Daily (1D)"
                   >
-                    Daily
+                    Daily (1D)
+                  </button>
+                  <button
+                    onClick={() => setActivePivotTf('weekly')}
+                    className={`px-1.5 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
+                      activePivotTf === 'weekly'
+                        ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                        : 'text-[#848e9c] hover:text-[#eaecef]'
+                    }`}
+                    title="TradingView: Chart 1H (Auto) menggunakan Pivot Weekly (1W)"
+                  >
+                    Weekly (1W)
+                  </button>
+                  <button
+                    onClick={() => setActivePivotTf('monthly')}
+                    className={`px-1.5 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
+                      activePivotTf === 'monthly'
+                        ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                        : 'text-[#848e9c] hover:text-[#eaecef]'
+                    }`}
+                    title="TradingView: Chart Daily (Auto) menggunakan Pivot Monthly (1M)"
+                  >
+                    Monthly (1M)
                   </button>
                   <button
                     onClick={() => setActivePivotTf('1h')}
-                    className={`px-2 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
+                    className={`px-1.5 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
                       activePivotTf === '1h'
                         ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
                         : 'text-[#848e9c] hover:text-[#eaecef]'
                     }`}
+                    title="Pivot dari candle 1-jam sebelumnya"
                   >
-                    1 Jam
+                    1H Candle
                   </button>
                   <button
                     onClick={() => setActivePivotTf('5m')}
-                    className={`px-2 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
+                    className={`px-1.5 py-0.5 rounded-xs text-[10px] font-semibold transition-colors ${
                       activePivotTf === '5m'
                         ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
                         : 'text-[#848e9c] hover:text-[#eaecef]'
                     }`}
+                    title="Pivot dari candle 5-menit sebelumnya"
                   >
-                    5 Menit
+                    5M Candle
                   </button>
                 </div>
               </div>

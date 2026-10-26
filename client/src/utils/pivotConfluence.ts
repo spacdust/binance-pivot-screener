@@ -139,14 +139,20 @@ export function getConditionTagColor(cond?: PivotConditionType | null): string {
 }
 
 /**
- * Checks if Daily, 1H, and 5M pivots are aligned in the same market zone live.
+ * Checks if 3 pivot timeframes are aligned in the same market zone live.
+ * In 'tradingview' mode: aligns Daily (1D), Weekly (1W), and Monthly (1M) pivots (TradingView Auto).
+ * In 'micro' mode: aligns Daily (1D), 1H Candle, and 5M Candle pivots.
  */
-export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
-  const dCond = classifyPriceZone(coin.price, coin.pivots) ?? coin.pivotStatus?.condition;
-  const hCond = coin.pivots1h ? (classifyPriceZone(coin.price, coin.pivots1h) ?? coin.pivotStatus1h?.condition) : null;
-  const mCond = coin.pivots5m ? (classifyPriceZone(coin.price, coin.pivots5m) ?? coin.pivotStatus5m?.condition) : null;
+export function checkPivotConfluence(coin: CoinData, mode: 'tradingview' | 'micro' = 'tradingview'): ConfluenceResult {
+  const p1 = coin.pivots; // Daily (1D)
+  const p2 = mode === 'tradingview' ? (coin.pivotsWeekly || coin.pivots) : (coin.pivots1h || coin.pivots);
+  const p3 = mode === 'tradingview' ? (coin.pivotsMonthly || coin.pivots) : (coin.pivots5m || coin.pivots);
 
-  if (!dCond || !hCond || !mCond) {
+  const cond1 = classifyPriceZone(coin.price, p1) ?? coin.pivotStatus?.condition;
+  const cond2 = classifyPriceZone(coin.price, p2) ?? (mode === 'tradingview' ? coin.pivotStatusWeekly?.condition : coin.pivotStatus1h?.condition);
+  const cond3 = classifyPriceZone(coin.price, p3) ?? (mode === 'tradingview' ? coin.pivotStatusMonthly?.condition : coin.pivotStatus5m?.condition);
+
+  if (!cond1 || !cond2 || !cond3) {
     return {
       hasConfluence: false,
       isExact: false,
@@ -159,29 +165,29 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
     };
   }
 
-  // 1. Exact condition match across all 3 timeframes (Daily + 1H + 5M)
-  const isExact = dCond === hCond && dCond === mCond;
+  // 1. Exact condition match across all 3 timeframes
+  const isExact = cond1 === cond2 && cond1 === cond3;
 
   // 2. All 3 in Bullish zones (R1 s/d >R4)
   const isBullishCondition = (c: PivotConditionType) =>
     ['R1_TO_R2', 'R2_TO_R3', 'R3_TO_R4', 'ABOVE_R4'].includes(c);
-  const isAllBullish = isBullishCondition(dCond) && isBullishCondition(hCond) && isBullishCondition(mCond);
+  const isAllBullish = isBullishCondition(cond1) && isBullishCondition(cond2) && isBullishCondition(cond3);
 
   // 3. All 3 in Bearish zones (S1 s/d <S4)
   const isBearishCondition = (c: PivotConditionType) =>
     ['S1_TO_S2', 'S2_TO_S3', 'S3_TO_S4', 'BELOW_S4'].includes(c);
-  const isAllBearish = isBearishCondition(dCond) && isBearishCondition(hCond) && isBearishCondition(mCond);
+  const isAllBearish = isBearishCondition(cond1) && isBearishCondition(cond2) && isBearishCondition(cond3);
 
   // Priority 1: Exact condition match with specific code (e.g. 3TF S1-P, 3TF R1-P, 3TF S1-S2, 3TF AREA P)
   if (isExact) {
-    const code = getPivotCode(dCond);
+    const code = getPivotCode(cond1);
 
-    if (dCond === 'AREA_P') {
+    if (cond1 === 'AREA_P') {
       return {
         hasConfluence: true,
         isExact: true,
         type: 'AREA_P',
-        label: 'Triple Area P (Daily, 1H, 5M di Level Pivot P)',
+        label: mode === 'tradingview' ? 'Triple Area P (Daily, Weekly, Monthly di Level Pivot P)' : 'Triple Area P (Daily, 1H, 5M di Level Pivot P)',
         badgeText: '3TF AREA P',
         badgeStyle: 'bg-[#f0b90b]/10 text-[#f0b90b] border border-[#f0b90b]/30 rounded-xs',
         rowHighlight: 'border-l-2 border-l-[#f0b90b] bg-[#f0b90b]/[0.03]',
@@ -189,12 +195,12 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       };
     }
 
-    if (dCond === 'S1_TO_P') {
+    if (cond1 === 'S1_TO_P') {
       return {
         hasConfluence: true,
         isExact: true,
         type: 'OTHER',
-        label: 'Triple S1-P (Pantul Reversal di Daily, 1H, 5M)',
+        label: 'Triple S1-P (Pantul Reversal di 3 Timeframe)',
         badgeText: '3TF S1-P',
         badgeStyle: 'bg-[#0ecb81]/10 text-[#0ecb81] border border-[#0ecb81]/30 rounded-xs',
         rowHighlight: 'border-l-2 border-l-[#0ecb81] bg-[#0ecb81]/[0.03]',
@@ -202,12 +208,12 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       };
     }
 
-    if (dCond === 'R1_TO_P') {
+    if (cond1 === 'R1_TO_P') {
       return {
         hasConfluence: true,
         isExact: true,
         type: 'OTHER',
-        label: 'Triple R1-P (Tolak Pullback di Daily, 1H, 5M)',
+        label: 'Triple R1-P (Tolak Pullback di 3 Timeframe)',
         badgeText: '3TF R1-P',
         badgeStyle: 'bg-[#f0b90b]/10 text-[#f0b90b] border border-[#f0b90b]/30 rounded-xs',
         rowHighlight: 'border-l-2 border-l-[#f0b90b] bg-[#f0b90b]/[0.03]',
@@ -215,12 +221,12 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       };
     }
 
-    if (isBullishCondition(dCond)) {
+    if (isBullishCondition(cond1)) {
       return {
         hasConfluence: true,
         isExact: true,
         type: 'BULLISH',
-        label: `Triple Bullish Breakout (${getConditionLabel(dCond)})`,
+        label: `Triple Bullish Breakout (${getConditionLabel(cond1)})`,
         badgeText: `3TF ${code}`,
         badgeStyle: 'bg-[#0ecb81]/10 text-[#0ecb81] border border-[#0ecb81]/30 rounded-xs',
         rowHighlight: 'border-l-2 border-l-[#0ecb81] bg-[#0ecb81]/[0.03]',
@@ -228,12 +234,12 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       };
     }
 
-    if (isBearishCondition(dCond)) {
+    if (isBearishCondition(cond1)) {
       return {
         hasConfluence: true,
         isExact: true,
         type: 'BEARISH',
-        label: `Triple Bearish Breakdown (${getConditionLabel(dCond)})`,
+        label: `Triple Bearish Breakdown (${getConditionLabel(cond1)})`,
         badgeText: `3TF ${code}`,
         badgeStyle: 'bg-[#f6465d]/10 text-[#f6465d] border border-[#f6465d]/30 rounded-xs',
         rowHighlight: 'border-l-2 border-l-[#f6465d] bg-[#f6465d]/[0.03]',
@@ -245,7 +251,7 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       hasConfluence: true,
       isExact: true,
       type: 'OTHER',
-      label: `3TF Selaras (${getConditionLabel(dCond)})`,
+      label: `3TF Selaras (${getConditionLabel(cond1)})`,
       badgeText: `3TF ${code}`,
       badgeStyle: 'bg-[#f0b90b]/10 text-[#f0b90b] border border-[#f0b90b]/30 rounded-xs',
       rowHighlight: 'border-l-2 border-l-[#f0b90b] bg-[#f0b90b]/[0.03]',

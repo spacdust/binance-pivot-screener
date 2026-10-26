@@ -162,11 +162,13 @@ export class BinanceService {
     }
   }
 
-  // Step 2: Fetch 1d kline for Pivot, 1h klines for 1h Pivot + 1h-24h, 5m for 5m Pivot, 1m for 1m-30m
+  // Step 2: Fetch 1d kline for Pivot, 1w for Weekly Pivot, 1M for Monthly Pivot, 1h klines for 1h-24h, 5m, 1m
   async fetchSymbolKlines(symbol) {
     try {
-      const [dailyKlines, hourlyKlines, fiveMinKlines, minuteKlines] = await Promise.all([
+      const [dailyKlines, weeklyKlines, monthlyKlines, hourlyKlines, fiveMinKlines, minuteKlines] = await Promise.all([
         this.safeFetch(`/klines?symbol=${symbol}&interval=1d&limit=2`),
+        this.safeFetch(`/klines?symbol=${symbol}&interval=1w&limit=2`),
+        this.safeFetch(`/klines?symbol=${symbol}&interval=1M&limit=2`),
         this.safeFetch(`/klines?symbol=${symbol}&interval=1h&limit=25`),
         this.safeFetch(`/klines?symbol=${symbol}&interval=5m&limit=2`),
         this.safeFetch(`/klines?symbol=${symbol}&interval=1m&limit=35`)
@@ -177,13 +179,40 @@ export class BinanceService {
       }
 
       // 1. Daily Pivots (based on completed yesterday 00:00 - 23:59 UTC candle)
+      // Aligns with TradingView Auto resolution for 5m / 15m charts!
       const prevDay = dailyKlines[dailyKlines.length - 2];
       const prevHigh = parseFloat(prevDay[2]);
       const prevLow = parseFloat(prevDay[3]);
       const prevClose = parseFloat(prevDay[4]);
       const pivots = calculateDailyPivots(prevHigh, prevLow, prevClose);
 
-      // 2. 1H Pivots (based on completed previous 1-hour candle)
+      // 2. Weekly Pivots (based on completed last week's 1W candle)
+      // Aligns with TradingView Auto resolution for 1H chart!
+      let pivotsWeekly = pivots;
+      if (weeklyKlines && weeklyKlines.length >= 2) {
+        const prevWeek = weeklyKlines[weeklyKlines.length - 2];
+        const wHigh = parseFloat(prevWeek[2]);
+        const wLow = parseFloat(prevWeek[3]);
+        const wClose = parseFloat(prevWeek[4]);
+        if (!isNaN(wHigh) && !isNaN(wLow) && !isNaN(wClose)) {
+          pivotsWeekly = calculateDailyPivots(wHigh, wLow, wClose);
+        }
+      }
+
+      // 3. Monthly Pivots (based on completed last month's 1M candle)
+      // Aligns with TradingView Auto resolution for 1D chart!
+      let pivotsMonthly = pivotsWeekly;
+      if (monthlyKlines && monthlyKlines.length >= 2) {
+        const prevMonth = monthlyKlines[monthlyKlines.length - 2];
+        const mHigh = parseFloat(prevMonth[2]);
+        const mLow = parseFloat(prevMonth[3]);
+        const mClose = parseFloat(prevMonth[4]);
+        if (!isNaN(mHigh) && !isNaN(mLow) && !isNaN(mClose)) {
+          pivotsMonthly = calculateDailyPivots(mHigh, mLow, mClose);
+        }
+      }
+
+      // 4. 1H Pivots (based on completed previous 1-hour candle)
       let pivots1h = null;
       let open1h = null;
       let open3h = null;
@@ -208,7 +237,7 @@ export class BinanceService {
         open24h = parseFloat(hourlyKlines[0][1]);
       }
 
-      // 3. 5M Pivots (based on completed previous 5-minute candle)
+      // 5. 5M Pivots (based on completed previous 5-minute candle)
       let pivots5m = null;
       if (fiveMinKlines && fiveMinKlines.length >= 2) {
         const prev5m = fiveMinKlines[fiveMinKlines.length - 2];
@@ -235,6 +264,8 @@ export class BinanceService {
 
       return {
         pivots,
+        pivotsWeekly,
+        pivotsMonthly,
         pivots1h,
         pivots5m,
         baselines: {
@@ -288,6 +319,14 @@ export class BinanceService {
               momentum1h
             );
 
+            const pivotClassificationWeekly = klineData.pivotsWeekly
+              ? classifyPivotCondition(initialPrice, klineData.pivotsWeekly, momentum1h)
+              : pivotClassification;
+
+            const pivotClassificationMonthly = klineData.pivotsMonthly
+              ? classifyPivotCondition(initialPrice, klineData.pivotsMonthly, momentum1h)
+              : pivotClassificationWeekly;
+
             const pivotClassification1h = klineData.pivots1h
               ? classifyPivotCondition(initialPrice, klineData.pivots1h, momentum1h)
               : null;
@@ -309,10 +348,14 @@ export class BinanceService {
               price: initialPrice,
               volume24h: quoteVolume,
               pivots: klineData.pivots,
+              pivotsWeekly: klineData.pivotsWeekly,
+              pivotsMonthly: klineData.pivotsMonthly,
               pivots1h: klineData.pivots1h,
               pivots5m: klineData.pivots5m,
               baselines: klineData.baselines,
               pivotStatus: pivotClassification,
+              pivotStatusWeekly: pivotClassificationWeekly,
+              pivotStatusMonthly: pivotClassificationMonthly,
               pivotStatus1h: pivotClassification1h,
               pivotStatus5m: pivotClassification5m,
               changes: {
@@ -431,6 +474,8 @@ export class BinanceService {
           const change24h = open24h ? ((currentPrice - open24h) / open24h) * 100 : coin.changes.h24;
 
           const pivotStatus = classifyPivotCondition(currentPrice, coin.pivots, change1h);
+          const pivotStatusWeekly = coin.pivotsWeekly ? classifyPivotCondition(currentPrice, coin.pivotsWeekly, change1h) : pivotStatus;
+          const pivotStatusMonthly = coin.pivotsMonthly ? classifyPivotCondition(currentPrice, coin.pivotsMonthly, change1h) : pivotStatusWeekly;
           const pivotStatus1h = coin.pivots1h ? classifyPivotCondition(currentPrice, coin.pivots1h, change1h) : null;
           const pivotStatus5m = coin.pivots5m ? classifyPivotCondition(currentPrice, coin.pivots5m, change5m) : null;
 
@@ -449,6 +494,8 @@ export class BinanceService {
             h24: Number(change24h.toFixed(2)),
           };
           coin.pivotStatus = pivotStatus;
+          if (pivotStatusWeekly) coin.pivotStatusWeekly = pivotStatusWeekly;
+          if (pivotStatusMonthly) coin.pivotStatusMonthly = pivotStatusMonthly;
           if (pivotStatus1h) coin.pivotStatus1h = pivotStatus1h;
           if (pivotStatus5m) coin.pivotStatus5m = pivotStatus5m;
           coin.lastUpdated = Date.now();
@@ -459,6 +506,8 @@ export class BinanceService {
             volume24h: vol,
             changes: coin.changes,
             pivotStatus,
+            pivotStatusWeekly,
+            pivotStatusMonthly,
             pivotStatus1h,
             pivotStatus5m
           });

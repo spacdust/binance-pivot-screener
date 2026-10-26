@@ -71,9 +71,11 @@ export interface CoinData {
   logoUrl?: string | null;
   price: number;
   volume24h: number;
-  pivots: Pivots;
-  pivots1h?: Pivots | null;
-  pivots5m?: Pivots | null;
+  pivots: Pivots; // Daily (1D) Pivot
+  pivotsWeekly?: Pivots | null; // Weekly (1W) Pivot - Aligns with TV 1H chart
+  pivotsMonthly?: Pivots | null; // Monthly (1M) Pivot - Aligns with TV Daily chart
+  pivots1h?: Pivots | null; // Hourly Candle Pivot
+  pivots5m?: Pivots | null; // 5M Candle Pivot
   baselines: {
     open1m: number | null;
     open5m: number | null;
@@ -86,6 +88,8 @@ export interface CoinData {
     open24h: number | null;
   };
   pivotStatus: PivotStatus;
+  pivotStatusWeekly?: PivotStatus | null;
+  pivotStatusMonthly?: PivotStatus | null;
   pivotStatus1h?: PivotStatus | null;
   pivotStatus5m?: PivotStatus | null;
   changes: TimeframeChanges;

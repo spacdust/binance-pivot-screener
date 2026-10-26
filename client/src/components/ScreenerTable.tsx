@@ -57,6 +57,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(25);
   const [density, setDensity] = useState<'compact' | 'normal'>('compact');
+  const [pivotMode, setPivotMode] = useState<'tradingview' | 'micro'>('tradingview');
 
   // Respond to Top Mover Category changes
   useEffect(() => {
@@ -163,22 +164,34 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           bVal = b.changes.h24;
           break;
         case 'distP':
-          aVal = a.pivotStatus.distP;
-          bVal = b.pivotStatus.distP;
+          aVal = pivotMode === 'tradingview'
+            ? Number((((a.price - (a.pivotsMonthly?.P ?? a.pivots.P)) / (a.pivotsMonthly?.P ?? a.pivots.P)) * 100).toFixed(2))
+            : a.pivotStatus.distP;
+          bVal = pivotMode === 'tradingview'
+            ? Number((((b.price - (b.pivotsMonthly?.P ?? b.pivots.P)) / (b.pivotsMonthly?.P ?? b.pivots.P)) * 100).toFixed(2))
+            : b.pivotStatus.distP;
           break;
         case 'distP1h':
-          aVal = a.pivotStatus1h?.distP ?? 0;
-          bVal = b.pivotStatus1h?.distP ?? 0;
+          aVal = pivotMode === 'tradingview'
+            ? Number((((a.price - (a.pivotsWeekly?.P ?? a.pivots.P)) / (a.pivotsWeekly?.P ?? a.pivots.P)) * 100).toFixed(2))
+            : (a.pivotStatus1h?.distP ?? 0);
+          bVal = pivotMode === 'tradingview'
+            ? Number((((b.price - (b.pivotsWeekly?.P ?? b.pivots.P)) / (b.pivotsWeekly?.P ?? b.pivots.P)) * 100).toFixed(2))
+            : (b.pivotStatus1h?.distP ?? 0);
           break;
         case 'distP5m':
-          aVal = a.pivotStatus5m?.distP ?? 0;
-          bVal = b.pivotStatus5m?.distP ?? 0;
+          aVal = pivotMode === 'tradingview'
+            ? Number((((a.price - a.pivots.P) / a.pivots.P) * 100).toFixed(2))
+            : (a.pivotStatus5m?.distP ?? 0);
+          bVal = pivotMode === 'tradingview'
+            ? Number((((b.price - b.pivots.P) / b.pivots.P) * 100).toFixed(2))
+            : (b.pivotStatus5m?.distP ?? 0);
           break;
       }
 
       return sortDirection === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
     });
-  }, [coins, sortField, sortDirection]);
+  }, [coins, sortField, sortDirection, pivotMode]);
 
   const totalPages = Math.ceil(sortedCoins.length / pageSize) || 1;
 
@@ -357,8 +370,34 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           </div>
         </div>
 
-        {/* Right Controls: Density Switch + Page Size */}
-        <div className="flex items-center gap-2.5 self-end sm:self-auto">
+        {/* Right Controls: Pivot Mode + Density Switch + Page Size */}
+        <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+          {/* Pivot Mode Selector (TV Auto vs Micro Candle) */}
+          <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
+            <button
+              onClick={() => setPivotMode('tradingview')}
+              title="Standar TradingView Auto: M5 (Daily 1D), 1H (Weekly 1W), Daily (Monthly 1M)"
+              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                pivotMode === 'tradingview'
+                  ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                  : 'text-[#848e9c] hover:text-[#eaecef]'
+              }`}
+            >
+              TV Auto
+            </button>
+            <button
+              onClick={() => setPivotMode('micro')}
+              title="Micro-Candle: Pivot dihitung dari candle 5m, 1h, dan 1d masing-masing"
+              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                pivotMode === 'micro'
+                  ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                  : 'text-[#848e9c] hover:text-[#eaecef]'
+              }`}
+            >
+              Micro Candle
+            </button>
+          </div>
+
           {/* Density Toggle (Rapat / Normal) */}
           <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
             <button
@@ -517,20 +556,23 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               <th
                 onClick={() => handleSort('distP5m')}
                 className="py-2 px-2 text-center min-w-[135px] cursor-pointer hover:text-[#eaecef] transition-colors"
+                title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart 5m menggunakan Pivot Daily (1D)' : 'Pivot dari candle 5m sebelumnya'}
               >
-                Pivot 5M (S4 ➔ R4) {renderSortIcon('distP5m')}
+                {pivotMode === 'tradingview' ? 'Pivot 5M (Daily 1D)' : 'Pivot 5M (Candle)'} {renderSortIcon('distP5m')}
               </th>
               <th
                 onClick={() => handleSort('distP1h')}
                 className="py-2 px-2 text-center min-w-[135px] cursor-pointer hover:text-[#eaecef] transition-colors"
+                title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart 1H menggunakan Pivot Weekly (1W)' : 'Pivot dari candle 1h sebelumnya'}
               >
-                Pivot 1H (S4 ➔ R4) {renderSortIcon('distP1h')}
+                {pivotMode === 'tradingview' ? 'Pivot 1H (Weekly 1W)' : 'Pivot 1H (Candle)'} {renderSortIcon('distP1h')}
               </th>
               <th
                 onClick={() => handleSort('distP')}
                 className="py-2 px-2 text-center min-w-[135px] cursor-pointer hover:text-[#eaecef] transition-colors"
+                title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart Daily menggunakan Pivot Monthly (1M)' : 'Pivot Daily (1D)'}
               >
-                Pivot Daily (S4 ➔ R4) {renderSortIcon('distP')}
+                {pivotMode === 'tradingview' ? 'Pivot Daily (Monthly 1M)' : 'Pivot Daily (1D)'} {renderSortIcon('distP')}
               </th>
               <th className="py-2 px-3 min-w-[150px] cursor-pointer hover:text-[#eaecef] transition-colors">
                 Kondisi Pivot Daily
@@ -554,20 +596,25 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               paginatedCoins.map((coin, idx) => {
                 const rank = (page - 1) * pageSize + idx + 1;
                 const flash = priceFlashMap.get(coin.symbol);
-                const confluence = checkPivotConfluence(coin);
+                const confluence = checkPivotConfluence(coin, pivotMode);
 
                 // Real-time live condition & range evaluations directly tied to coin.price
-                const dCond = classifyPriceZone(coin.price, coin.pivots) ?? coin.pivotStatus?.condition;
-                const hCond = coin.pivots1h ? (classifyPriceZone(coin.price, coin.pivots1h) ?? coin.pivotStatus1h?.condition) : null;
-                const mCond = coin.pivots5m ? (classifyPriceZone(coin.price, coin.pivots5m) ?? coin.pivotStatus5m?.condition) : null;
+                const targetPivots5m = pivotMode === 'tradingview' ? coin.pivots : (coin.pivots5m || coin.pivots);
+                const targetPivots1h = pivotMode === 'tradingview' ? (coin.pivotsWeekly || coin.pivots) : (coin.pivots1h || coin.pivots);
+                const targetPivotsDaily = pivotMode === 'tradingview' ? (coin.pivotsMonthly || coin.pivots) : coin.pivots;
 
-                const distPDaily = Number((((coin.price - coin.pivots.P) / coin.pivots.P) * 100).toFixed(2));
-                const distP1h = coin.pivots1h ? Number((((coin.price - coin.pivots1h.P) / coin.pivots1h.P) * 100).toFixed(2)) : 0;
-                const distP5m = coin.pivots5m ? Number((((coin.price - coin.pivots5m.P) / coin.pivots5m.P) * 100).toFixed(2)) : 0;
+                const mCond = classifyPriceZone(coin.price, targetPivots5m) ?? coin.pivotStatus?.condition;
+                const hCond = classifyPriceZone(coin.price, targetPivots1h) ?? (pivotMode === 'tradingview' ? (coin.pivotStatusWeekly?.condition ?? coin.pivotStatus?.condition) : coin.pivotStatus1h?.condition);
+                const dCond = classifyPriceZone(coin.price, targetPivotsDaily) ?? (pivotMode === 'tradingview' ? (coin.pivotStatusMonthly?.condition ?? coin.pivotStatus?.condition) : coin.pivotStatus?.condition);
+                const dailyBaseCond = classifyPriceZone(coin.price, coin.pivots) ?? coin.pivotStatus?.condition;
 
-                const range5m = calculateRangePercent(coin.price, coin.pivots5m);
-                const range1h = calculateRangePercent(coin.price, coin.pivots1h);
-                const rangeDaily = calculateRangePercent(coin.price, coin.pivots);
+                const distP5m = Number((((coin.price - targetPivots5m.P) / targetPivots5m.P) * 100).toFixed(2));
+                const distP1h = Number((((coin.price - targetPivots1h.P) / targetPivots1h.P) * 100).toFixed(2));
+                const distPDaily = Number((((coin.price - targetPivotsDaily.P) / targetPivotsDaily.P) * 100).toFixed(2));
+
+                const range5m = calculateRangePercent(coin.price, targetPivots5m);
+                const range1h = calculateRangePercent(coin.price, targetPivots1h);
+                const rangeDaily = calculateRangePercent(coin.price, targetPivotsDaily);
 
                 return (
                   <tr
@@ -644,49 +691,41 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
                     {/* Pivot 5M Visualizer */}
                     <td className="py-1 px-1.5 text-center">
-                      {coin.pivots5m ? (
-                        <div className="flex flex-col items-center gap-0.5 py-0.5">
-                          <PivotVisualizer
-                            pivots={coin.pivots5m}
-                            currentPrice={coin.price}
-                            rangePercent={range5m}
-                          />
-                          {mCond && (
-                            <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block mt-0.5">
-                              {getPivotCode(mCond)} ({distP5m > 0 ? '+' : ''}{distP5m}%)
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-[10px] text-[#474d57] font-mono">Syncing...</span>
-                      )}
+                      <div className="flex flex-col items-center gap-0.5 py-0.5">
+                        <PivotVisualizer
+                          pivots={targetPivots5m}
+                          currentPrice={coin.price}
+                          rangePercent={range5m}
+                        />
+                        {mCond && (
+                          <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block mt-0.5">
+                            {getPivotCode(mCond)} ({distP5m > 0 ? '+' : ''}{distP5m}%)
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Pivot 1H Visualizer */}
                     <td className="py-1 px-1.5 text-center">
-                      {coin.pivots1h ? (
-                        <div className="flex flex-col items-center gap-0.5 py-0.5">
-                          <PivotVisualizer
-                            pivots={coin.pivots1h}
-                            currentPrice={coin.price}
-                            rangePercent={range1h}
-                          />
-                          {hCond && (
-                            <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block mt-0.5">
-                              {getPivotCode(hCond)} ({distP1h > 0 ? '+' : ''}{distP1h}%)
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-[10px] text-[#474d57] font-mono">Syncing...</span>
-                      )}
+                      <div className="flex flex-col items-center gap-0.5 py-0.5">
+                        <PivotVisualizer
+                          pivots={targetPivots1h}
+                          currentPrice={coin.price}
+                          rangePercent={range1h}
+                        />
+                        {hCond && (
+                          <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block mt-0.5">
+                            {getPivotCode(hCond)} ({distP1h > 0 ? '+' : ''}{distP1h}%)
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Pivot Daily Visualizer */}
                     <td className="py-1 px-1.5 text-center">
                       <div className="flex flex-col items-center gap-0.5 py-0.5">
                         <PivotVisualizer
-                          pivots={coin.pivots}
+                          pivots={targetPivotsDaily}
                           currentPrice={coin.price}
                           rangePercent={rangeDaily}
                         />
@@ -701,10 +740,12 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                       <div className="flex flex-col gap-0.5">
                         <span
                           className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-medium border ${getConditionBadgeStyle(
-                            getConditionTagColor(dCond)
+                            getConditionTagColor(dailyBaseCond)
                           )}`}
+                          title={`Kondisi Pivot Daily (1D): ${getConditionLabel(dailyBaseCond)}`}
                         >
-                          {getConditionLabel(dCond)}
+                          <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
+                          <span className="truncate">{getConditionLabel(dailyBaseCond)}</span>
                         </span>
                         <span className="text-[9px] text-[#848e9c] font-mono tabular-nums">
                           Dist P: {distPDaily > 0 ? '+' : ''}{distPDaily}%
