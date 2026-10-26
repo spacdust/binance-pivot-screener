@@ -285,118 +285,109 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
           <div className="h-px bg-zinc-800/70" />
 
-          {/* Section 4: Timeframe Perubahan & Filter Persentase */}
-          <div className="space-y-2">
-            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Clock className="w-3 h-3 text-amber-400" />
-              <span>Timeframe Perubahan</span>
-            </label>
+          {/* Section 4: Filter Persentase / Sideways dengan Pilihan Timeframe Acuan Terpadu */}
+          <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-xl p-2.5 space-y-2.5">
+            <div className="flex items-center justify-between gap-1 flex-wrap">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="sidebarEnablePercent"
+                  checked={filters.enablePercentFilter}
+                  onChange={(e) => onFilterChange({ enablePercentFilter: e.target.checked })}
+                  className="w-3.5 h-3.5 rounded border-zinc-700 bg-zinc-950 text-amber-500 cursor-pointer accent-amber-500"
+                />
+                <label htmlFor="sidebarEnablePercent" className="font-semibold text-zinc-200 cursor-pointer text-xs flex items-center gap-1">
+                  <span>Filter Sideways</span>
+                  <span className="font-mono text-amber-400 font-bold">&le; {filters.maxPercent}%</span>
+                </label>
+              </div>
 
-            {/* Timeframe Buttons Grid */}
-            <div className="grid grid-cols-3 gap-1 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80">
-              {TIMEFRAMES.map((tf) => {
-                const active = filters.selectedTimeframe === tf.key;
+              {/* Compact Timeframe Dropdown */}
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3 text-zinc-500" />
+                <select
+                  value={filters.selectedTimeframe}
+                  onChange={(e) => onFilterChange({ selectedTimeframe: e.target.value as SelectedTimeframe })}
+                  className="bg-zinc-950 border border-zinc-800 text-zinc-200 text-[11px] font-mono rounded-lg px-2 py-0.5 focus:outline-none focus:border-amber-500 cursor-pointer"
+                  title="Pilih timeframe acuan untuk filter persentase"
+                >
+                  {TIMEFRAMES.map((tf) => (
+                    <option key={tf.key} value={tf.key}>
+                      TF: {tf.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Mode switch */}
+            <div className="grid grid-cols-2 gap-1 bg-zinc-950/80 p-0.5 rounded-lg border border-zinc-800">
+              <button
+                onClick={() => onFilterChange({ filterMode: 'absolute_below' })}
+                className={`py-1 px-1.5 rounded text-[10px] font-mono transition-colors text-center ${
+                  filters.filterMode === 'absolute_below'
+                    ? 'bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                |&plusmn;{filters.maxPercent}%| Sideways
+              </button>
+              <button
+                onClick={() => onFilterChange({ filterMode: 'below' })}
+                className={`py-1 px-1.5 rounded text-[10px] font-mono transition-colors text-center ${
+                  filters.filterMode === 'below'
+                    ? 'bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                &lt; {filters.maxPercent}%
+              </button>
+            </div>
+
+            {/* Presets and custom slider */}
+            <div className="flex items-center gap-1 flex-wrap pt-0.5">
+              <span className="text-[10px] text-zinc-500 mr-0.5">Preset:</span>
+              {QUICK_PERCENT_PRESETS.map((pct) => {
+                const isSelected = filters.enablePercentFilter && filters.maxPercent === pct;
                 return (
                   <button
-                    key={tf.key}
-                    onClick={() => onFilterChange({ selectedTimeframe: tf.key })}
-                    className={`py-1 text-center rounded-lg text-xs font-mono font-semibold transition-all ${
-                      active
-                        ? 'bg-amber-500 text-zinc-950 shadow-sm font-bold'
-                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                    key={pct}
+                    onClick={() =>
+                      onFilterChange({
+                        enablePercentFilter: true,
+                        maxPercent: pct,
+                      })
+                    }
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono tabular-nums border ${
+                      isSelected
+                        ? 'bg-amber-500 text-zinc-950 font-bold border-amber-400'
+                        : 'bg-zinc-950/80 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                     }`}
                   >
-                    {tf.label}
+                    &lt;{pct}%
                   </button>
                 );
               })}
             </div>
 
-            {/* Percentage Filter Threshold */}
-            <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-xl p-2.5 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="sidebarEnablePercent"
-                    checked={filters.enablePercentFilter}
-                    onChange={(e) => onFilterChange({ enablePercentFilter: e.target.checked })}
-                    className="w-3.5 h-3.5 rounded border-zinc-700 bg-zinc-950 text-amber-500 cursor-pointer accent-amber-500"
-                  />
-                  <label htmlFor="sidebarEnablePercent" className="font-semibold text-zinc-300 cursor-pointer text-xs">
-                    Perubahan &le; <span className="font-mono text-amber-400">{filters.maxPercent}%</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Mode switch */}
-              <div className="grid grid-cols-2 gap-1 bg-zinc-950/80 p-0.5 rounded-lg border border-zinc-800">
-                <button
-                  onClick={() => onFilterChange({ filterMode: 'absolute_below' })}
-                  className={`py-1 px-1.5 rounded text-[10px] font-mono transition-colors text-center ${
-                    filters.filterMode === 'absolute_below'
-                      ? 'bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30'
-                      : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  |&plusmn;{filters.maxPercent}%| Sideways
-                </button>
-                <button
-                  onClick={() => onFilterChange({ filterMode: 'below' })}
-                  className={`py-1 px-1.5 rounded text-[10px] font-mono transition-colors text-center ${
-                    filters.filterMode === 'below'
-                      ? 'bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30'
-                      : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  &lt; {filters.maxPercent}%
-                </button>
-              </div>
-
-              {/* Presets and custom slider */}
-              <div className="flex items-center gap-1 flex-wrap pt-1">
-                {QUICK_PERCENT_PRESETS.map((pct) => {
-                  const isSelected = filters.enablePercentFilter && filters.maxPercent === pct;
-                  return (
-                    <button
-                      key={pct}
-                      onClick={() =>
-                        onFilterChange({
-                          enablePercentFilter: true,
-                          maxPercent: pct,
-                        })
-                      }
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono tabular-nums border ${
-                        isSelected
-                          ? 'bg-amber-500 text-zinc-950 font-bold border-amber-400'
-                          : 'bg-zinc-950/80 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                      }`}
-                    >
-                      &lt;{pct}%
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="range"
-                  min="0.5"
-                  max="25"
-                  step="0.5"
-                  value={filters.maxPercent}
-                  onChange={(e) =>
-                    onFilterChange({
-                      enablePercentFilter: true,
-                      maxPercent: parseFloat(e.target.value),
-                    })
-                  }
-                  className="w-full accent-amber-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
-                />
-                <span className="text-[11px] font-mono tabular-nums text-zinc-400 w-8 text-right">
-                  {filters.maxPercent}%
-                </span>
-              </div>
+            <div className="flex items-center gap-2 pt-0.5">
+              <input
+                type="range"
+                min="0.5"
+                max="25"
+                step="0.5"
+                value={filters.maxPercent}
+                onChange={(e) =>
+                  onFilterChange({
+                    enablePercentFilter: true,
+                    maxPercent: parseFloat(e.target.value),
+                  })
+                }
+                className="w-full accent-amber-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+              />
+              <span className="text-[11px] font-mono tabular-nums text-zinc-400 w-8 text-right">
+                {filters.maxPercent}%
+              </span>
             </div>
           </div>
 
