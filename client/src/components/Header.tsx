@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
     : '--:--:--';
 
   return (
-    <header className="border-b border-zinc-800/80 bg-zinc-950/85 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-6 py-2.5">
+    <header className="border-b border-[#1c2333] bg-[#0b0e14]/90 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-6 py-2.5">
       <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         {/* Logo and Brand */}
         <div className="flex items-center gap-3">
@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Live Status and Actions */}
         <div className="flex items-center gap-2.5 self-end sm:self-auto">
           {/* Status Badge */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900/90 border border-zinc-800 text-xs shadow-inner">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0e121a] border border-[#1c2333] text-xs shadow-inner">
             <span className="relative flex h-2 w-2">
               {isConnected && (
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -58,13 +58,13 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-zinc-200 font-medium">
               {isConnected ? 'Binance Live WS' : 'Connecting...'}
             </span>
-            <span className="text-zinc-500 text-[11px] font-mono tabular-nums border-l border-zinc-800 pl-2">
+            <span className="text-zinc-500 text-[11px] font-mono tabular-nums border-l border-[#1c2333] pl-2">
               {formattedTime}
             </span>
           </div>
 
           {/* Active pairs pill */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-300">
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0e121a] border border-[#1c2333] text-xs text-zinc-300">
             <Activity className="w-3.5 h-3.5 text-amber-400" />
             <span>
               <strong className="text-zinc-100 font-mono tabular-nums">{totalCoins}</strong> Pasang USDT
@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onRefresh}
             title="Refresh Snapshot"
-            className="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+            className="p-2 rounded-lg bg-[#0e121a] hover:bg-zinc-800 border border-[#1c2333] text-zinc-400 hover:text-zinc-100 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </button>

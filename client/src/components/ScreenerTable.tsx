@@ -288,20 +288,21 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
   const renderChangeCell = (val: number) => {
     const isPos = val > 0;
-    const isZero = val === 0;
+    const isNeg = val < 0;
 
-    let colorStyles = '';
-    if (isZero) {
-      colorStyles = 'text-zinc-500 bg-zinc-800/30 font-semibold';
-    } else if (isPos) {
-      colorStyles = 'text-emerald-400 bg-emerald-500/10 font-semibold';
-    } else {
-      colorStyles = 'text-rose-400 bg-rose-500/10 font-semibold';
-    }
+    // Clean TradingView / Binance Pro typography without eye-fatiguing heavy boxes
+    const textColor = isPos ? 'text-emerald-400' : isNeg ? 'text-rose-400' : 'text-zinc-500';
+    // Subtle pill accent only for notable momentum moves (>= 5%)
+    const badgeStyle =
+      Math.abs(val) >= 5
+        ? isPos
+          ? 'bg-emerald-500/15 font-bold'
+          : 'bg-rose-500/15 font-bold'
+        : 'font-medium';
 
     return (
       <span
-        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-mono tabular-nums transition-all duration-200 ${colorStyles}`}
+        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-mono tabular-nums transition-colors ${textColor} ${badgeStyle}`}
       >
         {isPos ? '+' : ''}{val.toFixed(2)}%
       </span>
@@ -311,9 +312,9 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   const pyRow = density === 'compact' ? 'py-1.5' : 'py-2.5';
 
   return (
-    <div className="flex-1 min-h-0 bg-zinc-900/80 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col shadow-xl">
+    <div className="flex-1 min-h-0 bg-[#0e121a]/95 border border-[#1c2333] rounded-2xl overflow-hidden flex flex-col shadow-xl">
       {/* Top Workspace Toolbar */}
-      <div className="p-2.5 sm:p-3 border-b border-zinc-800 bg-zinc-950/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
+      <div className="p-2.5 sm:p-3 border-b border-[#1c2333] bg-[#0b0e14]/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
         <div className="flex items-center gap-2 flex-wrap">
           {/* Toggle Sidebar Button */}
           {onToggleSidebar && (
@@ -321,7 +322,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               onClick={onToggleSidebar}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                 isSidebarOpen
-                  ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-750'
+                  ? 'bg-zinc-800/80 text-zinc-200 border-zinc-700 hover:bg-zinc-750'
                   : 'bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25 shadow-[0_0_10px_rgba(251,191,36,0.2)]'
               }`}
             >
@@ -363,7 +364,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
         {/* Right Controls: Density Switch + Page Size */}
         <div className="flex items-center gap-2.5 self-end sm:self-auto">
           {/* Density Toggle (Rapat / Normal) */}
-          <div className="flex items-center bg-zinc-900/90 rounded-lg border border-zinc-800 p-0.5 text-xs">
+          <div className="flex items-center bg-[#0b0e14] rounded-lg border border-[#1c2333] p-0.5 text-xs">
             <button
               onClick={() => setDensity('compact')}
               title="Compact View (Data lebih padat & banyak)"
@@ -397,7 +398,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 setPageSize(Number(e.target.value));
                 setPage(1);
               }}
-              className="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-amber-500 cursor-pointer"
+              className="bg-[#0b0e14] border border-[#1c2333] text-zinc-200 text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-amber-500 cursor-pointer"
             >
               <option value={25}>25</option>
               <option value={50}>50</option>
@@ -410,12 +411,12 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
       {/* Active Filter Pills Bar (Dismissible chips) */}
       {activePills.length > 0 && (
-        <div className="px-3 py-1.5 border-b border-zinc-800/80 bg-zinc-950/40 flex items-center gap-1.5 flex-wrap text-xs shrink-0">
+        <div className="px-3 py-1.5 border-b border-[#1c2333] bg-[#0b0e14]/50 flex items-center gap-1.5 flex-wrap text-xs shrink-0">
           <span className="text-[11px] text-zinc-500 font-medium">Filter Aktif:</span>
           {activePills.map((pill) => (
             <span
               key={pill.id}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono bg-zinc-800/90 border border-zinc-700/80 text-zinc-200 shadow-xs"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono bg-zinc-800/80 border border-zinc-700/80 text-zinc-200 shadow-xs"
             >
               <span>{pill.label}</span>
               <button
@@ -441,17 +442,17 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       {/* Table Scrollable Container: Sticky Header + Freeze Symbol Column */}
       <div className="flex-1 overflow-auto custom-scrollbar relative">
         <table className="w-full text-left border-collapse text-xs">
-          <thead className="sticky top-0 z-20 bg-zinc-950 shadow-sm border-b border-zinc-800">
+          <thead className="sticky top-0 z-20 bg-[#0b0e14] shadow-sm border-b border-[#1c2333]">
             <tr className="text-zinc-400 font-semibold uppercase tracking-wider text-[11px]">
               {/* Frozen Column 1: Rank # */}
-              <th className="py-2.5 px-3 w-12 text-center sticky left-0 z-30 bg-zinc-950 border-r border-zinc-800/60 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+              <th className="py-2.5 px-3 w-12 text-center sticky left-0 z-30 bg-[#0b0e14] border-r border-[#1c2333] shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
                 #
               </th>
 
               {/* Frozen Column 2: Symbol & Volume */}
               <th
                 onClick={() => handleSort('symbol')}
-                className="py-2.5 px-3 cursor-pointer hover:text-zinc-200 transition-colors sticky left-12 z-30 bg-zinc-950 min-w-[130px] border-r border-zinc-800/80 shadow-[2px_0_5px_rgba(0,0,0,0.3)]"
+                className="py-2.5 px-3 cursor-pointer hover:text-zinc-200 transition-colors sticky left-12 z-30 bg-[#0b0e14] min-w-[130px] border-r border-[#1c2333] shadow-[2px_0_5px_rgba(0,0,0,0.3)]"
               >
                 Pasang / Volume {renderSortIcon('symbol')}
               </th>
@@ -579,16 +580,16 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     className={`cursor-pointer transition-all group ${
                       confluence.hasConfluence
                         ? confluence.rowHighlight
-                        : 'hover:bg-zinc-800/40 border-l-4 border-l-transparent'
+                        : 'hover:bg-[#121722]/80 border-l-4 border-l-transparent'
                     }`}
                   >
                     {/* Frozen Column 1: Rank # */}
-                    <td className={`${pyRow} px-2 text-center text-zinc-500 font-mono tabular-nums text-[11px] sticky left-0 z-10 bg-zinc-950/95 group-hover:bg-zinc-900/95 border-r border-zinc-800/60 shadow-[2px_0_5px_rgba(0,0,0,0.3)]`}>
+                    <td className={`${pyRow} px-2 text-center text-zinc-500 font-mono tabular-nums text-[11px] sticky left-0 z-10 bg-[#0b0e14] group-hover:bg-[#121722] border-r border-[#1c2333] shadow-[2px_0_5px_rgba(0,0,0,0.3)]`}>
                       {rank}
                     </td>
 
                     {/* Frozen Column 2: Symbol & Volume */}
-                    <td className={`${pyRow} px-3 sticky left-12 z-10 bg-zinc-950/95 group-hover:bg-zinc-900/95 border-r border-zinc-800/80 shadow-[2px_0_5px_rgba(0,0,0,0.3)] min-w-[130px]`}>
+                    <td className={`${pyRow} px-3 sticky left-12 z-10 bg-[#0b0e14] group-hover:bg-[#121722] border-r border-[#1c2333] shadow-[2px_0_5px_rgba(0,0,0,0.3)] min-w-[130px]`}>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`font-bold text-zinc-100 group-hover:text-amber-400 transition-colors ${density === 'compact' ? 'text-xs' : 'text-sm'}`}>
                           {coin.baseAsset}
@@ -640,7 +641,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     {/* Pivot 5M Visualizer */}
                     <td className="py-1 px-1.5 text-center">
                       {coin.pivots5m ? (
-                        <div className={`flex flex-col items-center gap-0.5 p-0.5 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
+                        <div className="flex flex-col items-center gap-0.5 py-0.5">
                           <PivotVisualizer
                             pivots={coin.pivots5m}
                             currentPrice={coin.price}
@@ -660,7 +661,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     {/* Pivot 1H Visualizer */}
                     <td className="py-1 px-1.5 text-center">
                       {coin.pivots1h ? (
-                        <div className={`flex flex-col items-center gap-0.5 p-0.5 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
+                        <div className="flex flex-col items-center gap-0.5 py-0.5">
                           <PivotVisualizer
                             pivots={coin.pivots1h}
                             currentPrice={coin.price}
@@ -679,7 +680,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
                     {/* Pivot Daily Visualizer */}
                     <td className="py-1 px-1.5 text-center">
-                      <div className={`flex flex-col items-center gap-0.5 p-0.5 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
+                      <div className="flex flex-col items-center gap-0.5 py-0.5">
                         <PivotVisualizer
                           pivots={coin.pivots}
                           currentPrice={coin.price}
@@ -727,7 +728,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
       {/* Pagination Footer */}
       {sortedCoins.length > 0 && (
-        <div className="p-2.5 sm:p-3 border-t border-zinc-800 bg-zinc-950/80 flex items-center justify-between text-xs text-zinc-400 shrink-0">
+        <div className="p-2.5 sm:p-3 border-t border-[#1c2333] bg-[#0b0e14]/90 flex items-center justify-between text-xs text-zinc-400 shrink-0">
           <div>
             Menampilkan{' '}
             <span className="font-mono text-zinc-200">
@@ -740,7 +741,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 font-medium transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 font-medium transition-colors"
             >
               Sebelumnya
             </button>
@@ -750,7 +751,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 font-medium transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 font-medium transition-colors"
             >
               Selanjutnya
             </button>

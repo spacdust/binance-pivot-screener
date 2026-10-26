@@ -121,7 +121,7 @@ export const App: React.FC = () => {
   }, [filters]);
 
   return (
-    <div className="h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans overflow-hidden">
+    <div className="h-screen bg-[#0b0e14] text-zinc-100 flex flex-col font-sans overflow-hidden">
       {/* App Header */}
       <Header
         totalCoins={coins.length}

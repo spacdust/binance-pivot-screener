@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-[#09090b] text-[#fafafa] font-sans antialiased;
+    @apply bg-[#0b0e14] text-[#f0f3f8] font-sans antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -58,14 +58,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: #0b0e14;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #1c2333;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #2d3748;
 }

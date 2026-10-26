@@ -140,14 +140,14 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed lg:static top-[52px] bottom-0 left-0 z-40 bg-zinc-950/95 border-r border-zinc-800/80 flex flex-col transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none ${
+        className={`fixed lg:static top-[52px] bottom-0 left-0 z-40 bg-[#0b0e14]/98 border-r border-[#1c2333] flex flex-col transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none ${
           isOpen
             ? 'w-80 translate-x-0'
             : '-translate-x-full lg:translate-x-0 lg:w-0 lg:border-r-0 overflow-hidden'
         }`}
       >
         {/* Sidebar Header */}
-        <div className="p-3.5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 bg-zinc-900/50">
+        <div className="p-3.5 border-b border-[#1c2333] flex items-center justify-between shrink-0 bg-[#0e121a]/60">
           <div className="flex items-center gap-2">
             <span className="p-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400">
               <SlidersHorizontal className="w-3.5 h-3.5 stroke-[2.2]" />

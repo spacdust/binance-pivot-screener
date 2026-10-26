@@ -183,9 +183,9 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
         type: 'AREA_P',
         label: 'Triple Area P (Daily, 1H, 5M di Level Pivot P)',
         badgeText: '3TF AREA P',
-        badgeStyle: 'bg-sky-500/20 text-sky-300 border-sky-400/50 shadow-[0_0_8px_rgba(56,189,248,0.25)]',
-        rowHighlight: 'bg-sky-500/[0.08] hover:bg-sky-500/[0.13] border-l-4 border-l-sky-400',
-        visualizerRing: 'ring-1 ring-sky-500/40 bg-sky-500/[0.03] rounded-lg'
+        badgeStyle: 'bg-sky-500/15 text-sky-300 border-sky-400/40 shadow-sm',
+        rowHighlight: 'border-l-4 border-l-sky-400 bg-gradient-to-r from-sky-500/[0.08] via-transparent to-transparent',
+        visualizerRing: ''
       };
     }
 
@@ -196,9 +196,9 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
         type: 'OTHER',
         label: 'Triple S1-P (Pantul Reversal di Daily, 1H, 5M)',
         badgeText: '3TF S1-P',
-        badgeStyle: 'bg-teal-500/20 text-teal-300 border-teal-400/50 shadow-[0_0_8px_rgba(45,212,191,0.25)]',
-        rowHighlight: 'bg-teal-500/[0.08] hover:bg-teal-500/[0.13] border-l-4 border-l-teal-400',
-        visualizerRing: 'ring-1 ring-teal-500/40 bg-teal-500/[0.03] rounded-lg'
+        badgeStyle: 'bg-teal-500/15 text-teal-300 border-teal-400/40 shadow-sm',
+        rowHighlight: 'border-l-4 border-l-teal-400 bg-gradient-to-r from-teal-500/[0.08] via-transparent to-transparent',
+        visualizerRing: ''
       };
     }
 
@@ -209,9 +209,9 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
         type: 'OTHER',
         label: 'Triple R1-P (Tolak Pullback di Daily, 1H, 5M)',
         badgeText: '3TF R1-P',
-        badgeStyle: 'bg-amber-500/20 text-amber-300 border-amber-400/50 shadow-[0_0_8px_rgba(251,191,36,0.25)]',
-        rowHighlight: 'bg-amber-500/[0.08] hover:bg-amber-500/[0.13] border-l-4 border-l-amber-400',
-        visualizerRing: 'ring-1 ring-amber-500/40 bg-amber-500/[0.03] rounded-lg'
+        badgeStyle: 'bg-amber-500/15 text-amber-300 border-amber-400/40 shadow-sm',
+        rowHighlight: 'border-l-4 border-l-amber-400 bg-gradient-to-r from-amber-500/[0.08] via-transparent to-transparent',
+        visualizerRing: ''
       };
     }
 
@@ -224,14 +224,12 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
         label: `Triple Bullish Breakout (${getConditionLabel(dCond)})`,
         badgeText: `3TF ${code}`,
         badgeStyle: isExtreme
-          ? 'bg-purple-500/20 text-purple-300 border-purple-400/50 shadow-[0_0_8px_rgba(192,132,252,0.25)]'
-          : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50 shadow-[0_0_8px_rgba(52,211,153,0.25)]',
+          ? 'bg-purple-500/15 text-purple-300 border-purple-400/40 shadow-sm'
+          : 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40 shadow-sm',
         rowHighlight: isExtreme
-          ? 'bg-purple-500/[0.08] hover:bg-purple-500/[0.13] border-l-4 border-l-purple-400'
-          : 'bg-emerald-500/[0.08] hover:bg-emerald-500/[0.13] border-l-4 border-l-emerald-400',
-        visualizerRing: isExtreme
-          ? 'ring-1 ring-purple-500/40 bg-purple-500/[0.03] rounded-lg'
-          : 'ring-1 ring-emerald-500/40 bg-emerald-500/[0.03] rounded-lg'
+          ? 'border-l-4 border-l-purple-400 bg-gradient-to-r from-purple-500/[0.08] via-transparent to-transparent'
+          : 'border-l-4 border-l-emerald-400 bg-gradient-to-r from-emerald-500/[0.08] via-transparent to-transparent',
+        visualizerRing: ''
       };
     }
 
@@ -244,14 +242,12 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
         label: `Triple Bearish Breakdown (${getConditionLabel(dCond)})`,
         badgeText: `3TF ${code}`,
         badgeStyle: isExtreme
-          ? 'bg-red-500/20 text-red-300 border-red-400/50 shadow-[0_0_8px_rgba(248,113,113,0.25)]'
-          : 'bg-rose-500/20 text-rose-300 border-rose-400/50 shadow-[0_0_8px_rgba(251,113,133,0.25)]',
+          ? 'bg-red-500/15 text-red-300 border-red-400/40 shadow-sm'
+          : 'bg-rose-500/15 text-rose-300 border-rose-400/40 shadow-sm',
         rowHighlight: isExtreme
-          ? 'bg-red-500/[0.08] hover:bg-red-500/[0.13] border-l-4 border-l-red-400'
-          : 'bg-rose-500/[0.08] hover:bg-rose-500/[0.13] border-l-4 border-l-rose-400',
-        visualizerRing: isExtreme
-          ? 'ring-1 ring-red-500/40 bg-red-500/[0.03] rounded-lg'
-          : 'ring-1 ring-rose-500/40 bg-rose-500/[0.03] rounded-lg'
+          ? 'border-l-4 border-l-red-400 bg-gradient-to-r from-red-500/[0.08] via-transparent to-transparent'
+          : 'border-l-4 border-l-rose-400 bg-gradient-to-r from-rose-500/[0.08] via-transparent to-transparent',
+        visualizerRing: ''
       };
     }
 
@@ -261,9 +257,9 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       type: 'OTHER',
       label: `3TF Selaras (${getConditionLabel(dCond)})`,
       badgeText: `3TF ${code}`,
-      badgeStyle: 'bg-amber-500/20 text-amber-300 border-amber-400/50 shadow-[0_0_8px_rgba(251,191,36,0.25)]',
-      rowHighlight: 'bg-amber-500/[0.08] hover:bg-amber-500/[0.13] border-l-4 border-l-amber-400',
-      visualizerRing: 'ring-1 ring-amber-500/40 bg-amber-500/[0.03] rounded-lg'
+      badgeStyle: 'bg-amber-500/15 text-amber-300 border-amber-400/40 shadow-sm',
+      rowHighlight: 'border-l-4 border-l-amber-400 bg-gradient-to-r from-amber-500/[0.08] via-transparent to-transparent',
+      visualizerRing: ''
     };
   }
 
@@ -276,8 +272,8 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       label: '3TF Bullish Zone Confluence (Daily, 1H, 5M Menembus Resistance)',
       badgeText: '3TF BULLISH',
       badgeStyle: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-sm',
-      rowHighlight: 'bg-emerald-500/[0.05] hover:bg-emerald-500/[0.10] border-l-4 border-l-emerald-500',
-      visualizerRing: 'ring-1 ring-emerald-500/30 rounded-lg'
+      rowHighlight: 'border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-500/[0.05] via-transparent to-transparent',
+      visualizerRing: ''
     };
   }
 
@@ -289,8 +285,8 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       label: '3TF Bearish Zone Confluence (Daily, 1H, 5M Menembus Support)',
       badgeText: '3TF BEARISH',
       badgeStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-sm',
-      rowHighlight: 'bg-rose-500/[0.05] hover:bg-rose-500/[0.10] border-l-4 border-l-rose-500',
-      visualizerRing: 'ring-1 ring-rose-500/30 rounded-lg'
+      rowHighlight: 'border-l-4 border-l-rose-500 bg-gradient-to-r from-rose-500/[0.05] via-transparent to-transparent',
+      visualizerRing: ''
     };
   }
 
