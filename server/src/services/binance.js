@@ -1,5 +1,11 @@
 import WebSocket from 'ws';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { calculateDailyPivots, classifyPivotCondition } from './pivot.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const REST_MIRRORS = [
   'https://api.binance.com/api/v3',
@@ -26,6 +32,21 @@ export class BinanceService {
     this.isSyncing = false;
     this.activeRestMirrorIndex = 0;
     this.activeWsMirrorIndex = 0;
+
+    // Load pre-bundled asset logos baseline for 100% offline & instant availability
+    try {
+      const logosPath = path.resolve(__dirname, '../data/binance-asset-logos.json');
+      if (fs.existsSync(logosPath)) {
+        const raw = fs.readFileSync(logosPath, 'utf8');
+        const parsed = JSON.parse(raw);
+        for (const [k, v] of Object.entries(parsed)) {
+          this.assetLogos.set(k.toUpperCase(), v);
+        }
+        console.log(`[BinanceService] Loaded ${this.assetLogos.size} pre-bundled asset logos.`);
+      }
+    } catch (e) {
+      console.warn('[BinanceService] Could not load pre-bundled asset logos:', e.message);
+    }
   }
 
   // Fetch official Binance asset logos for 100% token logo coverage
