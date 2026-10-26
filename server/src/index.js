@@ -1,8 +1,15 @@
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 import { WebSocketServer, WebSocket } from 'ws';
 import { binanceService } from './services/binance.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.resolve(__dirname, '../../client/dist');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -179,6 +186,15 @@ binanceService.subscribe((payload) => {
     }
   }
 });
+
+// Serve static frontend bundle if client/dist exists
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/ws')) return next();
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // Start server and initialize Binance service
 server.listen(PORT, async () => {
