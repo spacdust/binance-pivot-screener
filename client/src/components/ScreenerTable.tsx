@@ -286,24 +286,17 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
     );
   };
 
-  const renderChangeCell = (val: number, tfKey: SelectedTimeframe) => {
-    const isSelected = selectedTimeframe === tfKey;
+  const renderChangeCell = (val: number) => {
     const isPos = val > 0;
     const isZero = val === 0;
 
     let colorStyles = '';
     if (isZero) {
-      colorStyles = isSelected
-        ? 'text-zinc-300 bg-zinc-800/70 ring-1 ring-zinc-600/60 font-bold'
-        : 'text-zinc-500 bg-zinc-800/30 font-semibold';
+      colorStyles = 'text-zinc-500 bg-zinc-800/30 font-semibold';
     } else if (isPos) {
-      colorStyles = isSelected
-        ? 'text-emerald-400 bg-emerald-500/20 ring-1 ring-emerald-500/60 font-bold shadow-sm'
-        : 'text-emerald-400 bg-emerald-500/10 font-semibold';
+      colorStyles = 'text-emerald-400 bg-emerald-500/10 font-semibold';
     } else {
-      colorStyles = isSelected
-        ? 'text-rose-400 bg-rose-500/20 ring-1 ring-rose-500/60 font-bold shadow-sm'
-        : 'text-rose-400 bg-rose-500/10 font-semibold';
+      colorStyles = 'text-rose-400 bg-rose-500/10 font-semibold';
     }
 
     return (
@@ -472,73 +465,55 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </th>
               <th
                 onClick={() => handleSort('m1')}
-                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'm1' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
-                }`}
+                className="py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 1m {renderSortIcon('m1')}
               </th>
               <th
                 onClick={() => handleSort('m5')}
-                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'm5' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
-                }`}
+                className="py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 5m {renderSortIcon('m5')}
               </th>
               <th
                 onClick={() => handleSort('m15')}
-                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'm15' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
-                }`}
+                className="py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 15m {renderSortIcon('m15')}
               </th>
               <th
                 onClick={() => handleSort('m30')}
-                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'm30' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
-                }`}
+                className="py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 30m {renderSortIcon('m30')}
               </th>
               <th
                 onClick={() => handleSort('h1')}
-                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h1' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
-                }`}
+                className="py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 1j {renderSortIcon('h1')}
               </th>
               <th
                 onClick={() => handleSort('h3')}
-                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h3' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
-                }`}
+                className="py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 3j {renderSortIcon('h3')}
               </th>
               <th
                 onClick={() => handleSort('h6')}
-                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h6' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
-                }`}
+                className="py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 6j {renderSortIcon('h6')}
               </th>
               <th
                 onClick={() => handleSort('h12')}
-                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h12' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
-                }`}
+                className="py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 12j {renderSortIcon('h12')}
               </th>
               <th
                 onClick={() => handleSort('h24')}
-                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h24' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
-                }`}
+                className="py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 24j {renderSortIcon('h24')}
               </th>
@@ -652,15 +627,15 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Changes columns (1m to 24h) */}
-                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'm1' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m1, 'm1')}</td>
-                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'm5' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m5, 'm5')}</td>
-                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'm15' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m15, 'm15')}</td>
-                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'm30' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m30, 'm30')}</td>
-                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'h1' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h1, 'h1')}</td>
-                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'h3' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h3, 'h3')}</td>
-                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'h6' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h6, 'h6')}</td>
-                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'h12' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h12, 'h12')}</td>
-                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'h24' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h24, 'h24')}</td>
+                    <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m1)}</td>
+                    <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m5)}</td>
+                    <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m15)}</td>
+                    <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m30)}</td>
+                    <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.h1)}</td>
+                    <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.h3)}</td>
+                    <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.h6)}</td>
+                    <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.h12)}</td>
+                    <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.h24)}</td>
 
                     {/* Pivot 5M Visualizer */}
                     <td className="py-1 px-1.5 text-center">
