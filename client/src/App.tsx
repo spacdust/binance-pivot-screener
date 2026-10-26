@@ -11,6 +11,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 const initialFilters: FilterState = {
   searchQuery: '',
   selectedTimeframe: 'h24',
+  topMoverCategory: 'ALL',
   maxPercent: 5,
   enablePercentFilter: false,
   filterMode: 'absolute_below',
@@ -41,7 +42,21 @@ export const App: React.FC = () => {
         if (!matchesSymbol) return false;
       }
 
-      // 2. Multi-Timeframe percentage filter
+      // 2. Top Mover Category filter
+      if (filters.topMoverCategory === 'TOP_GAINERS') {
+        const changeVal = coin.changes[filters.selectedTimeframe] ?? 0;
+        if (changeVal <= 0) return false;
+      } else if (filters.topMoverCategory === 'TOP_LOSERS') {
+        const changeVal = coin.changes[filters.selectedTimeframe] ?? 0;
+        if (changeVal >= 0) return false;
+      } else if (filters.topMoverCategory === 'FLASH_MOVERS') {
+        // High rapid spike in 1m or 5m (|change| >= 1.0% in 5m or >= 0.5% in 1m)
+        const isSpike5m = Math.abs(coin.changes.m5) >= 1.0;
+        const isSpike1m = Math.abs(coin.changes.m1) >= 0.5;
+        if (!isSpike5m && !isSpike1m) return false;
+      }
+
+      // 3. Multi-Timeframe percentage filter
       if (filters.enablePercentFilter) {
         const changeVal = coin.changes[filters.selectedTimeframe] ?? 0;
         if (filters.filterMode === 'absolute_below') {
@@ -53,7 +68,7 @@ export const App: React.FC = () => {
         }
       }
 
-      // 3. Daily Pivot Point condition filter
+      // 4. Daily Pivot Point condition filter
       if (filters.pivotCondition !== 'ALL') {
         if (coin.pivotStatus.condition !== filters.pivotCondition) {
           return false;
@@ -123,6 +138,7 @@ export const App: React.FC = () => {
         <ScreenerTable
           coins={filteredCoins}
           selectedTimeframe={filters.selectedTimeframe}
+          topMoverCategory={filters.topMoverCategory}
           onSelectCoin={(coin) => setSelectedCoin(coin)}
         />
       </main>

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CoinData, SelectedTimeframe } from '../types';
+import { CoinData, SelectedTimeframe, TopMoverCategory } from '../types';
 import { PivotVisualizer } from './PivotVisualizer';
 import { ArrowUpDown, ArrowUp, ArrowDown, ExternalLink, Eye, Info } from 'lucide-react';
 
 interface ScreenerTableProps {
   coins: CoinData[];
   selectedTimeframe: SelectedTimeframe;
+  topMoverCategory?: TopMoverCategory;
   onSelectCoin: (coin: CoinData) => void;
 }
 
@@ -14,12 +15,32 @@ type SortField = 'symbol' | 'price' | 'volume24h' | 'm1' | 'm5' | 'm15' | 'm30' 
 export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   coins,
   selectedTimeframe,
+  topMoverCategory,
   onSelectCoin,
 }) => {
   const [sortField, setSortField] = useState<SortField>('volume24h');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
   const pageSize = 25;
+
+  // Respond to Top Mover Category changes
+  useEffect(() => {
+    if (!topMoverCategory || topMoverCategory === 'ALL') return;
+    if (topMoverCategory === 'TOP_GAINERS') {
+      setSortField(selectedTimeframe);
+      setSortDirection('desc');
+    } else if (topMoverCategory === 'TOP_LOSERS') {
+      setSortField(selectedTimeframe);
+      setSortDirection('asc');
+    } else if (topMoverCategory === 'FLASH_MOVERS') {
+      setSortField('m5');
+      setSortDirection('desc');
+    } else if (topMoverCategory === 'TOP_VOLUME') {
+      setSortField('volume24h');
+      setSortDirection('desc');
+    }
+    setPage(1);
+  }, [topMoverCategory, selectedTimeframe]);
 
   // Flash tracker for price changes
   const prevPricesRef = useRef<Map<string, number>>(new Map());

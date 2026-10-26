@@ -86,4 +86,25 @@ describe('Comprehensive Screener Logic & Filter Simulation', () => {
     const filterCombined = mockCoins.filter(c => Math.abs(c.changes.h24) < 5 && c.condition === 'AREA_P');
     assert.deepEqual(filterCombined.map(c => c.symbol), ['COIN_A', 'COIN_D']);
   });
+
+  test('Top Mover filter simulation (Gainers, Losers, Flash Movers)', () => {
+    const mockCoins = [
+      { symbol: 'BTC', changes: { m1: 0.1, m5: 0.3, h24: 2.5 }, volume24h: 500e6 },
+      { symbol: 'SOL', changes: { m1: 0.8, m5: 1.6, h24: 7.2 }, volume24h: 120e6 },
+      { symbol: 'DOGE', changes: { m1: -0.6, m5: -1.4, h24: -4.1 }, volume24h: 80e6 },
+      { symbol: 'PEPE', changes: { m1: -0.1, m5: -0.2, h24: -1.0 }, volume24h: 40e6 },
+    ];
+
+    // Top Gainers 24h
+    const gainers24h = mockCoins.filter(c => c.changes.h24 > 0).sort((a, b) => b.changes.h24 - a.changes.h24);
+    assert.deepEqual(gainers24h.map(c => c.symbol), ['SOL', 'BTC']);
+
+    // Top Losers 24h
+    const losers24h = mockCoins.filter(c => c.changes.h24 < 0).sort((a, b) => a.changes.h24 - b.changes.h24);
+    assert.deepEqual(losers24h.map(c => c.symbol), ['DOGE', 'PEPE']);
+
+    // Flash Movers (Spike 5m >= 1.0% or 1m >= 0.5%)
+    const flashMovers = mockCoins.filter(c => Math.abs(c.changes.m5) >= 1.0 || Math.abs(c.changes.m1) >= 0.5);
+    assert.deepEqual(flashMovers.map(c => c.symbol), ['SOL', 'DOGE']);
+  });
 });

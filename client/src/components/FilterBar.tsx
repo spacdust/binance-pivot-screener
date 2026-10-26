@@ -1,6 +1,6 @@
 import React from 'react';
-import { FilterState, PivotConditionType, SelectedTimeframe } from '../types';
-import { Search, SlidersHorizontal, X, Clock, Target, ArrowUpDown } from 'lucide-react';
+import { FilterState, PivotConditionType, SelectedTimeframe, TopMoverCategory } from '../types';
+import { Search, SlidersHorizontal, X, Clock, Target, ArrowUpDown, Flame, TrendingDown, Zap, Gem, Globe } from 'lucide-react';
 
 interface FilterBarProps {
   filters: FilterState;
@@ -8,6 +8,20 @@ interface FilterBarProps {
   onReset: () => void;
   resultCount: number;
 }
+
+const TOP_MOVER_CATEGORIES: {
+  key: TopMoverCategory;
+  label: string;
+  icon: string;
+  desc: string;
+  badgeBg: string;
+}[] = [
+  { key: 'ALL', label: 'Semua Koin', icon: '🌐', desc: 'Seluruh koin USDT aktif', badgeBg: 'hover:border-zinc-700' },
+  { key: 'TOP_GAINERS', label: 'Top Gainers', icon: '🔥', desc: 'Kenaikan persentase tertinggi', badgeBg: 'hover:border-emerald-500/50' },
+  { key: 'TOP_LOSERS', label: 'Top Losers', icon: '🔻', desc: 'Penurunan terdalam (Buy on dip)', badgeBg: 'hover:border-rose-500/50' },
+  { key: 'FLASH_MOVERS', label: 'Flash Spike', icon: '⚡', desc: 'Volatilitas kilat di 1m / 5m', badgeBg: 'hover:border-amber-500/50' },
+  { key: 'TOP_VOLUME', label: 'Top Volume', icon: '💎', desc: 'Turnover USDT 24 jam terbesar', badgeBg: 'hover:border-sky-500/50' },
+];
 
 const TIMEFRAMES: { key: SelectedTimeframe; label: string }[] = [
   { key: 'h24', label: '24j' },
@@ -75,6 +89,38 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <X className="w-3.5 h-3.5" />
             Reset Filter
           </button>
+        </div>
+      </div>
+
+      {/* Row 2: Top Movers Ala Binance */}
+      <div className="flex flex-col gap-2 pt-1">
+        <div className="flex items-center justify-between text-xs">
+          <label className="font-semibold text-zinc-300 flex items-center gap-1.5">
+            <Flame className="w-3.5 h-3.5 text-amber-400" />
+            Filter Top Movers (Ala Binance):
+          </label>
+          <span className="text-[11px] text-zinc-500 hidden sm:inline font-mono">
+            {TOP_MOVER_CATEGORIES.find((c) => c.key === filters.topMoverCategory)?.desc}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {TOP_MOVER_CATEGORIES.map((cat) => {
+            const isActive = filters.topMoverCategory === cat.key;
+            return (
+              <button
+                key={cat.key}
+                onClick={() => onFilterChange({ topMoverCategory: cat.key })}
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
+                  isActive
+                    ? 'bg-zinc-100 text-zinc-950 border-white shadow-md shadow-white/5 ring-1 ring-white/50 font-extrabold'
+                    : 'bg-zinc-950/70 text-zinc-400 border-zinc-800 hover:text-zinc-200 ' + cat.badgeBg
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

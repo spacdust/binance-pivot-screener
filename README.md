@@ -10,6 +10,12 @@ Dirancang khusus untuk memfilter pergerakan harga koin Binance secara realtime b
    - 🟢 **Memantul dari S1 ➔ Menuju P**: *Bullish Reversal* pantulan dari Support 1
    - 🚀 **Tembus R1 ➔ Menuju R2**: *Bullish Breakout* menembus Resistance 1
    - 🔻 **Tertahan di R1 ➔ Menuju P**: *Pullback* ditolak dari Resistance 1
+3. **Kategori Top Movers (Ala Binance)**:
+   - 🌐 **Semua Koin**: Seluruh koin USDT aktif
+   - 🔥 **Top Gainers**: Kenaikan persentase tertinggi (bisa per 1m, 5m, 15m, 1j, hingga 24j)
+   - 🔻 **Top Losers**: Penurunan terdalam (mencari diskon & pantulan di support S1/S2)
+   - ⚡ **Flash Movers**: Lonjakan kilat aktif di timeframe pendek (1m & 5m spike)
+   - 💎 **Top Volume**: Likuiditas & turnover USDT 24 jam terbesar
 
 ---
 

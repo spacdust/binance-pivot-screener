@@ -86,9 +86,17 @@ export interface ScreenerStats {
 
 export type SelectedTimeframe = 'h24' | 'h12' | 'h6' | 'h3' | 'h1' | 'm30' | 'm15' | 'm5' | 'm1';
 
+export type TopMoverCategory =
+  | 'ALL'
+  | 'TOP_GAINERS'
+  | 'TOP_LOSERS'
+  | 'FLASH_MOVERS'
+  | 'TOP_VOLUME';
+
 export interface FilterState {
   searchQuery: string;
   selectedTimeframe: SelectedTimeframe;
+  topMoverCategory: TopMoverCategory;
   maxPercent: number; // e.g. 5 for < 5%
   enablePercentFilter: boolean;
   filterMode: 'below' | 'above' | 'absolute_below'; // absolute_below means |change| < 5%
