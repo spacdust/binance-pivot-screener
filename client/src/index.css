@@ -4,8 +4,9 @@
 
 @layer base {
   body {
-    @apply bg-[#0b0e14] text-[#f0f3f8] font-sans antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum" 1;
+    background-color: #0b0e11;
+    color: #eaecef;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -16,56 +17,52 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Super smooth price flash animations */
-@keyframes smoothFlashGreen {
+/* Authentic Binance price tick flashes */
+@keyframes binanceTickGreen {
   0% {
-    background-color: rgba(16, 185, 129, 0.28);
-    color: #34d399;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+    background-color: rgba(14, 203, 129, 0.22);
+    color: #0ecb81;
   }
   100% {
     background-color: transparent;
     color: inherit;
-    box-shadow: none;
   }
 }
 
-@keyframes smoothFlashRed {
+@keyframes binanceTickRed {
   0% {
-    background-color: rgba(244, 63, 94, 0.28);
-    color: #fb7185;
-    box-shadow: 0 0 12px rgba(244, 63, 94, 0.2);
+    background-color: rgba(246, 70, 93, 0.22);
+    color: #f6465d;
   }
   100% {
     background-color: transparent;
     color: inherit;
-    box-shadow: none;
   }
 }
 
 .tick-flash-up {
-  animation: smoothFlashGreen 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: binanceTickGreen 0.75s ease-out forwards;
 }
 
 .tick-flash-down {
-  animation: smoothFlashRed 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: binanceTickRed 0.75s ease-out forwards;
 }
 
-/* Custom dark scrollbar */
+/* Custom Binance Dark scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b0e14;
+  background: #0b0e11;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1c2333;
-  border-radius: 9999px;
+  background: #2b313a;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2d3748;
+  background: #474d57;
 }

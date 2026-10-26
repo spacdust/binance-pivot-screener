@@ -183,8 +183,8 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
         type: 'AREA_P',
         label: 'Triple Area P (Daily, 1H, 5M di Level Pivot P)',
         badgeText: '3TF AREA P',
-        badgeStyle: 'bg-sky-500/15 text-sky-300 border-sky-400/40 shadow-sm',
-        rowHighlight: 'border-l-4 border-l-sky-400 bg-gradient-to-r from-sky-500/[0.08] via-transparent to-transparent',
+        badgeStyle: 'bg-[#f0b90b]/10 text-[#f0b90b] border border-[#f0b90b]/30 rounded-xs',
+        rowHighlight: 'border-l-2 border-l-[#f0b90b] bg-[#f0b90b]/[0.03]',
         visualizerRing: ''
       };
     }
@@ -196,8 +196,8 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
         type: 'OTHER',
         label: 'Triple S1-P (Pantul Reversal di Daily, 1H, 5M)',
         badgeText: '3TF S1-P',
-        badgeStyle: 'bg-teal-500/15 text-teal-300 border-teal-400/40 shadow-sm',
-        rowHighlight: 'border-l-4 border-l-teal-400 bg-gradient-to-r from-teal-500/[0.08] via-transparent to-transparent',
+        badgeStyle: 'bg-[#0ecb81]/10 text-[#0ecb81] border border-[#0ecb81]/30 rounded-xs',
+        rowHighlight: 'border-l-2 border-l-[#0ecb81] bg-[#0ecb81]/[0.03]',
         visualizerRing: ''
       };
     }
@@ -209,44 +209,34 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
         type: 'OTHER',
         label: 'Triple R1-P (Tolak Pullback di Daily, 1H, 5M)',
         badgeText: '3TF R1-P',
-        badgeStyle: 'bg-amber-500/15 text-amber-300 border-amber-400/40 shadow-sm',
-        rowHighlight: 'border-l-4 border-l-amber-400 bg-gradient-to-r from-amber-500/[0.08] via-transparent to-transparent',
+        badgeStyle: 'bg-[#f0b90b]/10 text-[#f0b90b] border border-[#f0b90b]/30 rounded-xs',
+        rowHighlight: 'border-l-2 border-l-[#f0b90b] bg-[#f0b90b]/[0.03]',
         visualizerRing: ''
       };
     }
 
     if (isBullishCondition(dCond)) {
-      const isExtreme = ['R2_TO_R3', 'R3_TO_R4', 'ABOVE_R4'].includes(dCond);
       return {
         hasConfluence: true,
         isExact: true,
         type: 'BULLISH',
         label: `Triple Bullish Breakout (${getConditionLabel(dCond)})`,
         badgeText: `3TF ${code}`,
-        badgeStyle: isExtreme
-          ? 'bg-purple-500/15 text-purple-300 border-purple-400/40 shadow-sm'
-          : 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40 shadow-sm',
-        rowHighlight: isExtreme
-          ? 'border-l-4 border-l-purple-400 bg-gradient-to-r from-purple-500/[0.08] via-transparent to-transparent'
-          : 'border-l-4 border-l-emerald-400 bg-gradient-to-r from-emerald-500/[0.08] via-transparent to-transparent',
+        badgeStyle: 'bg-[#0ecb81]/10 text-[#0ecb81] border border-[#0ecb81]/30 rounded-xs',
+        rowHighlight: 'border-l-2 border-l-[#0ecb81] bg-[#0ecb81]/[0.03]',
         visualizerRing: ''
       };
     }
 
     if (isBearishCondition(dCond)) {
-      const isExtreme = ['S2_TO_S3', 'S3_TO_S4', 'BELOW_S4'].includes(dCond);
       return {
         hasConfluence: true,
         isExact: true,
         type: 'BEARISH',
         label: `Triple Bearish Breakdown (${getConditionLabel(dCond)})`,
         badgeText: `3TF ${code}`,
-        badgeStyle: isExtreme
-          ? 'bg-red-500/15 text-red-300 border-red-400/40 shadow-sm'
-          : 'bg-rose-500/15 text-rose-300 border-rose-400/40 shadow-sm',
-        rowHighlight: isExtreme
-          ? 'border-l-4 border-l-red-400 bg-gradient-to-r from-red-500/[0.08] via-transparent to-transparent'
-          : 'border-l-4 border-l-rose-400 bg-gradient-to-r from-rose-500/[0.08] via-transparent to-transparent',
+        badgeStyle: 'bg-[#f6465d]/10 text-[#f6465d] border border-[#f6465d]/30 rounded-xs',
+        rowHighlight: 'border-l-2 border-l-[#f6465d] bg-[#f6465d]/[0.03]',
         visualizerRing: ''
       };
     }
@@ -257,8 +247,8 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       type: 'OTHER',
       label: `3TF Selaras (${getConditionLabel(dCond)})`,
       badgeText: `3TF ${code}`,
-      badgeStyle: 'bg-amber-500/15 text-amber-300 border-amber-400/40 shadow-sm',
-      rowHighlight: 'border-l-4 border-l-amber-400 bg-gradient-to-r from-amber-500/[0.08] via-transparent to-transparent',
+      badgeStyle: 'bg-[#f0b90b]/10 text-[#f0b90b] border border-[#f0b90b]/30 rounded-xs',
+      rowHighlight: 'border-l-2 border-l-[#f0b90b] bg-[#f0b90b]/[0.03]',
       visualizerRing: ''
     };
   }
@@ -271,8 +261,8 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       type: 'BULLISH',
       label: '3TF Bullish Zone Confluence (Daily, 1H, 5M Menembus Resistance)',
       badgeText: '3TF BULLISH',
-      badgeStyle: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-sm',
-      rowHighlight: 'border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-500/[0.05] via-transparent to-transparent',
+      badgeStyle: 'bg-[#0ecb81]/10 text-[#0ecb81] border border-[#0ecb81]/30 rounded-xs',
+      rowHighlight: 'border-l-2 border-l-[#0ecb81] bg-[#0ecb81]/[0.02]',
       visualizerRing: ''
     };
   }
@@ -284,8 +274,8 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       type: 'BEARISH',
       label: '3TF Bearish Zone Confluence (Daily, 1H, 5M Menembus Support)',
       badgeText: '3TF BEARISH',
-      badgeStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-sm',
-      rowHighlight: 'border-l-4 border-l-rose-500 bg-gradient-to-r from-rose-500/[0.05] via-transparent to-transparent',
+      badgeStyle: 'bg-[#f6465d]/10 text-[#f6465d] border border-[#f6465d]/30 rounded-xs',
+      rowHighlight: 'border-l-2 border-l-[#f6465d] bg-[#f6465d]/[0.02]',
       visualizerRing: ''
     };
   }

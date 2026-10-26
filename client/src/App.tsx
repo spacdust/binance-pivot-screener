@@ -121,7 +121,7 @@ export const App: React.FC = () => {
   }, [filters]);
 
   return (
-    <div className="h-screen bg-[#0b0e14] text-zinc-100 flex flex-col font-sans overflow-hidden">
+    <div className="h-screen bg-[#0b0e11] text-[#eaecef] flex flex-col font-sans overflow-hidden">
       {/* App Header */}
       <Header
         totalCoins={coins.length}
@@ -143,16 +143,16 @@ export const App: React.FC = () => {
           confluenceCount={confluenceCount}
         />
 
-        <main className="flex-1 min-w-0 flex flex-col h-full overflow-hidden p-2 sm:p-3">
+        <main className="flex-1 min-w-0 flex flex-col h-full overflow-hidden p-1.5 sm:p-2">
           {coins.length === 0 && (
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-center flex flex-col items-center justify-center gap-2 mb-2 shrink-0">
-              <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+            <div className="bg-[#181a20] border border-[#2b313a] rounded-xs p-4 text-center flex flex-col items-center justify-center gap-2 mb-2 shrink-0">
+              <Loader2 className="w-5 h-5 text-[#f0b90b] animate-spin" />
               <div>
-                <h3 className="text-sm font-bold text-amber-300">
-                  Menghubungkan ke Binance & Sinkronisasi Pivots...
+                <h3 className="text-xs font-bold text-[#eaecef]">
+                  Menghubungkan ke Binance Live & Sinkronisasi Pivots...
                 </h3>
-                <p className="text-xs text-zinc-400 mt-0.5 max-w-lg mx-auto">
-                  Mengambil data candlestick multi-timeframe (1m - 24j) dan Daily, 1H, 5M Pivots untuk seluruh koin USDT.
+                <p className="text-[11px] text-[#848e9c] mt-0.5 max-w-lg mx-auto">
+                  Mengambil snapshot harga real-time dan Daily, 1H, 5M Pivots (S4 ➔ R4) untuk seluruh koin USDT.
                 </p>
               </div>
             </div>

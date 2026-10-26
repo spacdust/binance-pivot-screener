@@ -60,15 +60,15 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
   const s4Val = currentPivots.S4 ?? (currentPivots.S3 - (currentPivots.S2 - currentPivots.S3));
 
   const pivotLevels = [
-    { name: 'R4', label: 'Resistance 4 (Super Ceiling)', val: r4Val, color: 'text-pink-400 font-bold', bg: 'bg-pink-500/15' },
-    { name: 'R3', label: 'Resistance 3', val: currentPivots.R3, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
-    { name: 'R2', label: 'Resistance 2', val: currentPivots.R2, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { name: 'R1', label: 'Resistance 1', val: currentPivots.R1, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { name: 'P', label: 'Pivot Center', val: currentPivots.P, color: 'text-sky-400 font-bold', bg: 'bg-sky-500/15' },
-    { name: 'S1', label: 'Support 1', val: currentPivots.S1, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { name: 'S2', label: 'Support 2', val: currentPivots.S2, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-    { name: 'S3', label: 'Support 3', val: currentPivots.S3, color: 'text-red-400', bg: 'bg-red-500/10' },
-    { name: 'S4', label: 'Support 4 (Super Floor)', val: s4Val, color: 'text-red-600 font-bold', bg: 'bg-red-600/15' },
+    { name: 'R4', label: 'Resistance 4 (Super Ceiling)', val: r4Val, color: 'text-[#0ecb81] font-bold', bg: 'bg-[#0ecb81]/15' },
+    { name: 'R3', label: 'Resistance 3', val: currentPivots.R3, color: 'text-[#0ecb81]', bg: 'bg-[#0ecb81]/10' },
+    { name: 'R2', label: 'Resistance 2', val: currentPivots.R2, color: 'text-[#0ecb81]', bg: 'bg-[#0ecb81]/08' },
+    { name: 'R1', label: 'Resistance 1', val: currentPivots.R1, color: 'text-[#0ecb81]', bg: 'bg-[#0ecb81]/05' },
+    { name: 'P', label: 'Pivot Center', val: currentPivots.P, color: 'text-[#f0b90b] font-bold', bg: 'bg-[#f0b90b]/15' },
+    { name: 'S1', label: 'Support 1', val: currentPivots.S1, color: 'text-[#f6465d]', bg: 'bg-[#f6465d]/05' },
+    { name: 'S2', label: 'Support 2', val: currentPivots.S2, color: 'text-[#f6465d]', bg: 'bg-[#f6465d]/08' },
+    { name: 'S3', label: 'Support 3', val: currentPivots.S3, color: 'text-[#f6465d]', bg: 'bg-[#f6465d]/10' },
+    { name: 'S4', label: 'Support 4 (Super Floor)', val: s4Val, color: 'text-[#f6465d] font-bold', bg: 'bg-[#f6465d]/15' },
   ];
 
   const tfList = [
@@ -84,25 +84,25 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-150">
       <div
-        className="bg-[#0e121a] border border-[#1c2333] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl custom-scrollbar"
+        className="bg-[#181a20] border border-[#2b313a] rounded-sm w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl custom-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 border-b border-[#1c2333] flex items-center justify-between sticky top-0 bg-[#0e121a]/95 backdrop-blur-md z-10">
+        <div className="p-4 border-b border-[#2b313a] flex items-center justify-between sticky top-0 bg-[#181a20] z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center font-bold text-amber-400 text-sm">
+            <div className="w-8 h-8 rounded-xs bg-[#f0b90b]/10 border border-[#f0b90b]/30 flex items-center justify-center font-bold text-[#f0b90b] text-xs font-mono">
               {coin.baseAsset.slice(0, 3)}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-extrabold text-zinc-100">{symbol}</h2>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-md bg-zinc-800 text-zinc-300">
+                <h2 className="text-base font-bold text-[#eaecef]">{symbol}</h2>
+                <span className="px-1.5 py-0.2 text-[10px] font-mono rounded-xs bg-[#12151a] border border-[#2b313a] text-[#848e9c]">
                   Spot USDT
                 </span>
               </div>
-              <p className="text-xs text-zinc-400 font-mono">
+              <p className="text-[11px] text-[#848e9c] font-mono">
                 Vol 24j: ${(volume24h / 1e6).toFixed(2)}M USDT
               </p>
             </div>
@@ -113,14 +113,14 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
               href={`https://www.binance.com/id/trade/${coin.baseAsset}_USDT`}
               target="_blank"
               rel="noreferrer"
-              className="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 border border-zinc-800 transition-colors"
+              className="p-1.5 rounded-xs bg-[#12151a] hover:bg-[#22262e] text-[#848e9c] hover:text-[#eaecef] border border-[#2b313a] transition-colors"
               title="Buka di Binance"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 border border-zinc-800 transition-colors"
+              className="p-1.5 rounded-xs bg-[#12151a] hover:bg-[#22262e] text-[#848e9c] hover:text-[#eaecef] border border-[#2b313a] transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -128,30 +128,30 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-6">
+        <div className="p-4 space-y-4">
           {/* Price & Current Status Callout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-900/60 border border-zinc-800 rounded-xl p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#12151a] border border-[#2b313a] rounded-xs p-3">
             <div>
-              <span className="text-xs text-zinc-400">Harga Terakhir:</span>
-              <div className="text-2xl font-bold font-mono tabular-nums text-zinc-100 mt-0.5">
+              <span className="text-[11px] text-[#848e9c]">Harga Terakhir:</span>
+              <div className="text-xl font-bold font-mono tabular-nums text-[#eaecef] mt-0.5">
                 ${formatPrice(price)}
               </div>
-              <div className="text-xs text-zinc-400 mt-1">
+              <div className="text-[11px] text-[#848e9c] mt-1">
                 Jarak ke Pivot P ({activePivotTf.toUpperCase()}):{' '}
-                <span className={`font-mono tabular-nums font-semibold ${currentStatus.distP >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`font-mono tabular-nums font-semibold ${currentStatus.distP >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                   {currentStatus.distP > 0 ? '+' : ''}{currentStatus.distP}%
                 </span>
               </div>
             </div>
 
             <div>
-              <span className="text-xs text-zinc-400">Status Pivot ({activePivotTf.toUpperCase()}):</span>
+              <span className="text-[11px] text-[#848e9c]">Status Pivot ({activePivotTf.toUpperCase()}):</span>
               <div className="mt-1 flex items-center gap-2">
-                <span className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded-xs text-xs font-bold bg-[#f0b90b]/10 text-[#f0b90b] border border-[#f0b90b]/30">
                   {currentStatus.label}
                 </span>
               </div>
-              <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+              <p className="text-[11px] text-[#848e9c] mt-1.5 leading-relaxed">
                 {currentStatus.description}
               </p>
             </div>
@@ -159,28 +159,28 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
 
           {/* Multi-Timeframe Changes Breakdown */}
           <div>
-            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-amber-400" />
+            <h3 className="text-xs font-bold text-[#848e9c] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-[#f0b90b]" />
               Perubahan Multi-Timeframe (1m s/d 24j)
             </h3>
-            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1.5">
               {tfList.map((tf) => {
                 const isPos = tf.change >= 0;
                 return (
                   <div
                     key={tf.key}
-                    className="p-3 bg-zinc-900/80 border border-zinc-800/80 rounded-xl text-center"
+                    className="p-2 bg-[#12151a] border border-[#2b313a] rounded-xs text-center"
                   >
-                    <div className="text-[11px] text-zinc-400 font-medium">{tf.label}</div>
+                    <div className="text-[10px] text-[#848e9c] font-medium">{tf.label}</div>
                     <div
-                      className={`text-sm sm:text-base font-bold font-mono tabular-nums mt-1 ${
-                        isPos ? 'text-emerald-400' : 'text-rose-400'
+                      className={`text-xs sm:text-sm font-bold font-mono tabular-nums mt-0.5 ${
+                        isPos ? 'text-[#0ecb81]' : 'text-[#f6465d]'
                       }`}
                     >
                       {isPos ? '+' : ''}{tf.change}%
                     </div>
                     {tf.open && (
-                      <div className="text-[10px] text-zinc-500 font-mono tabular-nums mt-0.5 truncate">
+                      <div className="text-[9px] text-[#474d57] font-mono tabular-nums mt-0.5 truncate">
                         ${formatPrice(tf.open)}
                       </div>
                     )}
@@ -192,40 +192,40 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
 
           {/* Multi-Timeframe Pivot Points Table */}
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
               <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-sky-400" />
-                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                <Target className="w-3.5 h-3.5 text-[#f0b90b]" />
+                <h3 className="text-xs font-bold text-[#eaecef] uppercase tracking-wider">
                   Level Pivot Points (S4 ➔ R4)
                 </h3>
                 {/* Timeframe tabs: Daily, 1H, 5M */}
-                <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 ml-2">
+                <div className="flex items-center bg-[#12151a] border border-[#2b313a] rounded-xs p-0.5 ml-2">
                   <button
                     onClick={() => setActivePivotTf('daily')}
-                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                    className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
                       activePivotTf === 'daily'
-                        ? 'bg-amber-500 text-zinc-950 font-bold'
-                        : 'text-zinc-400 hover:text-zinc-200'
+                        ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                        : 'text-[#848e9c] hover:text-[#eaecef]'
                     }`}
                   >
                     Daily
                   </button>
                   <button
                     onClick={() => setActivePivotTf('1h')}
-                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                    className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
                       activePivotTf === '1h'
-                        ? 'bg-amber-500 text-zinc-950 font-bold'
-                        : 'text-zinc-400 hover:text-zinc-200'
+                        ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                        : 'text-[#848e9c] hover:text-[#eaecef]'
                     }`}
                   >
                     1 Jam
                   </button>
                   <button
                     onClick={() => setActivePivotTf('5m')}
-                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                    className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
                       activePivotTf === '5m'
-                        ? 'bg-amber-500 text-zinc-950 font-bold'
-                        : 'text-zinc-400 hover:text-zinc-200'
+                        ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                        : 'text-[#848e9c] hover:text-[#eaecef]'
                     }`}
                   >
                     5 Menit
@@ -233,35 +233,35 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
                 </div>
               </div>
 
-              <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
+              <span className="text-[10px] text-[#848e9c] font-mono tabular-nums">
                 Basis Candle: H: ${formatPrice(currentPivots.H)} | L: ${formatPrice(currentPivots.L)} | C: ${formatPrice(currentPivots.C)}
               </span>
             </div>
 
-            <div className="border border-zinc-800 rounded-xl overflow-hidden divide-y divide-zinc-800/80">
+            <div className="border border-[#2b313a] rounded-xs overflow-hidden divide-y divide-[#22262e]">
               {pivotLevels.map((lvl) => {
                 const isClosest = Math.abs(price - lvl.val) / lvl.val < 0.005;
                 return (
                   <div
                     key={lvl.name}
-                    className={`flex items-center justify-between px-4 py-2.5 text-xs transition-colors ${lvl.bg} ${
-                      isClosest ? 'ring-1 ring-white/20 font-bold' : ''
+                    className={`flex items-center justify-between px-3 py-2 text-xs transition-colors ${lvl.bg} ${
+                      isClosest ? 'ring-1 ring-white/30 font-bold' : ''
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <span className={`w-8 font-mono font-bold ${lvl.color}`}>
                         {lvl.name}
                       </span>
-                      <span className="text-zinc-300">{lvl.label}</span>
+                      <span className="text-[#eaecef]">{lvl.label}</span>
                       {isClosest && (
-                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-white text-zinc-950 font-bold">
+                        <span className="px-1.5 py-0.2 rounded-xs text-[9px] bg-white text-[#181a20] font-bold">
                           DEKAT
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-6">
-                      <span className="font-mono tabular-nums text-zinc-100 font-medium">
+                    <div className="flex items-center gap-5">
+                      <span className="font-mono tabular-nums text-[#eaecef] font-medium">
                         ${formatPrice(lvl.val)}
                       </span>
                       <span
@@ -280,11 +280,11 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-zinc-800 bg-zinc-950/80 flex items-center justify-between text-xs text-zinc-500">
+        <div className="p-3 border-t border-[#2b313a] bg-[#181a20] flex items-center justify-between text-xs text-[#848e9c]">
           <span>Formula Classic Standard Pivot Point (H+L+C)/3</span>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium transition-colors"
+            className="px-3 py-1 rounded-xs bg-[#22262e] hover:bg-[#2b313a] border border-[#2b313a] text-[#eaecef] font-medium transition-colors"
           >
             Tutup
           </button>

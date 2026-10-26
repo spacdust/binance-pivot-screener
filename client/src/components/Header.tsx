@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, RefreshCw, Zap, Radio, BarChart2 } from 'lucide-react';
+import { Activity, RefreshCw } from 'lucide-react';
 
 interface HeaderProps {
   totalCoins: number;
@@ -19,67 +19,72 @@ export const Header: React.FC<HeaderProps> = ({
     : '--:--:--';
 
   return (
-    <header className="border-b border-[#1c2333] bg-[#0b0e14]/90 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-6 py-2.5">
-      <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        {/* Logo and Brand */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/15 border border-amber-300/30">
-            <BarChart2 className="w-5 h-5 text-zinc-950 stroke-[2.4]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-extrabold text-lg text-zinc-100 tracking-tight flex items-center gap-1.5 font-sans">
-                Binance Coin Screener
-              </h1>
-              <span className="px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/25 rounded-md font-mono">
-                PRO PIVOT & MOMENTUM
-              </span>
-            </div>
-            <p className="text-xs text-zinc-400 tracking-normal">
-              Multi-Timeframe Momentum (1m - 24j) & Multi-Timeframe Pivots 5M, 1H, Daily (S4 ➔ R4)
-            </p>
-          </div>
+    <header className="h-[48px] border-b border-[#2b313a] bg-[#181a20] sticky top-0 z-30 px-3 sm:px-4 flex items-center justify-between shrink-0 select-none">
+      {/* Brand & Market Identity */}
+      <div className="flex items-center gap-3">
+        {/* Authentic Binance Diamond Mark */}
+        <div className="flex items-center justify-center w-7 h-7 rounded-xs bg-[#f0b90b]/10 border border-[#f0b90b]/30">
+          <svg className="w-4 h-4 text-[#f0b90b]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2.5L7.5 7L12 11.5L16.5 7L12 2.5Z" />
+            <path d="M2.5 12L7 7.5L11.5 12L7 16.5L2.5 12Z" />
+            <path d="M12 12.5L7.5 17L12 21.5L16.5 17L12 12.5Z" />
+            <path d="M16.5 7.5L21.5 12L16.5 16.5L12.5 12.5L16.5 7.5Z" />
+            <path d="M12 8.5L8.5 12L12 15.5L15.5 12L12 8.5Z" />
+          </svg>
         </div>
 
-        {/* Live Status and Actions */}
-        <div className="flex items-center gap-2.5 self-end sm:self-auto">
-          {/* Status Badge */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0e121a] border border-[#1c2333] text-xs shadow-inner">
-            <span className="relative flex h-2 w-2">
-              {isConnected && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              )}
-              <span
-                className={`relative inline-flex rounded-full h-2 w-2 ${
-                  isConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-rose-500'
-                }`}
-              ></span>
-            </span>
-            <span className="text-zinc-200 font-medium">
-              {isConnected ? 'Binance Live WS' : 'Connecting...'}
-            </span>
-            <span className="text-zinc-500 text-[11px] font-mono tabular-nums border-l border-[#1c2333] pl-2">
-              {formattedTime}
-            </span>
-          </div>
-
-          {/* Active pairs pill */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0e121a] border border-[#1c2333] text-xs text-zinc-300">
-            <Activity className="w-3.5 h-3.5 text-amber-400" />
-            <span>
-              <strong className="text-zinc-100 font-mono tabular-nums">{totalCoins}</strong> Pasang USDT
-            </span>
-          </div>
-
-          {/* Refresh button */}
-          <button
-            onClick={onRefresh}
-            title="Refresh Snapshot"
-            className="p-2 rounded-lg bg-[#0e121a] hover:bg-zinc-800 border border-[#1c2333] text-zinc-400 hover:text-zinc-100 transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-sm tracking-tight text-[#eaecef]">
+            BINANCE SCREENER
+          </span>
+          <span className="px-1.5 py-0.2 text-[10px] font-mono font-medium uppercase border border-[#f0b90b]/40 text-[#f0b90b] bg-[#f0b90b]/10 rounded-xs">
+            PRO PIVOT
+          </span>
         </div>
+
+        <span className="hidden lg:inline text-[11px] text-[#848e9c] border-l border-[#2b313a] pl-2.5">
+          Multi-Timeframe Momentum (1m - 24j) & Pivots (5M, 1H, Daily)
+        </span>
+      </div>
+
+      {/* Live Controls & Diagnostics */}
+      <div className="flex items-center gap-2">
+        {/* Live WS Status */}
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-xs bg-[#12151a] border border-[#2b313a] text-xs">
+          <span className="relative flex h-2 w-2">
+            {isConnected && (
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0ecb81] opacity-75"></span>
+            )}
+            <span
+              className={`relative inline-flex rounded-full h-2 w-2 ${
+                isConnected ? 'bg-[#0ecb81]' : 'bg-[#f6465d]'
+              }`}
+            />
+          </span>
+          <span className="text-[#eaecef] text-xs font-medium">
+            {isConnected ? 'Binance Live' : 'Connecting...'}
+          </span>
+          <span className="text-[#848e9c] text-[11px] font-mono tabular-nums border-l border-[#2b313a] pl-2">
+            {formattedTime}
+          </span>
+        </div>
+
+        {/* Total USDT Pairs */}
+        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xs bg-[#12151a] border border-[#2b313a] text-xs text-[#848e9c]">
+          <Activity className="w-3.5 h-3.5 text-[#f0b90b]" />
+          <span>
+            <strong className="text-[#eaecef] font-mono tabular-nums">{totalCoins}</strong> Pasang USDT
+          </span>
+        </div>
+
+        {/* Snapshot Refresh Button */}
+        <button
+          onClick={onRefresh}
+          title="Refresh Data"
+          className="p-1.5 rounded-xs bg-[#12151a] hover:bg-[#22262e] border border-[#2b313a] text-[#848e9c] hover:text-[#eaecef] transition-colors"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+        </button>
       </div>
     </header>
   );
