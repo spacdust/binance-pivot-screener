@@ -1,8 +1,10 @@
 import WebSocket from 'ws';
+import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { calculateDailyPivots, classifyPivotCondition } from './pivot.js';
+import { dohFetch, resolveHostViaDoH } from './dohFetch.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,7 +60,7 @@ export class BinanceService {
   async fetchAssetLogos() {
     try {
       console.log('[BinanceService] Fetching official Binance asset logos...');
-      const res = await fetch('https://www.binance.com/bapi/asset/v2/public/asset/asset/get-all-asset');
+      const res = await dohFetch('https://www.binance.com/bapi/asset/v2/public/asset/asset/get-all-asset', { timeout: 5000 });
       if (res.ok) {
         const json = await res.json();
         if (json && Array.isArray(json.data)) {
@@ -71,7 +73,7 @@ export class BinanceService {
         }
       }
     } catch (err) {
-      console.warn('[BinanceService] Failed to fetch Binance asset logos:', err.message);
+      console.warn('[BinanceService] Failed to fetch Binance asset logos via DoH:', err.message);
     }
   }
 
@@ -91,7 +93,7 @@ export class BinanceService {
     }
   }
 
-  // Resilient fetch with automatic multi-mirror failover
+  // Resilient fetch with automatic multi-mirror failover and built-in DoH bypass
   async safeFetch(path) {
     const cleanPath = path.startsWith('http')
       ? path.replace(/^https?:\/\/[^/]+(\/api\/v3|\/fapi\/v1)?/, '')
@@ -104,11 +106,9 @@ export class BinanceService {
       const mirrorIndex = (startIndex + i) % REST_MIRRORS.length;
       const base = REST_MIRRORS[mirrorIndex];
       const url = `${base}${cleanPath}`;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
 
       try {
-        const res = await fetch(url, { signal: controller.signal });
+        const res = await dohFetch(url, { timeout: 6000 });
         if (res.ok) {
           if (mirrorIndex !== this.activeRestMirrorIndex) {
             console.log(`[BinanceService] Switched active REST mirror to: ${base}`);
@@ -119,8 +119,6 @@ export class BinanceService {
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       } catch (err) {
         lastError = err;
-      } finally {
-        clearTimeout(timeout);
       }
     }
 
@@ -368,7 +366,7 @@ export class BinanceService {
   }
 
   // Connect to Binance WebSocket for 1-second live ticker updates
-  connectWebSocket() {
+  async connectWebSocket() {
     if (this.ws) {
       try {
         this.ws.terminate();
@@ -377,7 +375,27 @@ export class BinanceService {
 
     const wsUrl = WS_MIRRORS[this.activeWsMirrorIndex];
     console.log(`[BinanceService] Connecting to Binance WebSocket (${wsUrl})...`);
-    this.ws = new WebSocket(wsUrl);
+
+    try {
+      const urlObj = new URL(wsUrl);
+      const hostname = urlObj.hostname;
+      const dohIp = await resolveHostViaDoH(hostname);
+      const connectHost = dohIp || hostname;
+      const actualWsUrl = `wss://${connectHost}${urlObj.pathname}${urlObj.search}`;
+      const agent = new https.Agent({ servername: hostname, keepAlive: true });
+
+      this.ws = new WebSocket(actualWsUrl, {
+        agent,
+        servername: hostname,
+        headers: {
+          Host: hostname,
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+    } catch (err) {
+      console.warn(`[BinanceService] Failed DoH WebSocket init, falling back to direct URL:`, err.message);
+      this.ws = new WebSocket(wsUrl);
+    }
 
     this.ws.on('open', () => {
       console.log(`[BinanceService] Connected to Binance MiniTicker WebSocket! (${wsUrl})`);

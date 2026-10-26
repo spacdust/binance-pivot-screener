@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { WebSocketServer, WebSocket } from 'ws';
 import { binanceService } from './services/binance.js';
+import { dohFetch } from './services/dohFetch.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -114,7 +115,8 @@ app.get('/api/logo/:symbol', async (req, res) => {
   }
 
   try {
-    const upstreamRes = await fetch(logoUrl, {
+    const upstreamRes = await dohFetch(logoUrl, {
+      timeout: 6000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
       }
@@ -125,7 +127,7 @@ app.get('/api/logo/:symbol', async (req, res) => {
     }
 
     const contentType = upstreamRes.headers.get('content-type') || 'image/png';
-    const buffer = Buffer.from(await upstreamRes.arrayBuffer());
+    const buffer = await upstreamRes.buffer();
 
     logoBufferCache.set(rawSymbol, { buffer, contentType });
     logoBufferCache.set(cleanSymbol, { buffer, contentType });
