@@ -65,9 +65,59 @@ app.get('/api/coins/:symbol', (req, res) => {
   res.json(coin);
 });
 
+// In-memory image buffer cache for official Binance asset logos
+const logoBufferCache = new Map();
+
 // Official Binance asset logos map
 app.get('/api/asset-logos', (req, res) => {
   res.json(Object.fromEntries(binanceService.assetLogos));
+});
+
+// Official Binance asset logo proxy (zero CORS, zero hotlink referer issues, RAM-cached)
+app.get('/api/logo/:symbol', async (req, res) => {
+  const symbol = req.params.symbol.toUpperCase().replace(/USDT$/, '');
+
+  // 1. Return from RAM cache if already downloaded
+  if (logoBufferCache.has(symbol)) {
+    const cached = logoBufferCache.get(symbol);
+    res.setHeader('Content-Type', cached.contentType);
+    res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    return res.send(cached.buffer);
+  }
+
+  // 2. Lookup logo URL
+  let logoUrl = binanceService.assetLogos.get(symbol);
+  if (!logoUrl && binanceService.assetLogos.size === 0) {
+    await binanceService.fetchAssetLogos();
+    logoUrl = binanceService.assetLogos.get(symbol);
+  }
+
+  if (!logoUrl) {
+    return res.status(404).send('Logo not found');
+  }
+
+  try {
+    const upstreamRes = await fetch(logoUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+      }
+    });
+
+    if (!upstreamRes.ok) {
+      return res.status(upstreamRes.status).send('Upstream CDN error');
+    }
+
+    const contentType = upstreamRes.headers.get('content-type') || 'image/png';
+    const buffer = Buffer.from(await upstreamRes.arrayBuffer());
+
+    logoBufferCache.set(symbol, { buffer, contentType });
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    res.send(buffer);
+  } catch (err) {
+    console.warn(`[LogoProxy] Failed to fetch upstream logo for ${symbol}:`, err.message);
+    res.status(502).send('Error fetching upstream logo');
+  }
 });
 
 // Create HTTP and WebSocket server

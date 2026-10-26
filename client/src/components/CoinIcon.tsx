@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Shared global cache of official Binance asset logos: symbol (upper) -> logoUrl
+// In-memory client cache of official Binance logos: symbol (upper) -> logoUrl
 const binanceLogoCache: Map<string, string> = new Map();
 let isFetchingLogos = false;
 const logoListeners = new Set<() => void>();
@@ -14,7 +14,7 @@ export async function preloadBinanceLogos() {
   isFetchingLogos = true;
 
   try {
-    // 1. Try our local backend API cache
+    // 1. Try our local backend API cache first
     const res = await fetch('/api/asset-logos').catch(() => null);
     if (res && res.ok) {
       const data = await res.json();
@@ -27,7 +27,7 @@ export async function preloadBinanceLogos() {
       }
     }
 
-    // 2. If backend didn't have entries yet, fetch direct Binance public CDN API
+    // 2. Fallback to direct Binance public BAPI if backend hadn't finished initial sync
     if (binanceLogoCache.size === 0) {
       const bres = await fetch('https://www.binance.com/bapi/asset/v2/public/asset/asset/get-all-asset');
       if (bres.ok) {
@@ -42,7 +42,7 @@ export async function preloadBinanceLogos() {
       }
     }
   } catch (err) {
-    // Fallbacks handled gracefully
+    // Graceful fallback
   } finally {
     isFetchingLogos = false;
     logoListeners.forEach((fn) => fn());
@@ -85,21 +85,21 @@ export const CoinIcon: React.FC<CoinIconProps> = ({
     setSourceIndex(0);
   }, [cleanSymbol, logoUrl]);
 
-  // Construct priority source list
-  const sources: string[] = [];
-  if (logoUrl) {
+  // Construct priority source list:
+  // 1. Local backend proxy /api/logo/:symbol (100% bypasses referer/hotlink blocks, instant RAM cache)
+  // 2. Direct official Binance logoUrl with referrerpolicy="no-referrer"
+  // 3. Preloaded official Binance CDN URL
+  const sources: string[] = [
+    `/api/logo/${cleanSymbol}`
+  ];
+
+  if (logoUrl && !sources.includes(logoUrl)) {
     sources.push(logoUrl);
   }
 
   const cachedOfficialUrl = binanceLogoCache.get(cleanSymbol);
   if (cachedOfficialUrl && !sources.includes(cachedOfficialUrl)) {
     sources.push(cachedOfficialUrl);
-  }
-
-  // Coincap CDN fallback for older common coins
-  const coincapUrl = `https://assets.coincap.io/assets/icons/${cleanSymbol.toLowerCase()}@2x.png`;
-  if (!sources.includes(coincapUrl)) {
-    sources.push(coincapUrl);
   }
 
   const currentSrc = sources[sourceIndex];
@@ -128,6 +128,7 @@ export const CoinIcon: React.FC<CoinIconProps> = ({
       src={currentSrc}
       alt={cleanSymbol}
       loading="lazy"
+      referrerPolicy="no-referrer"
       onError={() => setSourceIndex((i) => i + 1)}
       className={`${sizeClasses} shrink-0 rounded-full object-cover bg-[#12151a] border border-[#2b313a]/60 select-none shadow-xs ${className}`}
     />
