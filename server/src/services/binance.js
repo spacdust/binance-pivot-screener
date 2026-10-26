@@ -171,7 +171,7 @@ export class BinanceService {
         this.safeFetch(`/klines?symbol=${symbol}&interval=1M&limit=2`),
         this.safeFetch(`/klines?symbol=${symbol}&interval=1h&limit=25`),
         this.safeFetch(`/klines?symbol=${symbol}&interval=5m&limit=2`),
-        this.safeFetch(`/klines?symbol=${symbol}&interval=1m&limit=35`)
+        this.safeFetch(`/klines?symbol=${symbol}&interval=1m&limit=65`)
       ]);
 
       if (!dailyKlines || dailyKlines.length < 2) {
@@ -249,17 +249,39 @@ export class BinanceService {
         }
       }
 
+      // Multi-timeframe minute baselines (1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55m)
       let open1m = null;
       let open5m = null;
+      let open10m = null;
       let open15m = null;
+      let open20m = null;
+      let open25m = null;
       let open30m = null;
+      let open35m = null;
+      let open40m = null;
+      let open45m = null;
+      let open50m = null;
+      let open55m = null;
 
       if (minuteKlines && minuteKlines.length >= 2) {
         const mLen = minuteKlines.length;
-        open1m = parseFloat(minuteKlines[Math.max(0, mLen - 2)][1]);
-        open5m = parseFloat(minuteKlines[Math.max(0, mLen - 6)][1]);
-        open15m = parseFloat(minuteKlines[Math.max(0, mLen - 16)][1]);
-        open30m = parseFloat(minuteKlines[Math.max(0, mLen - 31)][1]);
+        const getOpen = (min) => {
+          const idx = mLen - 1 - min;
+          return idx >= 0 ? parseFloat(minuteKlines[idx][1]) : null;
+        };
+
+        open1m = getOpen(1);
+        open5m = getOpen(5);
+        open10m = getOpen(10);
+        open15m = getOpen(15);
+        open20m = getOpen(20);
+        open25m = getOpen(25);
+        open30m = getOpen(30);
+        open35m = getOpen(35);
+        open40m = getOpen(40);
+        open45m = getOpen(45);
+        open50m = getOpen(50);
+        open55m = getOpen(55);
       }
 
       return {
@@ -271,8 +293,16 @@ export class BinanceService {
         baselines: {
           open1m,
           open5m,
+          open10m,
           open15m,
+          open20m,
+          open25m,
           open30m,
+          open35m,
+          open40m,
+          open45m,
+          open50m,
+          open55m,
           open1h,
           open3h,
           open6h,
@@ -335,6 +365,11 @@ export class BinanceService {
               ? classifyPivotCondition(initialPrice, klineData.pivots5m, momentum5m)
               : null;
 
+            const calcPct = (openVal, def = 0) => {
+              if (!openVal) return def;
+              return Number((((initialPrice - openVal) / openVal) * 100).toFixed(2));
+            };
+
             const baseAsset = symbol.replace('USDT', '');
             const cleanBase = baseAsset.replace(/^1000+/, '');
             const logoUrl = this.assetLogos.get(baseAsset) || this.assetLogos.get(cleanBase) || null;
@@ -359,15 +394,23 @@ export class BinanceService {
               pivotStatus1h: pivotClassification1h,
               pivotStatus5m: pivotClassification5m,
               changes: {
-                m1: klineData.baselines.open1m ? Number((((initialPrice - klineData.baselines.open1m) / klineData.baselines.open1m) * 100).toFixed(2)) : 0,
-                m5: klineData.baselines.open5m ? Number((((initialPrice - klineData.baselines.open5m) / klineData.baselines.open5m) * 100).toFixed(2)) : 0,
-                m15: klineData.baselines.open15m ? Number((((initialPrice - klineData.baselines.open15m) / klineData.baselines.open15m) * 100).toFixed(2)) : 0,
-                m30: klineData.baselines.open30m ? Number((((initialPrice - klineData.baselines.open30m) / klineData.baselines.open30m) * 100).toFixed(2)) : 0,
+                m1: calcPct(klineData.baselines.open1m),
+                m5: calcPct(klineData.baselines.open5m),
+                m10: calcPct(klineData.baselines.open10m),
+                m15: calcPct(klineData.baselines.open15m),
+                m20: calcPct(klineData.baselines.open20m),
+                m25: calcPct(klineData.baselines.open25m),
+                m30: calcPct(klineData.baselines.open30m),
+                m35: calcPct(klineData.baselines.open35m),
+                m40: calcPct(klineData.baselines.open40m),
+                m45: calcPct(klineData.baselines.open45m),
+                m50: calcPct(klineData.baselines.open50m),
+                m55: calcPct(klineData.baselines.open55m),
                 h1: Number(momentum1h.toFixed(2)),
-                h3: klineData.baselines.open3h ? Number((((initialPrice - klineData.baselines.open3h) / klineData.baselines.open3h) * 100).toFixed(2)) : 0,
-                h6: klineData.baselines.open6h ? Number((((initialPrice - klineData.baselines.open6h) / klineData.baselines.open6h) * 100).toFixed(2)) : 0,
-                h12: klineData.baselines.open12h ? Number((((initialPrice - klineData.baselines.open12h) / klineData.baselines.open12h) * 100).toFixed(2)) : 0,
-                h24: klineData.baselines.open24h ? Number((((initialPrice - klineData.baselines.open24h) / klineData.baselines.open24h) * 100).toFixed(2)) : 0,
+                h3: calcPct(klineData.baselines.open3h),
+                h6: calcPct(klineData.baselines.open6h),
+                h12: calcPct(klineData.baselines.open12h),
+                h24: calcPct(klineData.baselines.open24h),
               },
               lastUpdated: Date.now()
             });
@@ -461,17 +504,33 @@ export class BinanceService {
 
           const currentPrice = parseFloat(closePrice);
           const vol = parseFloat(quoteVolume);
-          const { open1m, open5m, open15m, open30m, open1h, open3h, open6h, open12h, open24h } = coin.baselines;
+          const {
+            open1m, open5m, open10m, open15m, open20m, open25m, open30m, open35m, open40m, open45m, open50m, open55m,
+            open1h, open3h, open6h, open12h, open24h
+          } = coin.baselines;
 
-          const change1m = open1m ? ((currentPrice - open1m) / open1m) * 100 : (coin.changes?.m1 || 0);
-          const change5m = open5m ? ((currentPrice - open5m) / open5m) * 100 : (coin.changes?.m5 || 0);
-          const change15m = open15m ? ((currentPrice - open15m) / open15m) * 100 : (coin.changes?.m15 || 0);
-          const change30m = open30m ? ((currentPrice - open30m) / open30m) * 100 : (coin.changes?.m30 || 0);
-          const change1h = open1h ? ((currentPrice - open1h) / open1h) * 100 : coin.changes.h1;
-          const change3h = open3h ? ((currentPrice - open3h) / open3h) * 100 : coin.changes.h3;
-          const change6h = open6h ? ((currentPrice - open6h) / open6h) * 100 : coin.changes.h6;
-          const change12h = open12h ? ((currentPrice - open12h) / open12h) * 100 : coin.changes.h12;
-          const change24h = open24h ? ((currentPrice - open24h) / open24h) * 100 : coin.changes.h24;
+          const calcChange = (openVal, oldVal = 0) => {
+            if (!openVal) return oldVal;
+            return ((currentPrice - openVal) / openVal) * 100;
+          };
+
+          const change1m = calcChange(open1m, coin.changes?.m1 || 0);
+          const change5m = calcChange(open5m, coin.changes?.m5 || 0);
+          const change10m = calcChange(open10m, coin.changes?.m10 || 0);
+          const change15m = calcChange(open15m, coin.changes?.m15 || 0);
+          const change20m = calcChange(open20m, coin.changes?.m20 || 0);
+          const change25m = calcChange(open25m, coin.changes?.m25 || 0);
+          const change30m = calcChange(open30m, coin.changes?.m30 || 0);
+          const change35m = calcChange(open35m, coin.changes?.m35 || 0);
+          const change40m = calcChange(open40m, coin.changes?.m40 || 0);
+          const change45m = calcChange(open45m, coin.changes?.m45 || 0);
+          const change50m = calcChange(open50m, coin.changes?.m50 || 0);
+          const change55m = calcChange(open55m, coin.changes?.m55 || 0);
+          const change1h = calcChange(open1h, coin.changes?.h1 || 0);
+          const change3h = calcChange(open3h, coin.changes?.h3 || 0);
+          const change6h = calcChange(open6h, coin.changes?.h6 || 0);
+          const change12h = calcChange(open12h, coin.changes?.h12 || 0);
+          const change24h = calcChange(open24h, coin.changes?.h24 || 0);
 
           const pivotStatus = classifyPivotCondition(currentPrice, coin.pivots, change1h);
           const pivotStatusWeekly = coin.pivotsWeekly ? classifyPivotCondition(currentPrice, coin.pivotsWeekly, change1h) : pivotStatus;
@@ -485,8 +544,16 @@ export class BinanceService {
           coin.changes = {
             m1: Number(change1m.toFixed(2)),
             m5: Number(change5m.toFixed(2)),
+            m10: Number(change10m.toFixed(2)),
             m15: Number(change15m.toFixed(2)),
+            m20: Number(change20m.toFixed(2)),
+            m25: Number(change25m.toFixed(2)),
             m30: Number(change30m.toFixed(2)),
+            m35: Number(change35m.toFixed(2)),
+            m40: Number(change40m.toFixed(2)),
+            m45: Number(change45m.toFixed(2)),
+            m50: Number(change50m.toFixed(2)),
+            m55: Number(change55m.toFixed(2)),
             h1: Number(change1h.toFixed(2)),
             h3: Number(change3h.toFixed(2)),
             h6: Number(change6h.toFixed(2)),

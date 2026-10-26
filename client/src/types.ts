@@ -53,8 +53,16 @@ export interface PivotStatus {
 export interface TimeframeChanges {
   m1: number;
   m5: number;
+  m10?: number;
   m15: number;
+  m20?: number;
+  m25?: number;
   m30: number;
+  m35?: number;
+  m40?: number;
+  m45?: number;
+  m50?: number;
+  m55?: number;
   h1: number;
   h3: number;
   h6: number;
@@ -79,8 +87,16 @@ export interface CoinData {
   baselines: {
     open1m: number | null;
     open5m: number | null;
+    open10m?: number | null;
     open15m: number | null;
+    open20m?: number | null;
+    open25m?: number | null;
     open30m: number | null;
+    open35m?: number | null;
+    open40m?: number | null;
+    open45m?: number | null;
+    open50m?: number | null;
+    open55m?: number | null;
     open1h: number | null;
     open3h: number | null;
     open6h: number | null;
@@ -118,7 +134,24 @@ export interface ScreenerStats {
   confluence3tf?: number;
 }
 
-export type SelectedTimeframe = 'h24' | 'h12' | 'h6' | 'h3' | 'h1' | 'm30' | 'm15' | 'm5' | 'm1';
+export type SelectedTimeframe =
+  | 'h24'
+  | 'h12'
+  | 'h6'
+  | 'h3'
+  | 'h1'
+  | 'm55'
+  | 'm50'
+  | 'm45'
+  | 'm40'
+  | 'm35'
+  | 'm30'
+  | 'm25'
+  | 'm20'
+  | 'm15'
+  | 'm10'
+  | 'm5'
+  | 'm1';
 
 export type TopMoverCategory =
   | 'ALL'
