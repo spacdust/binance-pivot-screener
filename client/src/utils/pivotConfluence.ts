@@ -80,6 +80,28 @@ export function calculateRangePercent(price: number, pivots?: Pivots | null): nu
   return Math.max(0, Math.min(100, Math.round(range)));
 }
 
+export function getPivotCode(cond?: PivotConditionType | null): string {
+  if (!cond) return '';
+  switch (cond) {
+    case 'AREA_P': return 'AREA P';
+    case 'S1_TO_P': return 'S1-P';
+    case 'R1_TO_P': return 'R1-P';
+    case 'R1_TO_R2': return 'R1-R2';
+    case 'R2_TO_R3': return 'R2-R3';
+    case 'R3_TO_R4': return 'R3-R4';
+    case 'ABOVE_R4': return '>R4';
+    case 'ABOVE_R3': return '>R3';
+    case 'ABOVE_R2': return '>R2';
+    case 'S1_TO_S2': return 'S1-S2';
+    case 'S2_TO_S3': return 'S2-S3';
+    case 'S3_TO_S4': return 'S3-S4';
+    case 'BELOW_S4': return '<S4';
+    case 'BELOW_S3': return '<S3';
+    case 'BELOW_S2': return '<S2';
+    default: return cond;
+  }
+}
+
 export function getConditionLabel(cond?: PivotConditionType | null): string {
   if (!cond) return 'Unknown';
   switch (cond) {
@@ -140,45 +162,112 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
   // 1. Exact condition match across all 3 timeframes (Daily + 1H + 5M)
   const isExact = dCond === hCond && dCond === mCond;
 
-  // 2. All 3 in AREA_P (Golden Pivot Convergence)
-  const isAllAreaP = dCond === 'AREA_P' && hCond === 'AREA_P' && mCond === 'AREA_P';
-
-  // 3. Bullish zones
+  // 2. All 3 in Bullish zones (R1 s/d >R4)
   const isBullishCondition = (c: PivotConditionType) =>
     ['R1_TO_R2', 'R2_TO_R3', 'R3_TO_R4', 'ABOVE_R4'].includes(c);
   const isAllBullish = isBullishCondition(dCond) && isBullishCondition(hCond) && isBullishCondition(mCond);
 
-  // 4. Bearish zones
+  // 3. All 3 in Bearish zones (S1 s/d <S4)
   const isBearishCondition = (c: PivotConditionType) =>
     ['S1_TO_S2', 'S2_TO_S3', 'S3_TO_S4', 'BELOW_S4'].includes(c);
   const isAllBearish = isBearishCondition(dCond) && isBearishCondition(hCond) && isBearishCondition(mCond);
 
-  if (isAllAreaP) {
+  // Priority 1: Exact condition match with specific code (e.g. 3TF S1-P, 3TF R1-P, 3TF S1-S2, 3TF AREA P)
+  if (isExact) {
+    const code = getPivotCode(dCond);
+
+    if (dCond === 'AREA_P') {
+      return {
+        hasConfluence: true,
+        isExact: true,
+        type: 'AREA_P',
+        label: 'Triple Area P (Daily, 1H, 5M di Level Pivot P)',
+        badgeText: '3TF AREA P',
+        badgeStyle: 'bg-sky-500/20 text-sky-300 border-sky-400/50 shadow-[0_0_8px_rgba(56,189,248,0.25)]',
+        rowHighlight: 'bg-sky-500/[0.08] hover:bg-sky-500/[0.13] border-l-4 border-l-sky-400',
+        visualizerRing: 'ring-1 ring-sky-500/40 bg-sky-500/[0.03] rounded-lg'
+      };
+    }
+
+    if (dCond === 'S1_TO_P') {
+      return {
+        hasConfluence: true,
+        isExact: true,
+        type: 'OTHER',
+        label: 'Triple S1-P (Pantul Reversal di Daily, 1H, 5M)',
+        badgeText: '3TF S1-P',
+        badgeStyle: 'bg-teal-500/20 text-teal-300 border-teal-400/50 shadow-[0_0_8px_rgba(45,212,191,0.25)]',
+        rowHighlight: 'bg-teal-500/[0.08] hover:bg-teal-500/[0.13] border-l-4 border-l-teal-400',
+        visualizerRing: 'ring-1 ring-teal-500/40 bg-teal-500/[0.03] rounded-lg'
+      };
+    }
+
+    if (dCond === 'R1_TO_P') {
+      return {
+        hasConfluence: true,
+        isExact: true,
+        type: 'OTHER',
+        label: 'Triple R1-P (Tolak Pullback di Daily, 1H, 5M)',
+        badgeText: '3TF R1-P',
+        badgeStyle: 'bg-amber-500/20 text-amber-300 border-amber-400/50 shadow-[0_0_8px_rgba(251,191,36,0.25)]',
+        rowHighlight: 'bg-amber-500/[0.08] hover:bg-amber-500/[0.13] border-l-4 border-l-amber-400',
+        visualizerRing: 'ring-1 ring-amber-500/40 bg-amber-500/[0.03] rounded-lg'
+      };
+    }
+
+    if (isBullishCondition(dCond)) {
+      const isExtreme = ['R2_TO_R3', 'R3_TO_R4', 'ABOVE_R4'].includes(dCond);
+      return {
+        hasConfluence: true,
+        isExact: true,
+        type: 'BULLISH',
+        label: `Triple Bullish Breakout (${getConditionLabel(dCond)})`,
+        badgeText: `3TF ${code}`,
+        badgeStyle: isExtreme
+          ? 'bg-purple-500/20 text-purple-300 border-purple-400/50 shadow-[0_0_8px_rgba(192,132,252,0.25)]'
+          : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50 shadow-[0_0_8px_rgba(52,211,153,0.25)]',
+        rowHighlight: isExtreme
+          ? 'bg-purple-500/[0.08] hover:bg-purple-500/[0.13] border-l-4 border-l-purple-400'
+          : 'bg-emerald-500/[0.08] hover:bg-emerald-500/[0.13] border-l-4 border-l-emerald-400',
+        visualizerRing: isExtreme
+          ? 'ring-1 ring-purple-500/40 bg-purple-500/[0.03] rounded-lg'
+          : 'ring-1 ring-emerald-500/40 bg-emerald-500/[0.03] rounded-lg'
+      };
+    }
+
+    if (isBearishCondition(dCond)) {
+      const isExtreme = ['S2_TO_S3', 'S3_TO_S4', 'BELOW_S4'].includes(dCond);
+      return {
+        hasConfluence: true,
+        isExact: true,
+        type: 'BEARISH',
+        label: `Triple Bearish Breakdown (${getConditionLabel(dCond)})`,
+        badgeText: `3TF ${code}`,
+        badgeStyle: isExtreme
+          ? 'bg-red-500/20 text-red-300 border-red-400/50 shadow-[0_0_8px_rgba(248,113,113,0.25)]'
+          : 'bg-rose-500/20 text-rose-300 border-rose-400/50 shadow-[0_0_8px_rgba(251,113,133,0.25)]',
+        rowHighlight: isExtreme
+          ? 'bg-red-500/[0.08] hover:bg-red-500/[0.13] border-l-4 border-l-red-400'
+          : 'bg-rose-500/[0.08] hover:bg-rose-500/[0.13] border-l-4 border-l-rose-400',
+        visualizerRing: isExtreme
+          ? 'ring-1 ring-red-500/40 bg-red-500/[0.03] rounded-lg'
+          : 'ring-1 ring-rose-500/40 bg-rose-500/[0.03] rounded-lg'
+      };
+    }
+
     return {
       hasConfluence: true,
       isExact: true,
-      type: 'AREA_P',
-      label: 'Triple Area P (Konsolidasi Selaras di Pivot)',
-      badgeText: '3TF AREA P',
-      badgeStyle: 'bg-sky-500/20 text-sky-300 border-sky-400/50 shadow-[0_0_8px_rgba(56,189,248,0.25)]',
-      rowHighlight: 'bg-sky-500/[0.08] hover:bg-sky-500/[0.13] border-l-4 border-l-sky-400',
-      visualizerRing: 'ring-1 ring-sky-500/40 bg-sky-500/[0.03] rounded-lg'
+      type: 'OTHER',
+      label: `3TF Selaras (${getConditionLabel(dCond)})`,
+      badgeText: `3TF ${code}`,
+      badgeStyle: 'bg-amber-500/20 text-amber-300 border-amber-400/50 shadow-[0_0_8px_rgba(251,191,36,0.25)]',
+      rowHighlight: 'bg-amber-500/[0.08] hover:bg-amber-500/[0.13] border-l-4 border-l-amber-400',
+      visualizerRing: 'ring-1 ring-amber-500/40 bg-amber-500/[0.03] rounded-lg'
     };
   }
 
-  if (isExact && isBullishCondition(dCond)) {
-    return {
-      hasConfluence: true,
-      isExact: true,
-      type: 'BULLISH',
-      label: `Triple Bullish Breakout (${getConditionLabel(dCond)})`,
-      badgeText: '3TF BREAKOUT',
-      badgeStyle: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50 shadow-[0_0_8px_rgba(52,211,153,0.25)]',
-      rowHighlight: 'bg-emerald-500/[0.08] hover:bg-emerald-500/[0.13] border-l-4 border-l-emerald-400',
-      visualizerRing: 'ring-1 ring-emerald-500/40 bg-emerald-500/[0.03] rounded-lg'
-    };
-  }
-
+  // Priority 2: Zone-level Confluence (Daily, 1H, 5M all bullish or all bearish)
   if (isAllBullish) {
     return {
       hasConfluence: true,
@@ -192,19 +281,6 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
     };
   }
 
-  if (isExact && isBearishCondition(dCond)) {
-    return {
-      hasConfluence: true,
-      isExact: true,
-      type: 'BEARISH',
-      label: `Triple Bearish Breakdown (${getConditionLabel(dCond)})`,
-      badgeText: '3TF BREAKDOWN',
-      badgeStyle: 'bg-rose-500/20 text-rose-300 border-rose-400/50 shadow-[0_0_8px_rgba(251,113,133,0.25)]',
-      rowHighlight: 'bg-rose-500/[0.08] hover:bg-rose-500/[0.13] border-l-4 border-l-rose-400',
-      visualizerRing: 'ring-1 ring-rose-500/40 bg-rose-500/[0.03] rounded-lg'
-    };
-  }
-
   if (isAllBearish) {
     return {
       hasConfluence: true,
@@ -215,19 +291,6 @@ export function checkPivotConfluence(coin: CoinData): ConfluenceResult {
       badgeStyle: 'bg-rose-500/15 text-rose-400 border-rose-500/40 shadow-sm',
       rowHighlight: 'bg-rose-500/[0.05] hover:bg-rose-500/[0.10] border-l-4 border-l-rose-500',
       visualizerRing: 'ring-1 ring-rose-500/30 rounded-lg'
-    };
-  }
-
-  if (isExact) {
-    return {
-      hasConfluence: true,
-      isExact: true,
-      type: 'OTHER',
-      label: `3TF Selaras (${getConditionLabel(dCond)})`,
-      badgeText: '3TF SELARAS',
-      badgeStyle: 'bg-amber-500/20 text-amber-300 border-amber-400/50 shadow-[0_0_8px_rgba(251,191,36,0.25)]',
-      rowHighlight: 'bg-amber-500/[0.08] hover:bg-amber-500/[0.13] border-l-4 border-l-amber-400',
-      visualizerRing: 'ring-1 ring-amber-500/40 bg-amber-500/[0.03] rounded-lg'
     };
   }
 
