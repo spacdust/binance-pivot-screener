@@ -109,4 +109,18 @@ describe('Pivot Condition Classification', () => {
     assert.equal(res.condition, 'BELOW_S4');
     assert.match(res.label, /Di bawah S4/);
   });
+
+  test('correctly classifies narrow timeframe (e.g. 5M candle) without false AREA_P', () => {
+    // 5M candle with 0.2% total range: H=100.1, L=99.9, C=100.0 -> P=100.0, S1=99.9, S2=99.8, S3=99.7, S4=99.6
+    const m5Pivots = calculateDailyPivots(100.1, 99.9, 100.0);
+    
+    // Price = 99.75 (at S3/S2). Even though distP is only -0.25%, it must NOT be AREA_P!
+    const resS3 = classifyPivotCondition(99.75, m5Pivots, -0.2);
+    assert.notEqual(resS3.condition, 'AREA_P');
+    assert.equal(resS3.condition, 'S2_TO_S3');
+
+    // Price = 100.01 (within 35% of P towards R1=100.1): must be AREA_P
+    const resP = classifyPivotCondition(100.01, m5Pivots, 0);
+    assert.equal(resP.condition, 'AREA_P');
+  });
 });

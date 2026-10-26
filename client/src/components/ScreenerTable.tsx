@@ -2,7 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CoinData, SelectedTimeframe, TopMoverCategory } from '../types';
 import { PivotVisualizer } from './PivotVisualizer';
 import { ArrowUpDown, ArrowUp, ArrowDown, Eye, Info, Zap } from 'lucide-react';
-import { checkPivotConfluence } from '../utils/pivotConfluence';
+import {
+  checkPivotConfluence,
+  classifyPriceZone,
+  calculateRangePercent,
+  getConditionLabel,
+  getConditionTagColor,
+} from '../utils/pivotConfluence';
 
 interface ScreenerTableProps {
   coins: CoinData[];
@@ -359,6 +365,19 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 const rank = (page - 1) * pageSize + idx + 1;
                 const flash = priceFlashMap.get(coin.symbol);
                 const confluence = checkPivotConfluence(coin);
+
+                // Real-time live condition & range evaluations directly tied to coin.price
+                const dCond = classifyPriceZone(coin.price, coin.pivots) ?? coin.pivotStatus?.condition;
+                const hCond = coin.pivots1h ? (classifyPriceZone(coin.price, coin.pivots1h) ?? coin.pivotStatus1h?.condition) : null;
+                const mCond = coin.pivots5m ? (classifyPriceZone(coin.price, coin.pivots5m) ?? coin.pivotStatus5m?.condition) : null;
+
+                const distPDaily = Number((((coin.price - coin.pivots.P) / coin.pivots.P) * 100).toFixed(2));
+                const distP1h = coin.pivots1h ? Number((((coin.price - coin.pivots1h.P) / coin.pivots1h.P) * 100).toFixed(2)) : 0;
+                const distP5m = coin.pivots5m ? Number((((coin.price - coin.pivots5m.P) / coin.pivots5m.P) * 100).toFixed(2)) : 0;
+
+                const range5m = calculateRangePercent(coin.price, coin.pivots5m);
+                const range1h = calculateRangePercent(coin.price, coin.pivots1h);
+                const rangeDaily = calculateRangePercent(coin.price, coin.pivots);
                 return (
                   <tr
                     key={coin.symbol}
@@ -428,11 +447,11 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                           <PivotVisualizer
                             pivots={coin.pivots5m}
                             currentPrice={coin.price}
-                            rangePercent={coin.pivotStatus5m?.rangePercent ?? 50}
+                            rangePercent={range5m}
                           />
-                          {coin.pivotStatus5m && (
+                          {mCond && (
                             <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block">
-                              {coin.pivotStatus5m.label} ({coin.pivotStatus5m.distP > 0 ? '+' : ''}{coin.pivotStatus5m.distP}%)
+                              {getConditionLabel(mCond)} ({distP5m > 0 ? '+' : ''}{distP5m}%)
                             </span>
                           )}
                         </div>
@@ -448,11 +467,11 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                           <PivotVisualizer
                             pivots={coin.pivots1h}
                             currentPrice={coin.price}
-                            rangePercent={coin.pivotStatus1h?.rangePercent ?? 50}
+                            rangePercent={range1h}
                           />
-                          {coin.pivotStatus1h && (
+                          {hCond && (
                             <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block">
-                              {coin.pivotStatus1h.label} ({coin.pivotStatus1h.distP > 0 ? '+' : ''}{coin.pivotStatus1h.distP}%)
+                              {getConditionLabel(hCond)} ({distP1h > 0 ? '+' : ''}{distP1h}%)
                             </span>
                           )}
                         </div>
@@ -467,10 +486,10 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         <PivotVisualizer
                           pivots={coin.pivots}
                           currentPrice={coin.price}
-                          rangePercent={coin.pivotStatus.rangePercent}
+                          rangePercent={rangeDaily}
                         />
                         <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block">
-                          {coin.pivotStatus.label} ({coin.pivotStatus.distP > 0 ? '+' : ''}{coin.pivotStatus.distP}%)
+                          {getConditionLabel(dCond)} ({distPDaily > 0 ? '+' : ''}{distPDaily}%)
                         </span>
                       </div>
                     </td>
@@ -480,13 +499,13 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                       <div className="flex flex-col gap-1">
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${getConditionBadgeStyle(
-                            coin.pivotStatus.tagColor
+                            getConditionTagColor(dCond)
                           )}`}
                         >
-                          {coin.pivotStatus.label}
+                          {getConditionLabel(dCond)}
                         </span>
                         <span className="text-[10px] text-zinc-500 font-mono tabular-nums">
-                          Dist P: {coin.pivotStatus.distP > 0 ? '+' : ''}{coin.pivotStatus.distP}%
+                          Dist P: {distPDaily > 0 ? '+' : ''}{distPDaily}%
                         </span>
                       </div>
                     </td>

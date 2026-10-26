@@ -6,7 +6,7 @@ import { StatsOverview } from './components/StatsOverview';
 import { FilterBar } from './components/FilterBar';
 import { ScreenerTable } from './components/ScreenerTable';
 import { CoinDetailModal } from './components/CoinDetailModal';
-import { checkPivotConfluence } from './utils/pivotConfluence';
+import { checkPivotConfluence, classifyPriceZone } from './utils/pivotConfluence';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 const initialFilters: FilterState = {
@@ -70,9 +70,10 @@ export const App: React.FC = () => {
         }
       }
 
-      // 4. Daily Pivot Point condition filter
+      // 4. Daily Pivot Point condition filter (Live calculated from current price)
       if (filters.pivotCondition !== 'ALL') {
-        if (coin.pivotStatus.condition !== filters.pivotCondition) {
+        const liveCond = classifyPriceZone(coin.price, coin.pivots) ?? coin.pivotStatus?.condition;
+        if (liveCond !== filters.pivotCondition) {
           return false;
         }
       }
@@ -93,11 +94,11 @@ export const App: React.FC = () => {
     return coins.find((c) => c.symbol === selectedCoin.symbol) || selectedCoin;
   }, [coins, selectedCoin]);
 
-  // Live count per pivot condition for interactive filters
+  // Live count per pivot condition for interactive filters (Real-time live evaluations)
   const conditionCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
+    const counts: Record<string, number> = { ALL: coins.length };
     coins.forEach((c) => {
-      const cond = c.pivotStatus?.condition;
+      const cond = classifyPriceZone(c.price, c.pivots) ?? c.pivotStatus?.condition;
       if (cond) {
         counts[cond] = (counts[cond] || 0) + 1;
       }

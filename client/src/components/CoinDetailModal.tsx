@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CoinData, Pivots } from '../types';
 import { X, ExternalLink, Target, TrendingUp, TrendingDown, Layers, Clock } from 'lucide-react';
+import { classifyPriceZone, getConditionLabel } from '../utils/pivotConfluence';
 
 interface CoinDetailModalProps {
   coin: CoinData | null;
@@ -21,13 +22,21 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
       : pivots
   );
 
-  const currentStatus = (
-    activePivotTf === '5m' && pivotStatus5m
-      ? pivotStatus5m
-      : activePivotTf === '1h' && pivotStatus1h
-      ? pivotStatus1h
-      : pivotStatus
-  );
+  const liveCond = classifyPriceZone(price, currentPivots);
+  const liveDistP = Number((((price - currentPivots.P) / currentPivots.P) * 100).toFixed(2));
+  const liveLabel = getConditionLabel(liveCond);
+
+  const currentStatus = {
+    distP: liveDistP,
+    label: liveLabel,
+    description: (
+      activePivotTf === '5m' && pivotStatus5m
+        ? pivotStatus5m.description
+        : activePivotTf === '1h' && pivotStatus1h
+        ? pivotStatus1h.description
+        : pivotStatus.description
+    )
+  };
 
   const formatPrice = (val: number) => {
     if (val >= 1000) return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

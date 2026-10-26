@@ -59,7 +59,7 @@ export function classifyPivotCondition(currentPrice, pivots, momentum1h = 0) {
       label: 'Unknown',
       zone: 'UNKNOWN',
       description: 'Data tidak tersedia',
-      distanceP: 0,
+      distP: 0,
       rangePercent: 50
     };
   }
@@ -77,15 +77,18 @@ export function classifyPivotCondition(currentPrice, pivots, momentum1h = 0) {
   const distR4 = R4 !== undefined ? ((price - R4) / R4) * 100 : 0;
   const distS4 = S4 !== undefined ? ((price - S4) / S4) * 100 : 0;
 
+  const effectiveR4 = R4 !== undefined ? R4 : (R3 + (R3 - R2));
+  const effectiveS4 = S4 !== undefined ? S4 : (S3 - (S2 - S3));
+
   // Relative position score across 8 zones: S4 (0%) to R4 (100%)
   // S4: 0%, S3: 12.5%, S2: 25%, S1: 37.5%, P: 50%, R1: 62.5%, R2: 75%, R3: 87.5%, R4: 100%
   let rangePercent = 50;
-  if (R4 !== undefined && price >= R4) {
+  if (price >= effectiveR4) {
     rangePercent = 100;
-  } else if (R4 !== undefined && price >= R3) {
-    rangePercent = 87.5 + ((price - R3) / (R4 - R3 || 1)) * 12.5;
+  } else if (price >= R3) {
+    rangePercent = 87.5 + ((price - R3) / (effectiveR4 - R3 || 1)) * 12.5;
   } else if (price >= R2) {
-    rangePercent = 75 + ((price - R2) / ((R3 || R2 + 1) - R2 || 1)) * 12.5;
+    rangePercent = 75 + ((price - R2) / (R3 - R2 || 1)) * 12.5;
   } else if (price >= R1) {
     rangePercent = 62.5 + ((price - R1) / (R2 - R1 || 1)) * 12.5;
   } else if (price >= P) {
@@ -94,44 +97,32 @@ export function classifyPivotCondition(currentPrice, pivots, momentum1h = 0) {
     rangePercent = 37.5 + ((price - S1) / (P - S1 || 1)) * 12.5;
   } else if (price >= S2) {
     rangePercent = 25 + ((price - S2) / (S1 - S2 || 1)) * 12.5;
-  } else if (S4 !== undefined && price >= S3) {
+  } else if (price >= S3) {
     rangePercent = 12.5 + ((price - S3) / (S2 - S3 || 1)) * 12.5;
-  } else if (S4 !== undefined && price >= S4) {
-    rangePercent = ((price - S4) / (S3 - S4 || 1)) * 12.5;
+  } else if (price >= effectiveS4) {
+    rangePercent = ((price - effectiveS4) / (S3 - effectiveS4 || 1)) * 12.5;
   } else {
     rangePercent = 0;
   }
   rangePercent = Math.max(0, Math.min(100, Math.round(rangePercent)));
 
-  // Tolerance for "Area P": within +/- 0.4% of P or very close to middle
-  const pTolerance = 0.4; // 0.4%
-  const isNearP = Math.abs(distP) <= pTolerance;
+  let condition = 'AREA_P';
+  let label = 'Area P (Pivot)';
+  let description = 'Harga berkonsolidasi di sekitar level Pivot';
+  let tagColor = 'cyan';
 
-  let condition = 'BETWEEN_P_R1';
-  let label = 'P ke R1';
-  let description = 'Harga bergerak di antara Pivot dan R1';
-  let tagColor = 'blue';
-
-  if (isNearP) {
-    condition = 'AREA_P';
-    label = 'Area P (Pivot)';
-    description = 'Harga berkonsolidasi di sekitar level Pivot';
-    tagColor = 'cyan';
-  } else if (R4 !== undefined && price > R4) {
+  // Hierarchical zone evaluation:
+  // 1. Extreme Bullish (Beyond R1 / R2 / R3 / R4)
+  if (price > effectiveR4) {
     condition = 'ABOVE_R4';
     label = 'Di atas R4';
     description = 'Ekspansi parabolik ekstrem di atas Resistance 4 (Mega Pump)';
     tagColor = 'fuchsia';
-  } else if (R4 !== undefined && price > R3 && price <= R4) {
+  } else if (price > R3 && price <= effectiveR4) {
     condition = 'R3_TO_R4';
     label = 'Tembus R3 ➔ R4';
     description = 'Menembus R3 dan bergerak menuju R4 (Hyper Bullish Extension)';
     tagColor = 'purple';
-  } else if (price > R3) {
-    condition = 'ABOVE_R3';
-    label = 'Di atas R3';
-    description = 'Ekspansi parabolik ekstrem di atas Resistance 3 (Super Pump)';
-    tagColor = 'fuchsia';
   } else if (price > R2 && price <= R3) {
     condition = 'R2_TO_R3';
     label = 'Tembus R2 ➔ R3';
@@ -142,57 +133,51 @@ export function classifyPivotCondition(currentPrice, pivots, momentum1h = 0) {
     label = 'Tembus R1 ➔ R2';
     description = 'Menembus R1 dan bergerak menuju R2 (Bullish Breakout)';
     tagColor = 'emerald';
-  } else if (price >= P && price <= R1) {
-    // Check if price is heading back down to P from R1, or climbing from P to R1
-    if (momentum1h < -0.15 || (price > (P + (R1 - P) * 0.5) && momentum1h <= 0)) {
-      condition = 'R1_TO_P';
-      label = 'Tolak R1 ➔ P';
-      description = 'Tertahan di R1 dan bergerak turun menuju Pivot P (Pullback)';
-      tagColor = 'amber';
-    } else {
-      condition = 'P_TO_R1';
-      label = 'P ➔ R1';
-      description = 'Beranjak dari Pivot P mengarah ke R1';
-      tagColor = 'sky';
-    }
-  } else if (price >= S1 && price < P) {
-    // Check if price is bouncing from S1 towards P, or falling from P to S1
-    if (momentum1h > 0.15 || (price < (S1 + (P - S1) * 0.5) && momentum1h >= 0)) {
-      condition = 'S1_TO_P';
-      label = 'Pantul S1 ➔ P';
-      description = 'Memantul dari S1 dan bergerak naik menuju Pivot P (Reversal)';
-      tagColor = 'green';
-    } else {
-      condition = 'P_TO_S1';
-      label = 'P ➔ S1';
-      description = 'Turun dari Pivot P mengarah ke Support S1';
-      tagColor = 'orange';
-    }
-  } else if (price >= S2 && price < S1) {
-    condition = 'S1_TO_S2';
-    label = 'Tembus S1 ➔ S2';
-    description = 'Menembus S1 dan bergerak menuju S2 (Bearish Breakdown)';
-    tagColor = 'rose';
+  } 
+  // 2. Extreme Bearish (Below S1 / S2 / S3 / S4)
+  else if (price < effectiveS4) {
+    condition = 'BELOW_S4';
+    label = 'Di bawah S4';
+    description = 'Penurunan ekstrem di bawah Support 4 (Oversold Maksimal Ekstrem)';
+    tagColor = 'red';
+  } else if (price >= effectiveS4 && price < S3) {
+    condition = 'S3_TO_S4';
+    label = 'Tembus S3 ➔ S4';
+    description = 'Menembus S3 dan bergerak menuju S4 (Kapitulasi Lanjut / Extreme Dip)';
+    tagColor = 'red';
   } else if (price >= S3 && price < S2) {
     condition = 'S2_TO_S3';
     label = 'Tembus S2 ➔ S3';
     description = 'Menembus S2 dan bergerak menuju S3 (Kapitulasi / Diskon Ekstrem)';
     tagColor = 'red';
-  } else if (S4 !== undefined && price >= S4 && price < S3) {
-    condition = 'S3_TO_S4';
-    label = 'Tembus S3 ➔ S4';
-    description = 'Menembus S3 dan bergerak menuju S4 (Kapitulasi Lanjut / Extreme Dip)';
-    tagColor = 'red';
-  } else if (S4 !== undefined && price < S4) {
-    condition = 'BELOW_S4';
-    label = 'Di bawah S4';
-    description = 'Penurunan ekstrem di bawah Support 4 (Oversold Maksimal Ekstrem)';
-    tagColor = 'red';
-  } else if (price < S3) {
-    condition = 'BELOW_S3';
-    label = 'Di bawah S3';
-    description = 'Penurunan ekstrem di bawah Support 3 (Oversold Maksimal)';
-    tagColor = 'red';
+  } else if (price >= S2 && price < S1) {
+    condition = 'S1_TO_S2';
+    label = 'Tembus S1 ➔ S2';
+    description = 'Menembus S1 dan bergerak menuju S2 (Bearish Breakdown)';
+    tagColor = 'rose';
+  } 
+  // 3. Central Pivot Zone: strictly between S1 and R1
+  else {
+    // Dynamic tolerance proportional to candle range (35% towards R1 / S1)
+    const upperPTolerance = (R1 - P) * 0.35;
+    const lowerPTolerance = (P - S1) * 0.35;
+
+    if (price >= (P - lowerPTolerance) && price <= (P + upperPTolerance)) {
+      condition = 'AREA_P';
+      label = 'Area P (Pivot)';
+      description = 'Harga berkonsolidasi di sekitar level Pivot';
+      tagColor = 'cyan';
+    } else if (price > P) {
+      condition = 'R1_TO_P';
+      label = 'Tolak R1 ➔ P';
+      description = 'Tertahan di R1 dan bergerak turun menuju Pivot P (Pullback)';
+      tagColor = 'amber';
+    } else {
+      condition = 'S1_TO_P';
+      label = 'Pantul S1 ➔ P';
+      description = 'Memantul dari S1 dan bergerak naik menuju Pivot P (Reversal)';
+      tagColor = 'green';
+    }
   }
 
   return {
