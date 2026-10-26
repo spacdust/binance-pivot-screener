@@ -83,7 +83,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
         {/* Header Modal */}
         <div className="p-3.5 sm:p-4 border-b border-[#2b313a] flex items-center justify-between sticky top-0 bg-[#181a20] z-20">
           <div className="flex items-center gap-3">
-            <CoinIcon symbol={coin.baseAsset} size="lg" className="w-8 h-8 sm:w-9 sm:h-9" />
+            <CoinIcon symbol={coin.baseAsset} logoUrl={coin.logoUrl} size="lg" className="w-8 h-8 sm:w-9 sm:h-9" />
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-[#eaecef]">{symbol}</h2>

@@ -587,7 +587,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     {/* Frozen Column 2: Symbol & Volume */}
                     <td className={`${pyRow} px-2.5 sm:px-3 sticky left-12 z-10 bg-[#181a20] group-hover:bg-[#1e2329] border-r border-[#2b313a] min-w-[145px]`}>
                       <div className="flex items-center gap-2">
-                        <CoinIcon symbol={coin.baseAsset} size={density === 'compact' ? 'sm' : 'md'} />
+                        <CoinIcon symbol={coin.baseAsset} logoUrl={coin.logoUrl} size={density === 'compact' ? 'sm' : 'md'} />
                         <div className="flex flex-col min-w-0">
                           <div className="flex items-center gap-1 flex-wrap">
                             <span className={`font-bold text-[#eaecef] group-hover:text-[#f0b90b] transition-colors ${density === 'compact' ? 'text-xs' : 'text-sm'}`}>

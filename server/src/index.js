@@ -65,6 +65,11 @@ app.get('/api/coins/:symbol', (req, res) => {
   res.json(coin);
 });
 
+// Official Binance asset logos map
+app.get('/api/asset-logos', (req, res) => {
+  res.json(Object.fromEntries(binanceService.assetLogos));
+});
+
 // Create HTTP and WebSocket server
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws' });

@@ -66,6 +66,7 @@ export interface CoinData {
   symbol: string;
   baseAsset: string;
   quoteAsset: string;
+  logoUrl?: string | null;
   price: number;
   volume24h: number;
   pivots: Pivots;

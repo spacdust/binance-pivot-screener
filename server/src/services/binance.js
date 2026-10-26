@@ -16,6 +16,7 @@ const WS_MIRRORS = [
 export class BinanceService {
   constructor() {
     this.symbolsData = new Map(); // symbol -> coinData
+    this.assetLogos = new Map(); // assetCode -> logoUrl from Binance official
     this.trackedSymbols = new Set();
     this.ws = null;
     this.isWsConnected = false;
@@ -25,6 +26,27 @@ export class BinanceService {
     this.isSyncing = false;
     this.activeRestMirrorIndex = 0;
     this.activeWsMirrorIndex = 0;
+  }
+
+  // Fetch official Binance asset logos for 100% token logo coverage
+  async fetchAssetLogos() {
+    try {
+      console.log('[BinanceService] Fetching official Binance asset logos...');
+      const res = await fetch('https://www.binance.com/bapi/asset/v2/public/asset/asset/get-all-asset');
+      if (res.ok) {
+        const json = await res.json();
+        if (json && Array.isArray(json.data)) {
+          for (const item of json.data) {
+            if (item.assetCode && item.logoUrl) {
+              this.assetLogos.set(item.assetCode.toUpperCase(), item.logoUrl);
+            }
+          }
+          console.log(`[BinanceService] Successfully cached ${this.assetLogos.size} official Binance asset logos.`);
+        }
+      }
+    } catch (err) {
+      console.warn('[BinanceService] Failed to fetch Binance asset logos:', err.message);
+    }
   }
 
   // Subscribe callback for price/screener updates
@@ -240,10 +262,12 @@ export class BinanceService {
               ? classifyPivotCondition(initialPrice, klineData.pivots5m, momentum5m)
               : null;
 
+            const baseAsset = symbol.replace('USDT', '');
             this.symbolsData.set(symbol, {
               symbol,
-              baseAsset: symbol.replace('USDT', ''),
+              baseAsset,
               quoteAsset: 'USDT',
+              logoUrl: this.assetLogos.get(baseAsset) || null,
               price: initialPrice,
               volume24h: quoteVolume,
               pivots: klineData.pivots,
@@ -443,6 +467,7 @@ export class BinanceService {
   // Initialize service
   async init() {
     console.log('[BinanceService] Initializing Binance Screener service...');
+    await this.fetchAssetLogos();
     const topSymbols = await this.fetchTopUsdtSymbols(150);
     await this.syncAllKlines(topSymbols);
     this.connectWebSocket();
