@@ -121,7 +121,7 @@ export class BinanceService {
       }
 
       // 1. Daily Pivots (based on completed yesterday 00:00 - 23:59 UTC candle)
-      const prevDay = dailyKlines[0];
+      const prevDay = dailyKlines[dailyKlines.length - 2];
       const prevHigh = parseFloat(prevDay[2]);
       const prevLow = parseFloat(prevDay[3]);
       const prevClose = parseFloat(prevDay[4]);
@@ -155,7 +155,7 @@ export class BinanceService {
       // 3. 5M Pivots (based on completed previous 5-minute candle)
       let pivots5m = null;
       if (fiveMinKlines && fiveMinKlines.length >= 2) {
-        const prev5m = fiveMinKlines[0];
+        const prev5m = fiveMinKlines[fiveMinKlines.length - 2];
         const m5High = parseFloat(prev5m[2]);
         const m5Low = parseFloat(prev5m[3]);
         const m5Close = parseFloat(prev5m[4]);
