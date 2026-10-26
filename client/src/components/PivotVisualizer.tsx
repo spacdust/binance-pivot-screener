@@ -19,7 +19,7 @@ export const PivotVisualizer: React.FC<PivotVisualizerProps> = ({
   const r4Val = pivots.R4 ?? (pivots.R3 + (pivots.R3 - pivots.R2));
 
   return (
-    <div className="w-full flex flex-col gap-1 min-w-[160px] max-w-[230px]">
+    <div className="w-full flex flex-col gap-1 min-w-[120px] max-w-[170px] mx-auto">
       {/* Gauge track */}
       <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden flex items-center">
         {/* 8 Color segments: S4->S3, S3->S2, S2->S1, S1->P, P->R1, R1->R2, R2->R3, R3->R4 */}

@@ -69,6 +69,8 @@ export interface CoinData {
   price: number;
   volume24h: number;
   pivots: Pivots;
+  pivots1h?: Pivots | null;
+  pivots5m?: Pivots | null;
   baselines: {
     open1m: number | null;
     open5m: number | null;
@@ -81,6 +83,8 @@ export interface CoinData {
     open24h: number | null;
   };
   pivotStatus: PivotStatus;
+  pivotStatus1h?: PivotStatus | null;
+  pivotStatus5m?: PivotStatus | null;
   changes: TimeframeChanges;
   lastUpdated: number;
 }

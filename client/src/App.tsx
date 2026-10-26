@@ -95,8 +95,8 @@ export const App: React.FC = () => {
         lastUpdated={lastMessageTime}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Main Content Area: Expanded full-width without excessive side margins */}
+      <main className="flex-1 w-full px-2 sm:px-4 lg:px-6 py-4 space-y-4">
         {/* Loading Overlay / Banner */}
         {coins.length === 0 && (
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-center flex flex-col items-center justify-center gap-3">
@@ -150,11 +150,11 @@ export const App: React.FC = () => {
       />
 
       {/* Footer */}
-      <footer className="border-t border-zinc-800/80 bg-zinc-950/60 py-6 text-center text-xs text-zinc-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <footer className="border-t border-zinc-800/80 bg-zinc-950/60 py-4 text-center text-xs text-zinc-500">
+        <div className="w-full px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>Binance Coin Screener &bull; Real-time WebSocket Data</span>
           <span className="font-mono text-[11px]">
-            Formula: Classic Pivot $P=(H+L+C)/3$ &bull; Timeframes: 1m, 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h
+            Formula: Classic Pivot &bull; Multi-Timeframe: 1m, 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h &bull; Pivots: 5M, 1H, Daily (S4-R4)
           </span>
         </div>
       </footer>

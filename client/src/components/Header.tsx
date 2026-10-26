@@ -19,8 +19,8 @@ export const Header: React.FC<HeaderProps> = ({
     : '--:--:--';
 
   return (
-    <header className="border-b border-zinc-800/80 bg-zinc-950/85 backdrop-blur-md sticky top-0 z-30 px-4 lg:px-8 py-3">
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <header className="border-b border-zinc-800/80 bg-zinc-950/85 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-6 py-2.5">
+      <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         {/* Logo and Brand */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/15 border border-amber-300/30">

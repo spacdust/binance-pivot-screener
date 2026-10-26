@@ -123,6 +123,8 @@ export function useScreenerSocket() {
                         volume24h: item.volume24h,
                         changes: item.changes,
                         pivotStatus: item.pivotStatus,
+                        pivotStatus1h: item.pivotStatus1h ?? existing.pivotStatus1h,
+                        pivotStatus5m: item.pivotStatus5m ?? existing.pivotStatus5m,
                         lastUpdated: Date.now()
                       });
                     }

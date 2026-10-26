@@ -10,7 +10,7 @@ interface ScreenerTableProps {
   onSelectCoin: (coin: CoinData) => void;
 }
 
-type SortField = 'symbol' | 'price' | 'volume24h' | 'm1' | 'm5' | 'm15' | 'm30' | 'h1' | 'h3' | 'h6' | 'h12' | 'h24' | 'distP';
+type SortField = 'symbol' | 'price' | 'volume24h' | 'm1' | 'm5' | 'm15' | 'm30' | 'h1' | 'h3' | 'h6' | 'h12' | 'h24' | 'distP' | 'distP1h' | 'distP5m';
 
 export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   coins,
@@ -129,6 +129,14 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       case 'distP':
         aVal = a.pivotStatus.distP;
         bVal = b.pivotStatus.distP;
+        break;
+      case 'distP1h':
+        aVal = a.pivotStatus1h?.distP ?? 0;
+        bVal = b.pivotStatus1h?.distP ?? 0;
+        break;
+      case 'distP5m':
+        aVal = a.pivotStatus5m?.distP ?? 0;
+        bVal = b.pivotStatus5m?.distP ?? 0;
         break;
     }
 
@@ -300,22 +308,36 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               >
                 24j {renderSortIcon('h24')}
               </th>
-              <th className="py-3.5 px-4 min-w-[170px]">
-                Posisi Pivot (S4 ➔ R4)
+              <th
+                onClick={() => handleSort('distP5m')}
+                className="py-3.5 px-2 text-center min-w-[135px] cursor-pointer hover:text-zinc-200 transition-colors"
+              >
+                Pivot 5M (S4 ➔ R4) {renderSortIcon('distP5m')}
+              </th>
+              <th
+                onClick={() => handleSort('distP1h')}
+                className="py-3.5 px-2 text-center min-w-[135px] cursor-pointer hover:text-zinc-200 transition-colors"
+              >
+                Pivot 1H (S4 ➔ R4) {renderSortIcon('distP1h')}
               </th>
               <th
                 onClick={() => handleSort('distP')}
-                className="py-3.5 px-4 cursor-pointer hover:text-zinc-200 transition-colors"
+                className="py-3.5 px-2 text-center min-w-[135px] cursor-pointer hover:text-zinc-200 transition-colors"
               >
-                Kondisi Pivot Daily {renderSortIcon('distP')}
+                Pivot Daily (S4 ➔ R4) {renderSortIcon('distP')}
               </th>
-              <th className="py-3.5 px-4 text-center w-20">Aksi</th>
+              <th
+                className="py-3.5 px-3 min-w-[150px] cursor-pointer hover:text-zinc-200 transition-colors"
+              >
+                Kondisi Pivot Daily
+              </th>
+              <th className="py-3.5 px-3 text-center w-16">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/60">
             {paginatedCoins.length === 0 ? (
               <tr>
-                <td colSpan={15} className="py-12 text-center text-zinc-500">
+                <td colSpan={17} className="py-12 text-center text-zinc-500">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Info className="w-8 h-8 text-zinc-600" />
                     <p className="text-sm font-medium">Tidak ada koin yang sesuai kriteria filter.</p>
@@ -376,13 +398,58 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h12' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h12, 'h12')}</td>
                     <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h24' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h24, 'h24')}</td>
 
-                    {/* Pivot Visualizer */}
-                    <td className="py-3 px-4">
-                      <PivotVisualizer
-                        pivots={coin.pivots}
-                        currentPrice={coin.price}
-                        rangePercent={coin.pivotStatus.rangePercent}
-                      />
+                    {/* Pivot 5M Visualizer */}
+                    <td className="py-2.5 px-2 text-center">
+                      {coin.pivots5m ? (
+                        <div className="flex flex-col items-center gap-1">
+                          <PivotVisualizer
+                            pivots={coin.pivots5m}
+                            currentPrice={coin.price}
+                            rangePercent={coin.pivotStatus5m?.rangePercent ?? 50}
+                          />
+                          {coin.pivotStatus5m && (
+                            <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none">
+                              {coin.pivotStatus5m.label} ({coin.pivotStatus5m.distP > 0 ? '+' : ''}{coin.pivotStatus5m.distP}%)
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-zinc-600 font-mono">Syncing...</span>
+                      )}
+                    </td>
+
+                    {/* Pivot 1H Visualizer */}
+                    <td className="py-2.5 px-2 text-center">
+                      {coin.pivots1h ? (
+                        <div className="flex flex-col items-center gap-1">
+                          <PivotVisualizer
+                            pivots={coin.pivots1h}
+                            currentPrice={coin.price}
+                            rangePercent={coin.pivotStatus1h?.rangePercent ?? 50}
+                          />
+                          {coin.pivotStatus1h && (
+                            <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none">
+                              {coin.pivotStatus1h.label} ({coin.pivotStatus1h.distP > 0 ? '+' : ''}{coin.pivotStatus1h.distP}%)
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-zinc-600 font-mono">Syncing...</span>
+                      )}
+                    </td>
+
+                    {/* Pivot Daily Visualizer */}
+                    <td className="py-2.5 px-2 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <PivotVisualizer
+                          pivots={coin.pivots}
+                          currentPrice={coin.price}
+                          rangePercent={coin.pivotStatus.rangePercent}
+                        />
+                        <span className="text-[10px] text-zinc-400 font-mono tabular-nums leading-none">
+                          {coin.pivotStatus.label} ({coin.pivotStatus.distP > 0 ? '+' : ''}{coin.pivotStatus.distP}%)
+                        </span>
+                      </div>
                     </td>
 
                     {/* Pivot Condition Badge */}

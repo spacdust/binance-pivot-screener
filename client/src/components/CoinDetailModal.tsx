@@ -1,6 +1,6 @@
-import React from 'react';
-import { CoinData } from '../types';
-import { X, ExternalLink, Target, TrendingUp, TrendingDown, Layers } from 'lucide-react';
+import React, { useState } from 'react';
+import { CoinData, Pivots } from '../types';
+import { X, ExternalLink, Target, TrendingUp, TrendingDown, Layers, Clock } from 'lucide-react';
 
 interface CoinDetailModalProps {
   coin: CoinData | null;
@@ -10,7 +10,24 @@ interface CoinDetailModalProps {
 export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose }) => {
   if (!coin) return null;
 
-  const { symbol, price, pivots, changes, pivotStatus, baselines, volume24h } = coin;
+  const [activePivotTf, setActivePivotTf] = useState<'daily' | '1h' | '5m'>('daily');
+  const { symbol, price, pivots, pivots1h, pivots5m, changes, pivotStatus, pivotStatus1h, pivotStatus5m, baselines, volume24h } = coin;
+
+  const currentPivots: Pivots = (
+    activePivotTf === '5m' && pivots5m
+      ? pivots5m
+      : activePivotTf === '1h' && pivots1h
+      ? pivots1h
+      : pivots
+  );
+
+  const currentStatus = (
+    activePivotTf === '5m' && pivotStatus5m
+      ? pivotStatus5m
+      : activePivotTf === '1h' && pivotStatus1h
+      ? pivotStatus1h
+      : pivotStatus
+  );
 
   const formatPrice = (val: number) => {
     if (val >= 1000) return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -30,18 +47,18 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
     return dist >= 0 ? 'text-emerald-400' : 'text-rose-400';
   };
 
-  const r4Val = pivots.R4 ?? (pivots.R3 + (pivots.R3 - pivots.R2));
-  const s4Val = pivots.S4 ?? (pivots.S3 - (pivots.S2 - pivots.S3));
+  const r4Val = currentPivots.R4 ?? (currentPivots.R3 + (currentPivots.R3 - currentPivots.R2));
+  const s4Val = currentPivots.S4 ?? (currentPivots.S3 - (currentPivots.S2 - currentPivots.S3));
 
   const pivotLevels = [
     { name: 'R4', label: 'Resistance 4 (Super Ceiling)', val: r4Val, color: 'text-pink-400 font-bold', bg: 'bg-pink-500/15' },
-    { name: 'R3', label: 'Resistance 3', val: pivots.R3, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
-    { name: 'R2', label: 'Resistance 2', val: pivots.R2, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { name: 'R1', label: 'Resistance 1', val: pivots.R1, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { name: 'P', label: 'Daily Pivot (Center)', val: pivots.P, color: 'text-sky-400 font-bold', bg: 'bg-sky-500/15' },
-    { name: 'S1', label: 'Support 1', val: pivots.S1, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { name: 'S2', label: 'Support 2', val: pivots.S2, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-    { name: 'S3', label: 'Support 3', val: pivots.S3, color: 'text-red-400', bg: 'bg-red-500/10' },
+    { name: 'R3', label: 'Resistance 3', val: currentPivots.R3, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
+    { name: 'R2', label: 'Resistance 2', val: currentPivots.R2, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { name: 'R1', label: 'Resistance 1', val: currentPivots.R1, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { name: 'P', label: 'Pivot Center', val: currentPivots.P, color: 'text-sky-400 font-bold', bg: 'bg-sky-500/15' },
+    { name: 'S1', label: 'Support 1', val: currentPivots.S1, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    { name: 'S2', label: 'Support 2', val: currentPivots.S2, color: 'text-rose-400', bg: 'bg-rose-500/10' },
+    { name: 'S3', label: 'Support 3', val: currentPivots.S3, color: 'text-red-400', bg: 'bg-red-500/10' },
     { name: 'S4', label: 'Support 4 (Super Floor)', val: s4Val, color: 'text-red-600 font-bold', bg: 'bg-red-600/15' },
   ];
 
@@ -111,22 +128,22 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
                 ${formatPrice(price)}
               </div>
               <div className="text-xs text-zinc-400 mt-1">
-                Jarak ke Pivot P:{' '}
-                <span className={`font-mono tabular-nums font-semibold ${pivotStatus.distP >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {pivotStatus.distP > 0 ? '+' : ''}{pivotStatus.distP}%
+                Jarak ke Pivot P ({activePivotTf.toUpperCase()}):{' '}
+                <span className={`font-mono tabular-nums font-semibold ${currentStatus.distP >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {currentStatus.distP > 0 ? '+' : ''}{currentStatus.distP}%
                 </span>
               </div>
             </div>
 
             <div>
-              <span className="text-xs text-zinc-400">Status Pivot:</span>
+              <span className="text-xs text-zinc-400">Status Pivot ({activePivotTf.toUpperCase()}):</span>
               <div className="mt-1 flex items-center gap-2">
                 <span className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                  {pivotStatus.label}
+                  {currentStatus.label}
                 </span>
               </div>
               <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
-                {pivotStatus.description}
+                {currentStatus.description}
               </p>
             </div>
           </div>
@@ -164,15 +181,51 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
             </div>
           </div>
 
-          {/* Daily Pivot Points Table */}
+          {/* Multi-Timeframe Pivot Points Table */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-sky-400" />
-                Level Daily Pivot Points (Standar Harian)
-              </h3>
+                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                  Level Pivot Points (S4 ➔ R4)
+                </h3>
+                {/* Timeframe tabs: Daily, 1H, 5M */}
+                <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 ml-2">
+                  <button
+                    onClick={() => setActivePivotTf('daily')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                      activePivotTf === 'daily'
+                        ? 'bg-amber-500 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    Daily
+                  </button>
+                  <button
+                    onClick={() => setActivePivotTf('1h')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                      activePivotTf === '1h'
+                        ? 'bg-amber-500 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    1 Jam
+                  </button>
+                  <button
+                    onClick={() => setActivePivotTf('5m')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                      activePivotTf === '5m'
+                        ? 'bg-amber-500 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    5 Menit
+                  </button>
+                </div>
+              </div>
+
               <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
-                Basis Candle Kemarin: H: ${formatPrice(pivots.H)} | L: ${formatPrice(pivots.L)} | C: ${formatPrice(pivots.C)}
+                Basis Candle: H: ${formatPrice(currentPivots.H)} | L: ${formatPrice(currentPivots.L)} | C: ${formatPrice(currentPivots.C)}
               </span>
             </div>
 

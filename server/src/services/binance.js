@@ -106,12 +106,13 @@ export class BinanceService {
     }
   }
 
-  // Step 2: Fetch 1d kline for Pivot, 1h klines for 1h-24h, and 1m klines for 1m-30m
+  // Step 2: Fetch 1d kline for Pivot, 1h klines for 1h Pivot + 1h-24h, 5m for 5m Pivot, 1m for 1m-30m
   async fetchSymbolKlines(symbol) {
     try {
-      const [dailyKlines, hourlyKlines, minuteKlines] = await Promise.all([
+      const [dailyKlines, hourlyKlines, fiveMinKlines, minuteKlines] = await Promise.all([
         this.safeFetch(`/klines?symbol=${symbol}&interval=1d&limit=2`),
         this.safeFetch(`/klines?symbol=${symbol}&interval=1h&limit=25`),
+        this.safeFetch(`/klines?symbol=${symbol}&interval=5m&limit=2`),
         this.safeFetch(`/klines?symbol=${symbol}&interval=1m&limit=35`)
       ]);
 
@@ -119,12 +120,15 @@ export class BinanceService {
         return null;
       }
 
+      // 1. Daily Pivots (based on completed yesterday 00:00 - 23:59 UTC candle)
       const prevDay = dailyKlines[0];
       const prevHigh = parseFloat(prevDay[2]);
       const prevLow = parseFloat(prevDay[3]);
       const prevClose = parseFloat(prevDay[4]);
       const pivots = calculateDailyPivots(prevHigh, prevLow, prevClose);
 
+      // 2. 1H Pivots (based on completed previous 1-hour candle)
+      let pivots1h = null;
       let open1h = null;
       let open3h = null;
       let open6h = null;
@@ -133,11 +137,31 @@ export class BinanceService {
 
       if (hourlyKlines && hourlyKlines.length >= 2) {
         const len = hourlyKlines.length;
+        const prev1h = hourlyKlines[len - 2];
+        const h1High = parseFloat(prev1h[2]);
+        const h1Low = parseFloat(prev1h[3]);
+        const h1Close = parseFloat(prev1h[4]);
+        if (!isNaN(h1High) && !isNaN(h1Low) && !isNaN(h1Close)) {
+          pivots1h = calculateDailyPivots(h1High, h1Low, h1Close);
+        }
+
         open1h = parseFloat(hourlyKlines[Math.max(0, len - 2)][1]);
         open3h = parseFloat(hourlyKlines[Math.max(0, len - 4)][1]);
         open6h = parseFloat(hourlyKlines[Math.max(0, len - 7)][1]);
         open12h = parseFloat(hourlyKlines[Math.max(0, len - 13)][1]);
         open24h = parseFloat(hourlyKlines[0][1]);
+      }
+
+      // 3. 5M Pivots (based on completed previous 5-minute candle)
+      let pivots5m = null;
+      if (fiveMinKlines && fiveMinKlines.length >= 2) {
+        const prev5m = fiveMinKlines[0];
+        const m5High = parseFloat(prev5m[2]);
+        const m5Low = parseFloat(prev5m[3]);
+        const m5Close = parseFloat(prev5m[4]);
+        if (!isNaN(m5High) && !isNaN(m5Low) && !isNaN(m5Close)) {
+          pivots5m = calculateDailyPivots(m5High, m5Low, m5Close);
+        }
       }
 
       let open1m = null;
@@ -155,6 +179,8 @@ export class BinanceService {
 
       return {
         pivots,
+        pivots1h,
+        pivots5m,
         baselines: {
           open1m,
           open5m,
@@ -196,12 +222,23 @@ export class BinanceService {
             const momentum1h = klineData.baselines.open1h && initialPrice
               ? ((initialPrice - klineData.baselines.open1h) / klineData.baselines.open1h) * 100
               : 0;
+            const momentum5m = klineData.baselines.open5m && initialPrice
+              ? ((initialPrice - klineData.baselines.open5m) / klineData.baselines.open5m) * 100
+              : 0;
 
             const pivotClassification = classifyPivotCondition(
               initialPrice,
               klineData.pivots,
               momentum1h
             );
+
+            const pivotClassification1h = klineData.pivots1h
+              ? classifyPivotCondition(initialPrice, klineData.pivots1h, momentum1h)
+              : null;
+
+            const pivotClassification5m = klineData.pivots5m
+              ? classifyPivotCondition(initialPrice, klineData.pivots5m, momentum5m)
+              : null;
 
             this.symbolsData.set(symbol, {
               symbol,
@@ -210,8 +247,12 @@ export class BinanceService {
               price: initialPrice,
               volume24h: quoteVolume,
               pivots: klineData.pivots,
+              pivots1h: klineData.pivots1h,
+              pivots5m: klineData.pivots5m,
               baselines: klineData.baselines,
               pivotStatus: pivotClassification,
+              pivotStatus1h: pivotClassification1h,
+              pivotStatus5m: pivotClassification5m,
               changes: {
                 m1: klineData.baselines.open1m ? Number((((initialPrice - klineData.baselines.open1m) / klineData.baselines.open1m) * 100).toFixed(2)) : 0,
                 m5: klineData.baselines.open5m ? Number((((initialPrice - klineData.baselines.open5m) / klineData.baselines.open5m) * 100).toFixed(2)) : 0,
@@ -308,6 +349,8 @@ export class BinanceService {
           const change24h = open24h ? ((currentPrice - open24h) / open24h) * 100 : coin.changes.h24;
 
           const pivotStatus = classifyPivotCondition(currentPrice, coin.pivots, change1h);
+          const pivotStatus1h = coin.pivots1h ? classifyPivotCondition(currentPrice, coin.pivots1h, change1h) : null;
+          const pivotStatus5m = coin.pivots5m ? classifyPivotCondition(currentPrice, coin.pivots5m, change5m) : null;
 
           // Update cache
           coin.price = currentPrice;
@@ -324,6 +367,8 @@ export class BinanceService {
             h24: Number(change24h.toFixed(2)),
           };
           coin.pivotStatus = pivotStatus;
+          if (pivotStatus1h) coin.pivotStatus1h = pivotStatus1h;
+          if (pivotStatus5m) coin.pivotStatus5m = pivotStatus5m;
           coin.lastUpdated = Date.now();
 
           updates.push({
@@ -331,7 +376,9 @@ export class BinanceService {
             price: currentPrice,
             volume24h: vol,
             changes: coin.changes,
-            pivotStatus
+            pivotStatus,
+            pivotStatus1h,
+            pivotStatus5m
           });
         }
 
