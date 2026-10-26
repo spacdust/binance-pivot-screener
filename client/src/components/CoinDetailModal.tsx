@@ -87,8 +87,8 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-[#eaecef]">{symbol}</h2>
-                <span className="px-1.5 py-0.2 text-[10px] font-mono rounded-xs bg-[#12151a] border border-[#2b313a] text-[#848e9c]">
-                  Spot USDT
+                <span className="px-1.5 py-0.2 text-[10px] font-mono font-semibold rounded-xs bg-[#f0b90b]/10 border border-[#f0b90b]/30 text-[#f0b90b]">
+                  Futures PERP
                 </span>
               </div>
               <p className="text-[11px] text-[#848e9c] font-mono">
@@ -99,11 +99,11 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
 
           <div className="flex items-center gap-2">
             <a
-              href={`https://www.binance.com/id/trade/${coin.baseAsset}_USDT`}
+              href={`https://www.binance.com/id/futures/${coin.symbol}`}
               target="_blank"
               rel="noreferrer"
               className="p-1.5 rounded-xs bg-[#12151a] hover:bg-[#22262e] text-[#848e9c] hover:text-[#eaecef] border border-[#2b313a] transition-colors"
-              title="Buka grafik di Binance"
+              title="Buka grafik di Binance Futures"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -122,7 +122,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-[#12151a] border border-[#2b313a] rounded-xs p-3">
             <div>
               <div className="flex items-center justify-between text-[11px] text-[#848e9c]">
-                <span>Harga Terakhir Spot</span>
+                <span>Harga Terakhir (Futures PERP)</span>
                 <span className="font-mono text-[10px] text-[#0ecb81] flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0ecb81] animate-pulse" />
                   Live WebSocket

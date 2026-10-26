@@ -47,10 +47,10 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="flex items-center gap-2">
           <span className="font-bold text-sm tracking-tight text-[#eaecef]">
-            BINANCE SCREENER
+            BINANCE FUTURES SCREENER
           </span>
           <span className="px-1.5 py-0.2 text-[10px] font-mono font-medium uppercase border border-[#f0b90b]/40 text-[#f0b90b] bg-[#f0b90b]/10 rounded-xs">
-            PRO PIVOT
+            USDⓈ-M PERP
           </span>
         </div>
       </div>

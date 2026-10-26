@@ -68,6 +68,7 @@ export const CoinIcon: React.FC<CoinIconProps> = ({
   className = '',
 }) => {
   const cleanSymbol = symbol.toUpperCase().replace(/USDT$/, '');
+  const unscaledSymbol = cleanSymbol.replace(/^1000+/, '');
   const [, setTick] = useState(0);
   const [sourceIndex, setSourceIndex] = useState(0);
 
@@ -92,12 +93,15 @@ export const CoinIcon: React.FC<CoinIconProps> = ({
   const sources: string[] = [
     `/api/logo/${cleanSymbol}`
   ];
+  if (unscaledSymbol !== cleanSymbol) {
+    sources.push(`/api/logo/${unscaledSymbol}`);
+  }
 
   if (logoUrl && !sources.includes(logoUrl)) {
     sources.push(logoUrl);
   }
 
-  const cachedOfficialUrl = binanceLogoCache.get(cleanSymbol);
+  const cachedOfficialUrl = binanceLogoCache.get(cleanSymbol) || binanceLogoCache.get(unscaledSymbol);
   if (cachedOfficialUrl && !sources.includes(cachedOfficialUrl)) {
     sources.push(cachedOfficialUrl);
   }
@@ -118,7 +122,7 @@ export const CoinIcon: React.FC<CoinIconProps> = ({
         className={`${sizeClasses} shrink-0 rounded-full bg-[#20252e] border border-[#2b313a] flex items-center justify-center font-bold font-mono text-[#f0b90b] select-none shadow-xs ${className}`}
         title={cleanSymbol}
       >
-        {cleanSymbol.slice(0, 3)}
+        {unscaledSymbol.slice(0, 3)}
       </div>
     );
   }

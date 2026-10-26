@@ -8,15 +8,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const REST_MIRRORS = [
-  'https://api.binance.com/api/v3',
-  'https://data-api.binance.vision/api/v3',
-  'https://api1.binance.com/api/v3',
-  'https://api3.binance.com/api/v3',
+  'https://fapi.binance.com/fapi/v1',
+  'https://fapi1.binance.com/fapi/v1',
+  'https://fapi2.binance.com/fapi/v1',
+  'https://fapi3.binance.com/fapi/v1',
 ];
 
 const WS_MIRRORS = [
-  'wss://stream.binance.com:9443/ws/!miniTicker@arr',
-  'wss://data-stream.binance.vision/ws/!miniTicker@arr',
+  'wss://fstream.binance.com/market/ws/!miniTicker@arr',
+  'wss://fstream.binance.com/ws/!miniTicker@arr',
+  'wss://fstream-auth.binance.com/market/ws/!miniTicker@arr',
 ];
 
 export class BinanceService {
@@ -89,7 +90,7 @@ export class BinanceService {
   // Resilient fetch with automatic multi-mirror failover
   async safeFetch(path) {
     const cleanPath = path.startsWith('http')
-      ? path.replace(/^https?:\/\/[^/]+\/api\/v3/, '')
+      ? path.replace(/^https?:\/\/[^/]+(\/api\/v3|\/fapi\/v1)?/, '')
       : (path.startsWith('/') ? path : `/${path}`);
 
     let lastError = null;
@@ -122,29 +123,39 @@ export class BinanceService {
     throw new Error(`All Binance mirrors failed for ${cleanPath}: ${lastError?.message}`);
   }
 
-  // Step 1: Discover top USDT pairs by 24h quote volume
+  // Step 1: Discover top USDT Perpetual Futures pairs by 24h quote volume
   async fetchTopUsdtSymbols(limit = 150) {
     try {
-      console.log(`[BinanceService] Fetching 24h ticker for symbol discovery...`);
+      console.log(`[BinanceService] Discovering top USDT Perpetual Futures contracts...`);
+      const validPerps = new Set();
+      try {
+        const exchangeInfo = await this.safeFetch('/exchangeInfo');
+        if (exchangeInfo && Array.isArray(exchangeInfo.symbols)) {
+          exchangeInfo.symbols
+            .filter(s => s.contractType === 'PERPETUAL' && s.status === 'TRADING' && s.quoteAsset === 'USDT')
+            .forEach(s => validPerps.add(s.symbol));
+        }
+      } catch (e) {
+        console.warn('[BinanceService] Futures exchangeInfo fetch failed, using fallback filter:', e.message);
+      }
+
       const tickers = await this.safeFetch('/ticker/24hr');
       
-      const filtered = tickers.filter(t => 
-        t.symbol.endsWith('USDT') &&
-        !t.symbol.includes('UPUSDT') &&
-        !t.symbol.includes('DOWNUSDT') &&
-        !t.symbol.includes('BEARUSDT') &&
-        !t.symbol.includes('BULLUSDT') &&
-        parseFloat(t.quoteVolume) > 300000 // Min $300k volume
-      );
+      const filtered = tickers.filter(t => {
+        if (!t.symbol.endsWith('USDT')) return false;
+        if (t.symbol.includes('_')) return false; // Exclude delivery quarterly contracts
+        if (validPerps.size > 0 && !validPerps.has(t.symbol)) return false;
+        return parseFloat(t.quoteVolume) > 300000;
+      });
 
       // Sort by quote volume descending
       filtered.sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume));
       const topSymbols = filtered.slice(0, limit);
 
-      console.log(`[BinanceService] Selected top ${topSymbols.length} USDT pairs.`);
+      console.log(`[BinanceService] Selected top ${topSymbols.length} USDT Perpetual Futures contracts.`);
       return topSymbols;
     } catch (err) {
-      console.error('[BinanceService] Failed to fetch top USDT symbols:', err.message);
+      console.error('[BinanceService] Failed to fetch top USDT Futures symbols:', err.message);
       return [];
     }
   }
@@ -284,11 +295,15 @@ export class BinanceService {
               : null;
 
             const baseAsset = symbol.replace('USDT', '');
+            const cleanBase = baseAsset.replace(/^1000+/, '');
+            const logoUrl = this.assetLogos.get(baseAsset) || this.assetLogos.get(cleanBase) || null;
             this.symbolsData.set(symbol, {
               symbol,
               baseAsset,
               quoteAsset: 'USDT',
-              logoUrl: this.assetLogos.get(baseAsset) || null,
+              marketType: 'PERP',
+              contractType: 'PERPETUAL',
+              logoUrl,
               price: initialPrice,
               volume24h: quoteVolume,
               pivots: klineData.pivots,

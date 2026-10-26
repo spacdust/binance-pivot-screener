@@ -82,21 +82,23 @@ app.get('/api/asset-logos', (req, res) => {
 
 // Official Binance asset logo proxy (zero CORS, zero hotlink referer issues, RAM-cached)
 app.get('/api/logo/:symbol', async (req, res) => {
-  const symbol = req.params.symbol.toUpperCase().replace(/USDT$/, '');
+  const rawSymbol = req.params.symbol.toUpperCase().replace(/USDT$/, '');
+  const cleanSymbol = rawSymbol.replace(/^1000+/, '');
+  const targetKey = logoBufferCache.has(rawSymbol) ? rawSymbol : cleanSymbol;
 
   // 1. Return from RAM cache if already downloaded
-  if (logoBufferCache.has(symbol)) {
-    const cached = logoBufferCache.get(symbol);
+  if (logoBufferCache.has(targetKey)) {
+    const cached = logoBufferCache.get(targetKey);
     res.setHeader('Content-Type', cached.contentType);
     res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
     return res.send(cached.buffer);
   }
 
-  // 2. Lookup logo URL
-  let logoUrl = binanceService.assetLogos.get(symbol);
+  // 2. Lookup logo URL (supports both 1000PEPE and PEPE)
+  let logoUrl = binanceService.assetLogos.get(rawSymbol) || binanceService.assetLogos.get(cleanSymbol);
   if (!logoUrl && binanceService.assetLogos.size === 0) {
     await binanceService.fetchAssetLogos();
-    logoUrl = binanceService.assetLogos.get(symbol);
+    logoUrl = binanceService.assetLogos.get(rawSymbol) || binanceService.assetLogos.get(cleanSymbol);
   }
 
   if (!logoUrl) {

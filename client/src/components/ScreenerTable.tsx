@@ -450,7 +450,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 onClick={() => handleSort('symbol')}
                 className="py-2 px-3 cursor-pointer hover:text-[#eaecef] transition-colors sticky left-12 z-30 bg-[#181a20] min-w-[130px] border-r border-[#2b313a]"
               >
-                Pasang / Volume {renderSortIcon('symbol')}
+                Kontrak PERP / Volume {renderSortIcon('symbol')}
               </th>
 
               {/* Unfrozen Table Columns */}
@@ -594,6 +594,9 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                               {coin.baseAsset}
                             </span>
                             <span className="text-[10px] text-[#848e9c] font-mono">/USDT</span>
+                            <span className="px-1 py-0.2 rounded-xs text-[9px] font-mono font-semibold bg-[#22262e] border border-[#2b313a] text-[#f0b90b]/90">
+                              PERP
+                            </span>
                             {confluence.hasConfluence && (
                               <span
                                 className={`inline-flex items-center gap-1 px-1 py-0.2 rounded-xs text-[9px] font-mono font-medium border tracking-tight ${confluence.badgeStyle}`}
