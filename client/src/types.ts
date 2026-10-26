@@ -15,24 +15,30 @@ export type PivotConditionType =
   | 'ALL'
   | 'AREA_P'
   | 'S1_TO_S2'
+  | 'S2_TO_S3'
   | 'S1_TO_P'
   | 'R1_TO_R2'
+  | 'R2_TO_R3'
   | 'R1_TO_P'
   | 'P_TO_R1'
   | 'P_TO_S1'
   | 'ABOVE_R2'
-  | 'BELOW_S2';
+  | 'ABOVE_R3'
+  | 'BELOW_S2'
+  | 'BELOW_S3';
 
 export interface PivotStatus {
   condition: PivotConditionType;
   label: string;
   description: string;
-  tagColor: 'blue' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'red' | 'green' | 'fuchsia' | 'sky' | 'orange';
+  tagColor: 'blue' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'red' | 'green' | 'fuchsia' | 'sky' | 'orange' | 'purple';
   distP: number;
   distR1: number;
   distS1: number;
   distR2: number;
   distS2: number;
+  distR3: number;
+  distS3: number;
   rangePercent: number;
 }
 
@@ -77,11 +83,15 @@ export interface ScreenerStats {
   under2pct24h: number;
   areaP: number;
   r1ToR2: number;
+  r2ToR3?: number;
   r1ToP: number;
   s1ToS2: number;
+  s2ToS3?: number;
   s1ToP: number;
   aboveR2: number;
+  aboveR3?: number;
   belowS2: number;
+  belowS3?: number;
 }
 
 export type SelectedTimeframe = 'h24' | 'h12' | 'h6' | 'h3' | 'h1' | 'm30' | 'm15' | 'm5' | 'm1';

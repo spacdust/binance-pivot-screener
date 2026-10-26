@@ -159,6 +159,8 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
         return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
       case 'fuchsia':
         return 'bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/30';
+      case 'purple':
+        return 'bg-purple-500/15 text-purple-400 border-purple-500/30';
       case 'red':
         return 'bg-red-500/15 text-red-400 border-red-500/30';
       default:

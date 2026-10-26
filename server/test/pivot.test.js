@@ -66,13 +66,29 @@ describe('Pivot Condition Classification', () => {
     assert.equal(res.tagColor, 'green');
   });
 
-  test('classifies ABOVE_R2 when price exceeds R2', () => {
+  test('classifies R2_TO_R3 when price breaks above R2 towards R3', () => {
+    // Price = 115 (between R2=110 and R3=120)
     const res = classifyPivotCondition(115, pivots, 2.0);
-    assert.equal(res.condition, 'ABOVE_R2');
+    assert.equal(res.condition, 'R2_TO_R3');
+    assert.equal(res.tagColor, 'purple');
   });
 
-  test('classifies BELOW_S2 when price drops below S2', () => {
+  test('classifies ABOVE_R3 when price exceeds R3', () => {
+    // Price = 125 (> R3=120)
+    const res = classifyPivotCondition(125, pivots, 3.0);
+    assert.equal(res.condition, 'ABOVE_R3');
+  });
+
+  test('classifies S2_TO_S3 when price breaks below S2 towards S3', () => {
+    // Price = 65 (between S3=60 and S2=70)
     const res = classifyPivotCondition(65, pivots, -2.0);
-    assert.equal(res.condition, 'BELOW_S2');
+    assert.equal(res.condition, 'S2_TO_S3');
+    assert.equal(res.tagColor, 'red');
+  });
+
+  test('classifies BELOW_S3 when price drops below S3', () => {
+    // Price = 55 (< S3=60)
+    const res = classifyPivotCondition(55, pivots, -3.0);
+    assert.equal(res.condition, 'BELOW_S3');
   });
 });

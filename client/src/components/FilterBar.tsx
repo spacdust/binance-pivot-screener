@@ -40,12 +40,14 @@ const QUICK_PERCENT_PRESETS = [1, 2, 3, 5, 10];
 const PIVOT_CONDITIONS: { value: PivotConditionType; label: string; icon: string }[] = [
   { value: 'ALL', label: 'Semua Kondisi', icon: '🌐' },
   { value: 'AREA_P', label: 'Area P (Konsolidasi)', icon: '🎯' },
-  { value: 'S1_TO_S2', label: 'Tembus S1 ➔ S2 (Breakdown)', icon: '🔴' },
-  { value: 'S1_TO_P', label: 'Pantul S1 ➔ P (Reversal)', icon: '🟢' },
   { value: 'R1_TO_R2', label: 'Tembus R1 ➔ R2 (Breakout)', icon: '🚀' },
+  { value: 'R2_TO_R3', label: 'Tembus R2 ➔ R3 (Super Pump)', icon: '🔥' },
   { value: 'R1_TO_P', label: 'Tolak R1 ➔ P (Pullback)', icon: '🔻' },
-  { value: 'ABOVE_R2', label: 'Di atas R2 (Super Bull)', icon: '🔥' },
-  { value: 'BELOW_S2', label: 'Di bawah S2 (Super Bear)', icon: '❄️' },
+  { value: 'S1_TO_P', label: 'Pantul S1 ➔ P (Reversal)', icon: '🟢' },
+  { value: 'S1_TO_S2', label: 'Tembus S1 ➔ S2 (Breakdown)', icon: '🔴' },
+  { value: 'S2_TO_S3', label: 'Tembus S2 ➔ S3 (Diskon Ekstrem)', icon: '🩸' },
+  { value: 'ABOVE_R3', label: 'Di atas R3 (Parabolic)', icon: '⚡' },
+  { value: 'BELOW_S3', label: 'Di bawah S3 (Kapitulasi)', icon: '❄️' },
 ];
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -92,12 +94,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
       </div>
 
-      {/* Row 2: Top Movers Ala Binance */}
+      {/* Row 2: Top Movers */}
       <div className="flex flex-col gap-2 pt-1">
         <div className="flex items-center justify-between text-xs">
           <label className="font-semibold text-zinc-300 flex items-center gap-1.5">
             <Flame className="w-3.5 h-3.5 text-amber-400" />
-            Filter Top Movers (Ala Binance):
+            Kategori Top Movers:
           </label>
           <span className="text-[11px] text-zinc-500 hidden sm:inline font-mono">
             {TOP_MOVER_CATEGORIES.find((c) => c.key === filters.topMoverCategory)?.desc}

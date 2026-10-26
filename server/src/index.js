@@ -32,11 +32,15 @@ app.get('/api/screener', (req, res) => {
     under2pct24h: coins.filter(c => Math.abs(c.changes.h24) < 2).length,
     areaP: coins.filter(c => c.pivotStatus?.condition === 'AREA_P').length,
     r1ToR2: coins.filter(c => c.pivotStatus?.condition === 'R1_TO_R2').length,
+    r2ToR3: coins.filter(c => c.pivotStatus?.condition === 'R2_TO_R3').length,
     r1ToP: coins.filter(c => c.pivotStatus?.condition === 'R1_TO_P').length,
     s1ToS2: coins.filter(c => c.pivotStatus?.condition === 'S1_TO_S2').length,
+    s2ToS3: coins.filter(c => c.pivotStatus?.condition === 'S2_TO_S3').length,
     s1ToP: coins.filter(c => c.pivotStatus?.condition === 'S1_TO_P').length,
-    aboveR2: coins.filter(c => c.pivotStatus?.condition === 'ABOVE_R2').length,
-    belowS2: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S2').length,
+    aboveR2: coins.filter(c => c.pivotStatus?.condition === 'ABOVE_R2' || c.pivotStatus?.condition === 'ABOVE_R3').length,
+    aboveR3: coins.filter(c => c.pivotStatus?.condition === 'ABOVE_R3').length,
+    belowS2: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S2' || c.pivotStatus?.condition === 'BELOW_S3').length,
+    belowS3: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S3').length,
   };
 
   res.json({

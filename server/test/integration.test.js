@@ -62,6 +62,22 @@ describe('Comprehensive Screener Logic & Filter Simulation', () => {
     assert.match(result.label, /R1 ➔ P/);
   });
 
+  test('Condition 6: Menembus R2 dan menuju R3 (Super Bullish Extension)', () => {
+    // R2=82400, R3=83600 (H=81200 + 2*(80400-79200) = 83600). Price = 83000
+    const result = classifyPivotCondition(83000, pivots, 1.8);
+    assert.equal(result.condition, 'R2_TO_R3');
+    assert.equal(result.tagColor, 'purple');
+    assert.match(result.label, /R2 ➔ R3/);
+  });
+
+  test('Condition 7: Menembus S2 dan menuju S3 (Extreme Capitulation)', () => {
+    // S2=78400, S3=77200. Price = 77800
+    const result = classifyPivotCondition(77800, pivots, -2.1);
+    assert.equal(result.condition, 'S2_TO_S3');
+    assert.equal(result.tagColor, 'red');
+    assert.match(result.label, /S2 ➔ S3/);
+  });
+
   test('Multi-timeframe percentage filter logic simulation (1m to 24h)', () => {
     const mockCoins = [
       { symbol: 'COIN_A', changes: { m1: 0.05, m5: 0.1, m15: 0.15, m30: 0.2, h1: 0.2, h3: 0.5, h6: 1.1, h12: 2.0, h24: 3.5 }, condition: 'AREA_P' },
