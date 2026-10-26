@@ -16,13 +16,13 @@ export function useScreenerSocket() {
   // Fetch initial REST snapshot as fallback / fast start
   const fetchInitialData = useCallback(async () => {
     const urls = [
+      'http://127.0.0.1:5000/api/screener',
       '/api/screener',
-      `http://${window.location.hostname}:5000/api/screener`,
     ];
 
     for (const url of urls) {
       try {
-        const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+        const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
         if (res.ok) {
           const json = await res.json();
           if (json.data && Array.isArray(json.data) && json.data.length > 0) {
@@ -54,7 +54,7 @@ export function useScreenerSocket() {
         }
         return current;
       });
-    }, 2000);
+    }, 1500);
 
     return () => clearInterval(interval);
   }, [fetchInitialData]);
@@ -67,9 +67,9 @@ export function useScreenerSocket() {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      // In development, connect directly to backend port 5000 to bypass Vite proxy socket aborts
-      const host = import.meta.env.DEV
-        ? `${window.location.hostname}:5000`
+      // Connect directly to local backend port 5000 for zero-latency direct socket
+      const host = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? '127.0.0.1:5000'
         : window.location.host;
       const wsUrl = `${protocol}//${host}/ws`;
 

@@ -334,7 +334,7 @@ export class BinanceService {
       completed += batch.length;
       
       // Progressive broadcast: notify clients so coins appear immediately!
-      if (this.symbolsData.size > 0 && (completed % 20 === 0 || completed === symbolsList.length)) {
+      if (this.symbolsData.size > 0 && (completed === 5 || completed % 15 === 0 || completed === symbolsList.length)) {
         this.notifyListeners({
           type: 'FULL_SNAPSHOT',
           data: Array.from(this.symbolsData.values()),
