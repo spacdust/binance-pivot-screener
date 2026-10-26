@@ -29,6 +29,8 @@ interface FilterBarProps {
   onFilterChange: (updates: Partial<FilterState>) => void;
   onReset: () => void;
   resultCount: number;
+  conditionCounts?: Record<string, number>;
+  confluenceCount?: number;
 }
 
 const TOP_MOVER_CATEGORIES: {
@@ -59,24 +61,48 @@ const TIMEFRAMES: { key: SelectedTimeframe; label: string }[] = [
 
 const QUICK_PERCENT_PRESETS = [1, 2, 3, 5, 10];
 
-const PIVOT_CONDITIONS: {
+const BULLISH_GROUP: {
   value: PivotConditionType;
+  code: string;
   label: string;
+  desc: string;
   icon: React.ComponentType<{ className?: string }>;
   iconColor: string;
+  selectedClass: string;
 }[] = [
-  { value: 'ALL', label: 'Semua Kondisi', icon: Layers, iconColor: 'text-zinc-400' },
-  { value: 'AREA_P', label: 'Area P (Konsolidasi)', icon: Target, iconColor: 'text-sky-400' },
-  { value: 'R1_TO_R2', label: 'Tembus R1 ➔ R2 (Breakout)', icon: ChevronsUp, iconColor: 'text-emerald-400' },
-  { value: 'R2_TO_R3', label: 'Tembus R2 ➔ R3 (Super Bullish)', icon: Rocket, iconColor: 'text-purple-400' },
-  { value: 'R3_TO_R4', label: 'Tembus R3 ➔ R4 (Hyper Pump)', icon: Flame, iconColor: 'text-fuchsia-400' },
-  { value: 'ABOVE_R4', label: 'Di atas R4 (Mega Pump)', icon: Sparkles, iconColor: 'text-pink-400' },
-  { value: 'R1_TO_P', label: 'Tolak R1 ➔ P (Pullback)', icon: ArrowDownRight, iconColor: 'text-amber-400' },
-  { value: 'S1_TO_P', label: 'Pantul S1 ➔ P (Reversal)', icon: ArrowUpRight, iconColor: 'text-teal-400' },
-  { value: 'S1_TO_S2', label: 'Tembus S1 ➔ S2 (Breakdown)', icon: ChevronsDown, iconColor: 'text-rose-400' },
-  { value: 'S2_TO_S3', label: 'Tembus S2 ➔ S3 (Diskon Ekstrem)', icon: ShieldAlert, iconColor: 'text-red-400' },
-  { value: 'S3_TO_S4', label: 'Tembus S3 ➔ S4 (Kapitulasi Berat)', icon: AlertTriangle, iconColor: 'text-red-500' },
-  { value: 'BELOW_S4', label: 'Di bawah S4 (Oversold Maksimal)', icon: AlertOctagon, iconColor: 'text-red-600' },
+  { value: 'R1_TO_R2', code: 'R1 ➔ R2', label: 'Tembus R1 ➔ R2', desc: 'Breakout', icon: ChevronsUp, iconColor: 'text-emerald-400', selectedClass: 'bg-emerald-500 text-zinc-950 font-bold border-emerald-400 shadow-md shadow-emerald-500/20' },
+  { value: 'R2_TO_R3', code: 'R2 ➔ R3', label: 'Tembus R2 ➔ R3', desc: 'Super Bullish', icon: Rocket, iconColor: 'text-purple-400', selectedClass: 'bg-purple-500 text-zinc-950 font-bold border-purple-400 shadow-md shadow-purple-500/20' },
+  { value: 'R3_TO_R4', code: 'R3 ➔ R4', label: 'Tembus R3 ➔ R4', desc: 'Hyper Pump', icon: Flame, iconColor: 'text-fuchsia-400', selectedClass: 'bg-fuchsia-500 text-zinc-950 font-bold border-fuchsia-400 shadow-md shadow-fuchsia-500/20' },
+  { value: 'ABOVE_R4', code: '> R4', label: 'Di atas R4', desc: 'Mega Pump', icon: Sparkles, iconColor: 'text-pink-400', selectedClass: 'bg-pink-500 text-zinc-950 font-bold border-pink-400 shadow-md shadow-pink-500/20' },
+];
+
+const CENTER_GROUP: {
+  value: PivotConditionType;
+  code: string;
+  label: string;
+  desc: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconColor: string;
+  selectedClass: string;
+}[] = [
+  { value: 'AREA_P', code: 'Area P', label: 'Area P', desc: 'Konsolidasi', icon: Target, iconColor: 'text-sky-400', selectedClass: 'bg-sky-500 text-zinc-950 font-bold border-sky-400 shadow-md shadow-sky-500/20' },
+  { value: 'S1_TO_P', code: 'S1 ➔ P', label: 'Pantul S1 ➔ P', desc: 'Reversal', icon: ArrowUpRight, iconColor: 'text-teal-400', selectedClass: 'bg-teal-500 text-zinc-950 font-bold border-teal-400 shadow-md shadow-teal-500/20' },
+  { value: 'R1_TO_P', code: 'R1 ➔ P', label: 'Tolak R1 ➔ P', desc: 'Pullback', icon: ArrowDownRight, iconColor: 'text-amber-400', selectedClass: 'bg-amber-500 text-zinc-950 font-bold border-amber-400 shadow-md shadow-amber-500/20' },
+];
+
+const BEARISH_GROUP: {
+  value: PivotConditionType;
+  code: string;
+  label: string;
+  desc: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconColor: string;
+  selectedClass: string;
+}[] = [
+  { value: 'S1_TO_S2', code: 'S1 ➔ S2', label: 'Tembus S1 ➔ S2', desc: 'Breakdown', icon: ChevronsDown, iconColor: 'text-rose-400', selectedClass: 'bg-rose-500 text-zinc-950 font-bold border-rose-400 shadow-md shadow-rose-500/20' },
+  { value: 'S2_TO_S3', code: 'S2 ➔ S3', label: 'Tembus S2 ➔ S3', desc: 'Diskon Ekstrem', icon: ShieldAlert, iconColor: 'text-red-400', selectedClass: 'bg-red-500 text-zinc-950 font-bold border-red-400 shadow-md shadow-red-500/20' },
+  { value: 'S3_TO_S4', code: 'S3 ➔ S4', label: 'Tembus S3 ➔ S4', desc: 'Kapitulasi Berat', icon: AlertTriangle, iconColor: 'text-red-500', selectedClass: 'bg-red-600 text-white font-bold border-red-500 shadow-md shadow-red-600/20' },
+  { value: 'BELOW_S4', code: '< S4', label: 'Di bawah S4', desc: 'Oversold Maksimal', icon: AlertOctagon, iconColor: 'text-red-600', selectedClass: 'bg-red-700 text-white font-bold border-red-600 shadow-md shadow-red-700/20' },
 ];
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -84,6 +110,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onFilterChange,
   onReset,
   resultCount,
+  conditionCounts,
+  confluenceCount,
 }) => {
   return (
     <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-4 lg:p-5 space-y-4 shadow-xl backdrop-blur-sm">
@@ -290,47 +318,248 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       <div className="h-px bg-zinc-800/70" />
 
-      {/* Row 4: Daily Pivot Point Conditions & 3TF Confluence Toggle */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <label className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
-            <Target className="w-3.5 h-3.5 text-sky-400 stroke-[2.2]" />
-            Filter Kondisi Pivot Point (Daily, 1H, 5M):
-          </label>
-          <button
-            onClick={() => onFilterChange({ onlyConfluence: !filters.onlyConfluence })}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all ${
-              filters.onlyConfluence
-                ? 'bg-amber-400 text-zinc-950 border-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)]'
-                : 'bg-zinc-950/90 text-amber-400 border-amber-500/30 hover:border-amber-400/60 hover:bg-amber-500/10'
-            }`}
-          >
-            <Zap className={`w-3.5 h-3.5 ${filters.onlyConfluence ? 'fill-zinc-950' : 'fill-amber-400'}`} />
-            <span>3TF Confluence (Area Selaras)</span>
-            {filters.onlyConfluence && (
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-950 animate-pulse" />
-            )}
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {PIVOT_CONDITIONS.map((cond) => {
-            const isSelected = filters.pivotCondition === cond.value;
-            const Icon = cond.icon;
-            return (
-              <button
-                key={cond.value}
-                onClick={() => onFilterChange({ pivotCondition: cond.value })}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
-                  isSelected
-                    ? 'bg-zinc-100 text-zinc-950 border-white shadow-md font-bold'
-                    : 'bg-zinc-950/80 text-zinc-400 border-zinc-800/80 hover:text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900'
+      {/* Row 4: Pivot Conditions Filter Categorized into 3 Market Zones */}
+      <div className="flex flex-col gap-3">
+        {/* Top Control: Section Title + "Semua Kondisi" + "3TF Confluence" Toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-0.5">
+          <div className="flex items-center gap-2">
+            <span className="p-1 rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-400">
+              <Target className="w-3.5 h-3.5 stroke-[2.2]" />
+            </span>
+            <div>
+              <span className="text-xs font-semibold text-zinc-200">
+                Filter Kondisi Pivot Point
+              </span>
+              <span className="text-[11px] text-zinc-500 ml-2 font-mono hidden sm:inline">
+                (Daily Pivot &bull; Multi-Zone)
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Semua Kondisi (ALL) Button */}
+            <button
+              onClick={() => onFilterChange({ pivotCondition: 'ALL' })}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold border transition-all ${
+                filters.pivotCondition === 'ALL'
+                  ? 'bg-zinc-100 text-zinc-950 border-white shadow-md shadow-white/10 font-bold'
+                  : 'bg-zinc-950/80 text-zinc-400 border-zinc-800/80 hover:text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/60'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Semua Kondisi</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono tabular-nums ${
+                  filters.pivotCondition === 'ALL'
+                    ? 'bg-zinc-900 text-zinc-100 font-bold'
+                    : 'bg-zinc-800/80 text-zinc-300'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 stroke-[2.2] ${isSelected ? 'text-zinc-950' : cond.iconColor}`} />
-                <span>{cond.label}</span>
-              </button>
-            );
-          })}
+                {conditionCounts?.ALL ?? resultCount}
+              </span>
+            </button>
+
+            {/* 3TF Confluence Toggle */}
+            <button
+              onClick={() => onFilterChange({ onlyConfluence: !filters.onlyConfluence })}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all ${
+                filters.onlyConfluence
+                  ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-zinc-950 border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.35)]'
+                  : 'bg-zinc-950/90 text-amber-400 border-amber-500/30 hover:border-amber-400/60 hover:bg-amber-500/10'
+              }`}
+            >
+              <Zap className={`w-3.5 h-3.5 ${filters.onlyConfluence ? 'fill-zinc-950' : 'fill-amber-400'}`} />
+              <span>3TF Confluence</span>
+              {typeof confluenceCount === 'number' && (
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold tabular-nums ${
+                    filters.onlyConfluence
+                      ? 'bg-zinc-950 text-amber-300'
+                      : 'bg-amber-400/15 text-amber-300 border border-amber-400/30'
+                  }`}
+                >
+                  {confluenceCount}
+                </span>
+              )}
+              {filters.onlyConfluence && (
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-950 animate-pulse ml-0.5" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* 3-Column Categorized Market Zone Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Card 1: Zona Bullish (Breakout & Resistance Targets) */}
+          <div className="bg-zinc-950/60 border border-emerald-950/40 rounded-xl p-3 flex flex-col gap-2 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
+            <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/60">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+                <span className="p-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                  <TrendingUp className="w-3 h-3 text-emerald-400 stroke-[2.2]" />
+                </span>
+                <span>Zona Bullish (Breakout)</span>
+              </div>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300/80 border border-emerald-500/20 font-semibold">
+                R1 ➔ R4+
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5">
+              {BULLISH_GROUP.map((cond) => {
+                const isSelected = filters.pivotCondition === cond.value;
+                const count = conditionCounts?.[cond.value] ?? 0;
+                const Icon = cond.icon;
+                return (
+                  <button
+                    key={cond.value}
+                    onClick={() =>
+                      onFilterChange({
+                        pivotCondition: isSelected ? 'ALL' : cond.value,
+                      })
+                    }
+                    className={`flex items-center justify-between gap-1 p-2 rounded-lg text-xs font-medium border text-left transition-all ${
+                      isSelected
+                        ? cond.selectedClass
+                        : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Icon className={`w-3.5 h-3.5 shrink-0 stroke-[2.2] ${isSelected ? 'text-zinc-950' : cond.iconColor}`} />
+                      <div className="truncate">
+                        <div className="font-mono font-bold text-[11px] leading-tight">{cond.code}</div>
+                        <div className={`text-[10px] truncate leading-tight ${isSelected ? 'text-zinc-900 font-semibold' : 'text-zinc-500'}`}>{cond.desc}</div>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 tabular-nums ${
+                        isSelected
+                          ? 'bg-zinc-950/20 text-zinc-950 font-bold'
+                          : count > 0
+                          ? 'bg-emerald-500/15 text-emerald-400 font-semibold border border-emerald-500/20'
+                          : 'bg-zinc-800/40 text-zinc-600'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 2: Center Pivot & Reversal (Konsolidasi & Retest) */}
+          <div className="bg-zinc-950/60 border border-sky-950/40 rounded-xl p-3 flex flex-col gap-2 relative overflow-hidden group hover:border-sky-500/30 transition-all">
+            <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/60">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-sky-400">
+                <span className="p-1 rounded-md bg-sky-500/10 border border-sky-500/20">
+                  <Target className="w-3 h-3 text-sky-400 stroke-[2.2]" />
+                </span>
+                <span>Center & Reversal</span>
+              </div>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-300/80 border border-sky-500/20 font-semibold">
+                Area P & Retest
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              {CENTER_GROUP.map((cond) => {
+                const isSelected = filters.pivotCondition === cond.value;
+                const count = conditionCounts?.[cond.value] ?? 0;
+                const Icon = cond.icon;
+                return (
+                  <button
+                    key={cond.value}
+                    onClick={() =>
+                      onFilterChange({
+                        pivotCondition: isSelected ? 'ALL' : cond.value,
+                      })
+                    }
+                    className={`flex items-center justify-between gap-1 p-2 rounded-lg text-xs font-medium border text-left transition-all ${
+                      isSelected
+                        ? cond.selectedClass
+                        : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-300 hover:border-sky-500/40 hover:bg-zinc-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Icon className={`w-3.5 h-3.5 shrink-0 stroke-[2.2] ${isSelected ? 'text-zinc-950' : cond.iconColor}`} />
+                      <div className="truncate">
+                        <div className="font-mono font-bold text-[11px] leading-tight">{cond.code}</div>
+                        <div className={`text-[10px] truncate leading-tight ${isSelected ? 'text-zinc-900 font-semibold' : 'text-zinc-500'}`}>{cond.desc}</div>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 tabular-nums ${
+                        isSelected
+                          ? 'bg-zinc-950/20 text-zinc-950 font-bold'
+                          : count > 0
+                          ? 'bg-sky-500/15 text-sky-400 font-semibold border border-sky-500/20'
+                          : 'bg-zinc-800/40 text-zinc-600'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 3: Zona Bearish (Breakdown & Support Levels) */}
+          <div className="bg-zinc-950/60 border border-rose-950/40 rounded-xl p-3 flex flex-col gap-2 relative overflow-hidden group hover:border-rose-500/30 transition-all">
+            <div className="flex items-center justify-between pb-1.5 border-b border-zinc-800/60">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-rose-400">
+                <span className="p-1 rounded-md bg-rose-500/10 border border-rose-500/20">
+                  <TrendingDown className="w-3 h-3 text-rose-400 stroke-[2.2]" />
+                </span>
+                <span>Zona Bearish (Breakdown)</span>
+              </div>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-300/80 border border-rose-500/20 font-semibold">
+                S1 ➔ S4-
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5">
+              {BEARISH_GROUP.map((cond) => {
+                const isSelected = filters.pivotCondition === cond.value;
+                const count = conditionCounts?.[cond.value] ?? 0;
+                const Icon = cond.icon;
+                return (
+                  <button
+                    key={cond.value}
+                    onClick={() =>
+                      onFilterChange({
+                        pivotCondition: isSelected ? 'ALL' : cond.value,
+                      })
+                    }
+                    className={`flex items-center justify-between gap-1 p-2 rounded-lg text-xs font-medium border text-left transition-all ${
+                      isSelected
+                        ? cond.selectedClass
+                        : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-300 hover:border-rose-500/40 hover:bg-zinc-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Icon className={`w-3.5 h-3.5 shrink-0 stroke-[2.2] ${isSelected ? 'text-white' : cond.iconColor}`} />
+                      <div className="truncate">
+                        <div className="font-mono font-bold text-[11px] leading-tight">{cond.code}</div>
+                        <div className={`text-[10px] truncate leading-tight ${isSelected ? 'text-zinc-100 font-semibold' : 'text-zinc-500'}`}>{cond.desc}</div>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 tabular-nums ${
+                        isSelected
+                          ? 'bg-zinc-950/30 text-white font-bold'
+                          : count > 0
+                          ? 'bg-rose-500/15 text-rose-400 font-semibold border border-rose-500/20'
+                          : 'bg-zinc-800/40 text-zinc-600'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>

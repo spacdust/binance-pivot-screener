@@ -93,6 +93,22 @@ export const App: React.FC = () => {
     return coins.find((c) => c.symbol === selectedCoin.symbol) || selectedCoin;
   }, [coins, selectedCoin]);
 
+  // Live count per pivot condition for interactive filters
+  const conditionCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    coins.forEach((c) => {
+      const cond = c.pivotStatus?.condition;
+      if (cond) {
+        counts[cond] = (counts[cond] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [coins]);
+
+  const confluenceCount = useMemo(() => {
+    return coins.filter((c) => checkPivotConfluence(c).hasConfluence).length;
+  }, [coins]);
+
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans">
       {/* App Header */}
@@ -140,6 +156,8 @@ export const App: React.FC = () => {
           onFilterChange={handleFilterChange}
           onReset={handleResetFilters}
           resultCount={filteredCoins.length}
+          conditionCounts={conditionCounts}
+          confluenceCount={confluenceCount}
         />
 
         {/* Screener Data Table */}
