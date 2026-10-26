@@ -210,7 +210,16 @@ if (fs.existsSync(distPath)) {
 }
 
 // Start server and initialize Binance service
-server.listen(PORT, async () => {
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[Server Error] Port ${PORT} sudah digunakan oleh proses lain (EADDRINUSE). Silakan tutup aplikasi sebelumnya.`);
+    process.exit(1);
+  } else {
+    console.error('[Server Error]:', err.message);
+  }
+});
+
+server.listen(PORT, '0.0.0.0', async () => {
   console.log(`===============================================`);
   console.log(`🚀 Screener Server running on http://localhost:${PORT}`);
   console.log(`📡 WebSocket endpoint at ws://localhost:${PORT}/ws`);

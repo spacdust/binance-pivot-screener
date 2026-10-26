@@ -10,6 +10,12 @@ export default defineConfig({
       '/api': {
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (err: any) => {
+            if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.code === 'ECONNABORTED') return;
+            console.warn('[Vite API Proxy]', err.message);
+          });
+        },
       },
       '/ws': {
         target: 'ws://127.0.0.1:5000',

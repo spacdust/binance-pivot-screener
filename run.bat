@@ -34,6 +34,14 @@ if not exist "node_modules\" call npm install
 if not exist "server\node_modules\" call npm --prefix server install
 if not exist "client\node_modules\" call npm --prefix client install
 
+:: 4. Bersihkan port 5000 & 5173 dari sisa proses sebelumnya
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000" ^| findstr "LISTENING"') do (
+    taskkill /F /PID %%a >nul 2>nul
+)
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5173" ^| findstr "LISTENING"') do (
+    taskkill /F /PID %%a >nul 2>nul
+)
+
 echo [INFO] Menjalankan Binance Futures Screener...
 echo Tekan Ctrl+C untuk menghentikan aplikasi kapan saja.
 echo.
