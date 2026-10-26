@@ -53,10 +53,6 @@ export const Header: React.FC<HeaderProps> = ({
             PRO PIVOT
           </span>
         </div>
-
-        <span className="hidden lg:inline text-[11px] text-[#848e9c] border-l border-[#2b313a] pl-2.5">
-          Multi-Timeframe Momentum (1m - 24j) & Pivots (5M, 1H, Daily)
-        </span>
       </div>
 
       {/* Live Controls & Diagnostics */}
