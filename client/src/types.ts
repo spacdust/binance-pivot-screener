@@ -9,6 +9,8 @@ export interface Pivots {
   S2: number;
   R3: number;
   S3: number;
+  R4: number;
+  S4: number;
 }
 
 export type PivotConditionType =
@@ -16,22 +18,26 @@ export type PivotConditionType =
   | 'AREA_P'
   | 'S1_TO_S2'
   | 'S2_TO_S3'
+  | 'S3_TO_S4'
   | 'S1_TO_P'
   | 'R1_TO_R2'
   | 'R2_TO_R3'
+  | 'R3_TO_R4'
   | 'R1_TO_P'
   | 'P_TO_R1'
   | 'P_TO_S1'
   | 'ABOVE_R2'
   | 'ABOVE_R3'
+  | 'ABOVE_R4'
   | 'BELOW_S2'
-  | 'BELOW_S3';
+  | 'BELOW_S3'
+  | 'BELOW_S4';
 
 export interface PivotStatus {
   condition: PivotConditionType;
   label: string;
   description: string;
-  tagColor: 'blue' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'red' | 'green' | 'fuchsia' | 'sky' | 'orange' | 'purple';
+  tagColor: 'blue' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'red' | 'green' | 'fuchsia' | 'sky' | 'orange' | 'purple' | 'pink';
   distP: number;
   distR1: number;
   distS1: number;
@@ -39,6 +45,8 @@ export interface PivotStatus {
   distS2: number;
   distR3: number;
   distS3: number;
+  distR4?: number;
+  distS4?: number;
   rangePercent: number;
 }
 
@@ -84,14 +92,18 @@ export interface ScreenerStats {
   areaP: number;
   r1ToR2: number;
   r2ToR3?: number;
+  r3ToR4?: number;
   r1ToP: number;
   s1ToS2: number;
   s2ToS3?: number;
+  s3ToS4?: number;
   s1ToP: number;
   aboveR2: number;
   aboveR3?: number;
+  aboveR4?: number;
   belowS2: number;
   belowS3?: number;
+  belowS4?: number;
 }
 
 export type SelectedTimeframe = 'h24' | 'h12' | 'h6' | 'h3' | 'h1' | 'm30' | 'm15' | 'm5' | 'm1';

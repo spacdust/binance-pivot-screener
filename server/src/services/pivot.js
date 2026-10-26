@@ -20,6 +20,8 @@ export function calculateDailyPivots(high, low, close) {
   const S2 = P - (H - L);
   const R3 = H + 2 * (P - L);
   const S3 = L - 2 * (H - P);
+  const R4 = (3 * P) + (H - (3 * L)); // or H + 3 * (P - L)
+  const S4 = (3 * P) - ((3 * H) - L); // or L - 3 * (H - P)
 
   return {
     H,
@@ -31,7 +33,9 @@ export function calculateDailyPivots(high, low, close) {
     R2,
     S2,
     R3,
-    S3
+    S3,
+    R4,
+    S4
   };
 }
 
@@ -60,7 +64,7 @@ export function classifyPivotCondition(currentPrice, pivots, momentum1h = 0) {
     };
   }
 
-  const { P, R1, S1, R2, S2, R3, S3 } = pivots;
+  const { P, R1, S1, R2, S2, R3, S3, R4, S4 } = pivots;
 
   // Percentage distances
   const distP = ((price - P) / P) * 100;
@@ -70,23 +74,30 @@ export function classifyPivotCondition(currentPrice, pivots, momentum1h = 0) {
   const distS2 = ((price - S2) / S2) * 100;
   const distR3 = ((price - R3) / R3) * 100;
   const distS3 = ((price - S3) / S3) * 100;
+  const distR4 = R4 !== undefined ? ((price - R4) / R4) * 100 : 0;
+  const distS4 = S4 !== undefined ? ((price - S4) / S4) * 100 : 0;
 
-  // Relative position score: 0 = S3, 20 = S2, 35 = S1, 50 = P, 65 = R1, 80 = R2, 100 = R3
+  // Relative position score across 8 zones: S4 (0%) to R4 (100%)
+  // S4: 0%, S3: 12.5%, S2: 25%, S1: 37.5%, P: 50%, R1: 62.5%, R2: 75%, R3: 87.5%, R4: 100%
   let rangePercent = 50;
-  if (price >= R3) {
+  if (R4 !== undefined && price >= R4) {
     rangePercent = 100;
+  } else if (R4 !== undefined && price >= R3) {
+    rangePercent = 87.5 + ((price - R3) / (R4 - R3 || 1)) * 12.5;
   } else if (price >= R2) {
-    rangePercent = 80 + ((price - R2) / (R3 - R2 || 1)) * 20;
+    rangePercent = 75 + ((price - R2) / ((R3 || R2 + 1) - R2 || 1)) * 12.5;
   } else if (price >= R1) {
-    rangePercent = 65 + ((price - R1) / (R2 - R1 || 1)) * 15;
+    rangePercent = 62.5 + ((price - R1) / (R2 - R1 || 1)) * 12.5;
   } else if (price >= P) {
-    rangePercent = 50 + ((price - P) / (R1 - P || 1)) * 15;
+    rangePercent = 50 + ((price - P) / (R1 - P || 1)) * 12.5;
   } else if (price >= S1) {
-    rangePercent = 35 + ((price - S1) / (P - S1 || 1)) * 15;
+    rangePercent = 37.5 + ((price - S1) / (P - S1 || 1)) * 12.5;
   } else if (price >= S2) {
-    rangePercent = 20 + ((price - S2) / (S1 - S2 || 1)) * 15;
-  } else if (price >= S3) {
-    rangePercent = ((price - S3) / (S2 - S3 || 1)) * 20;
+    rangePercent = 25 + ((price - S2) / (S1 - S2 || 1)) * 12.5;
+  } else if (S4 !== undefined && price >= S3) {
+    rangePercent = 12.5 + ((price - S3) / (S2 - S3 || 1)) * 12.5;
+  } else if (S4 !== undefined && price >= S4) {
+    rangePercent = ((price - S4) / (S3 - S4 || 1)) * 12.5;
   } else {
     rangePercent = 0;
   }
@@ -106,6 +117,16 @@ export function classifyPivotCondition(currentPrice, pivots, momentum1h = 0) {
     label = 'Area P (Pivot)';
     description = 'Harga berkonsolidasi di sekitar level Pivot';
     tagColor = 'cyan';
+  } else if (R4 !== undefined && price > R4) {
+    condition = 'ABOVE_R4';
+    label = 'Di atas R4';
+    description = 'Ekspansi parabolik ekstrem di atas Resistance 4 (Mega Pump)';
+    tagColor = 'fuchsia';
+  } else if (R4 !== undefined && price > R3 && price <= R4) {
+    condition = 'R3_TO_R4';
+    label = 'Tembus R3 ➔ R4';
+    description = 'Menembus R3 dan bergerak menuju R4 (Hyper Bullish Extension)';
+    tagColor = 'purple';
   } else if (price > R3) {
     condition = 'ABOVE_R3';
     label = 'Di atas R3';
@@ -157,6 +178,16 @@ export function classifyPivotCondition(currentPrice, pivots, momentum1h = 0) {
     label = 'Tembus S2 ➔ S3';
     description = 'Menembus S2 dan bergerak menuju S3 (Kapitulasi / Diskon Ekstrem)';
     tagColor = 'red';
+  } else if (S4 !== undefined && price >= S4 && price < S3) {
+    condition = 'S3_TO_S4';
+    label = 'Tembus S3 ➔ S4';
+    description = 'Menembus S3 dan bergerak menuju S4 (Kapitulasi Lanjut / Extreme Dip)';
+    tagColor = 'red';
+  } else if (S4 !== undefined && price < S4) {
+    condition = 'BELOW_S4';
+    label = 'Di bawah S4';
+    description = 'Penurunan ekstrem di bawah Support 4 (Oversold Maksimal Ekstrem)';
+    tagColor = 'red';
   } else if (price < S3) {
     condition = 'BELOW_S3';
     label = 'Di bawah S3';
@@ -176,6 +207,8 @@ export function classifyPivotCondition(currentPrice, pivots, momentum1h = 0) {
     distS2: Number(distS2.toFixed(2)),
     distR3: Number(distR3.toFixed(2)),
     distS3: Number(distS3.toFixed(2)),
+    distR4: Number(distR4.toFixed(2)),
+    distS4: Number(distS4.toFixed(2)),
     rangePercent
   };
 }

@@ -20,6 +20,14 @@ describe('Comprehensive Screener Logic & Filter Simulation', () => {
     assert.equal(pivots.R2, 82400);
     // S2 = 80400 - (81200 - 79200) = 78400
     assert.equal(pivots.S2, 78400);
+    // R3 = 81200 + 2 * (80400 - 79200) = 83600
+    assert.equal(pivots.R3, 83600);
+    // S3 = 79200 - 2 * (81200 - 80400) = 77600
+    assert.equal(pivots.S3, 77600);
+    // R4 = 81200 + 3 * (80400 - 79200) = 84800
+    assert.equal(pivots.R4, 84800);
+    // S4 = 79200 - 3 * (81200 - 80400) = 76800
+    assert.equal(pivots.S4, 76800);
   });
 
   test('Condition 1: Area P (Price around Pivot point)', () => {
@@ -71,11 +79,25 @@ describe('Comprehensive Screener Logic & Filter Simulation', () => {
   });
 
   test('Condition 7: Menembus S2 dan menuju S3 (Extreme Capitulation)', () => {
-    // S2=78400, S3=77200. Price = 77800
-    const result = classifyPivotCondition(77800, pivots, -2.1);
+    // S2=78400, S3=77600. Price = 78000
+    const result = classifyPivotCondition(78000, pivots, -2.1);
     assert.equal(result.condition, 'S2_TO_S3');
     assert.equal(result.tagColor, 'red');
     assert.match(result.label, /S2 ➔ S3/);
+  });
+
+  test('Condition 8: Menembus R3 dan menuju R4 (Hyper Bullish Extension)', () => {
+    // R3=83600, R4=84800. Price = 84200
+    const result = classifyPivotCondition(84200, pivots, 2.5);
+    assert.equal(result.condition, 'R3_TO_R4');
+    assert.match(result.label, /R3 ➔ R4/);
+  });
+
+  test('Condition 9: Menembus S3 dan menuju S4 (Heavy Capitulation)', () => {
+    // S3=77600, S4=76800. Price = 77200
+    const result = classifyPivotCondition(77200, pivots, -2.8);
+    assert.equal(result.condition, 'S3_TO_S4');
+    assert.match(result.label, /S3 ➔ S4/);
   });
 
   test('Multi-timeframe percentage filter logic simulation (1m to 24h)', () => {

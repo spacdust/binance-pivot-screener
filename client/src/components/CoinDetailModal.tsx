@@ -30,14 +30,19 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
     return dist >= 0 ? 'text-emerald-400' : 'text-rose-400';
   };
 
+  const r4Val = pivots.R4 ?? (pivots.R3 + (pivots.R3 - pivots.R2));
+  const s4Val = pivots.S4 ?? (pivots.S3 - (pivots.S2 - pivots.S3));
+
   const pivotLevels = [
+    { name: 'R4', label: 'Resistance 4 (Super Ceiling)', val: r4Val, color: 'text-pink-400 font-bold', bg: 'bg-pink-500/15' },
     { name: 'R3', label: 'Resistance 3', val: pivots.R3, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
-    { name: 'R2', label: 'Resistance 2', val: pivots.R2, color: 'text-pink-400', bg: 'bg-pink-500/10' },
-    { name: 'R1', label: 'Resistance 1', val: pivots.R1, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { name: 'R2', label: 'Resistance 2', val: pivots.R2, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { name: 'R1', label: 'Resistance 1', val: pivots.R1, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     { name: 'P', label: 'Daily Pivot (Center)', val: pivots.P, color: 'text-sky-400 font-bold', bg: 'bg-sky-500/15' },
     { name: 'S1', label: 'Support 1', val: pivots.S1, color: 'text-amber-400', bg: 'bg-amber-500/10' },
     { name: 'S2', label: 'Support 2', val: pivots.S2, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-    { name: 'S3', label: 'Support 3', val: pivots.S3, color: 'text-red-500', bg: 'bg-red-500/10' },
+    { name: 'S3', label: 'Support 3', val: pivots.S3, color: 'text-red-400', bg: 'bg-red-500/10' },
+    { name: 'S4', label: 'Support 4 (Super Floor)', val: s4Val, color: 'text-red-600 font-bold', bg: 'bg-red-600/15' },
   ];
 
   const tfList = [

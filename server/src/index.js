@@ -33,14 +33,18 @@ app.get('/api/screener', (req, res) => {
     areaP: coins.filter(c => c.pivotStatus?.condition === 'AREA_P').length,
     r1ToR2: coins.filter(c => c.pivotStatus?.condition === 'R1_TO_R2').length,
     r2ToR3: coins.filter(c => c.pivotStatus?.condition === 'R2_TO_R3').length,
+    r3ToR4: coins.filter(c => c.pivotStatus?.condition === 'R3_TO_R4').length,
     r1ToP: coins.filter(c => c.pivotStatus?.condition === 'R1_TO_P').length,
     s1ToS2: coins.filter(c => c.pivotStatus?.condition === 'S1_TO_S2').length,
     s2ToS3: coins.filter(c => c.pivotStatus?.condition === 'S2_TO_S3').length,
+    s3ToS4: coins.filter(c => c.pivotStatus?.condition === 'S3_TO_S4').length,
     s1ToP: coins.filter(c => c.pivotStatus?.condition === 'S1_TO_P').length,
-    aboveR2: coins.filter(c => c.pivotStatus?.condition === 'ABOVE_R2' || c.pivotStatus?.condition === 'ABOVE_R3').length,
-    aboveR3: coins.filter(c => c.pivotStatus?.condition === 'ABOVE_R3').length,
-    belowS2: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S2' || c.pivotStatus?.condition === 'BELOW_S3').length,
-    belowS3: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S3').length,
+    aboveR2: coins.filter(c => c.pivotStatus?.condition === 'ABOVE_R2' || c.pivotStatus?.condition === 'R2_TO_R3' || c.pivotStatus?.condition === 'R3_TO_R4' || c.pivotStatus?.condition === 'ABOVE_R3' || c.pivotStatus?.condition === 'ABOVE_R4').length,
+    aboveR3: coins.filter(c => c.pivotStatus?.condition === 'ABOVE_R3' || c.pivotStatus?.condition === 'R3_TO_R4' || c.pivotStatus?.condition === 'ABOVE_R4').length,
+    aboveR4: coins.filter(c => c.pivotStatus?.condition === 'ABOVE_R4').length,
+    belowS2: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S2' || c.pivotStatus?.condition === 'S2_TO_S3' || c.pivotStatus?.condition === 'S3_TO_S4' || c.pivotStatus?.condition === 'BELOW_S3' || c.pivotStatus?.condition === 'BELOW_S4').length,
+    belowS3: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S3' || c.pivotStatus?.condition === 'S3_TO_S4' || c.pivotStatus?.condition === 'BELOW_S4').length,
+    belowS4: coins.filter(c => c.pivotStatus?.condition === 'BELOW_S4').length,
   };
 
   res.json({

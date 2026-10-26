@@ -20,6 +20,8 @@ describe('Daily Pivot Points Calculations', () => {
     assert.equal(pivots.S2, 70);
     assert.equal(pivots.R3, 120);
     assert.equal(pivots.S3, 60);
+    assert.equal(pivots.R4, 130);
+    assert.equal(pivots.S4, 50);
   });
 
   test('throws error on invalid input', () => {
@@ -73,10 +75,18 @@ describe('Pivot Condition Classification', () => {
     assert.equal(res.tagColor, 'purple');
   });
 
-  test('classifies ABOVE_R3 when price exceeds R3', () => {
-    // Price = 125 (> R3=120)
+  test('classifies R3_TO_R4 when price breaks above R3 towards R4', () => {
+    // Price = 125 (between R3=120 and R4=130)
     const res = classifyPivotCondition(125, pivots, 3.0);
-    assert.equal(res.condition, 'ABOVE_R3');
+    assert.equal(res.condition, 'R3_TO_R4');
+    assert.match(res.label, /R3 ➔ R4/);
+  });
+
+  test('classifies ABOVE_R4 when price exceeds R4', () => {
+    // Price = 135 (> R4=130)
+    const res = classifyPivotCondition(135, pivots, 4.0);
+    assert.equal(res.condition, 'ABOVE_R4');
+    assert.match(res.label, /Di atas R4/);
   });
 
   test('classifies S2_TO_S3 when price breaks below S2 towards S3', () => {
@@ -86,9 +96,17 @@ describe('Pivot Condition Classification', () => {
     assert.equal(res.tagColor, 'red');
   });
 
-  test('classifies BELOW_S3 when price drops below S3', () => {
-    // Price = 55 (< S3=60)
+  test('classifies S3_TO_S4 when price breaks below S3 towards S4', () => {
+    // Price = 55 (between S4=50 and S3=60)
     const res = classifyPivotCondition(55, pivots, -3.0);
-    assert.equal(res.condition, 'BELOW_S3');
+    assert.equal(res.condition, 'S3_TO_S4');
+    assert.match(res.label, /S3 ➔ S4/);
+  });
+
+  test('classifies BELOW_S4 when price drops below S4', () => {
+    // Price = 45 (< S4=50)
+    const res = classifyPivotCondition(45, pivots, -4.0);
+    assert.equal(res.condition, 'BELOW_S4');
+    assert.match(res.label, /Di bawah S4/);
   });
 });

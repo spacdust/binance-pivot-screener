@@ -9,9 +9,13 @@ Dirancang khusus untuk memfilter pergerakan harga koin Binance secara realtime b
    - 🔴 **Tembus S1 ➔ Menuju S2**: *Bearish Breakdown* menembus Support 1
    - 🟢 **Memantul dari S1 ➔ Menuju P**: *Bullish Reversal* pantulan dari Support 1
    - 🚀 **Tembus R1 ➔ Menuju R2**: *Bullish Breakout* menembus Resistance 1
-   - 🔥 **Tembus R2 ➔ Menuju R3**: *Super Pump* menembus Resistance 2
+   - 🟣 **Tembus R2 ➔ Menuju R3**: *Super Bullish Extension* menembus Resistance 2
+   - 🔥 **Tembus R3 ➔ Menuju R4**: *Hyper Pump* menembus Resistance 3
+   - ✨ **Di atas R4**: *Mega Pump Ekstrem* di atas Resistance 4
    - 🔻 **Tertahan di R1 ➔ Menuju P**: *Pullback* ditolak dari Resistance 1
    - 🩸 **Tembus S2 ➔ Menuju S3**: *Diskon Ekstrem / Kapitulasi* menembus Support 2
+   - ⚠️ **Tembus S3 ➔ Menuju S4**: *Kapitulasi Berat* menembus Support 3
+   - 🛑 **Di bawah S4**: *Oversold Maksimal Ekstrem* di bawah Support 4
 3. **Kategori Top Movers**:
    - 🌐 **Semua Koin**: Seluruh koin USDT aktif
    - 🔥 **Top Gainers**: Kenaikan persentase tertinggi (bisa per 1m, 5m, 15m, 1j, hingga 24j)
@@ -50,14 +54,16 @@ Dihitung dari candlestick harian kemarin (**00:00:00 - 23:59:59 UTC**):
 * $S2 = P - (High_{prev} - Low_{prev})$
 * $R3 = High_{prev} + 2 \times (P - Low_{prev})$
 * $S3 = Low_{prev} - 2 \times (High_{prev} - P)$
+* $R4 = 3 \times P + (High_{prev} - 3 \times Low_{prev}) = High_{prev} + 3 \times (P - Low_{prev})$
+* $S4 = 3 \times P - (3 \times High_{prev} - Low_{prev}) = Low_{prev} - 3 \times (High_{prev} - P)$
 
 ### Multi-Timeframe Momentum
-Harga awal (*baseline open price*) disimpan untuk 1 jam, 3 jam, 6 jam, 12 jam, dan 24 jam yang lalu. Setiap ada tick harga baru dari Binance WebSocket, persentase perubahan dihitung instan:
-$$\% \Delta_{Nh} = \frac{Price_{live} - Open_{Nh}}{Open_{Nh}} \times 100$$
+Harga awal (*baseline open price*) disimpan untuk 1m, 5m, 15m, 30m, 1 jam, 3 jam, 6 jam, 12 jam, dan 24 jam yang lalu. Setiap ada tick harga baru dari Binance WebSocket, persentase perubahan dihitung instan:
+$$\% \Delta_{N} = \frac{Price_{live} - Open_{N}}{Open_{N}} \times 100$$
 
 ### Tampilan & Fitur UI
 * **Dark Mode Theme (shadcn/ui style)**: Palet Zinc/Slate elegan dengan aksen Emerald (Bullish), Rose (Bearish), dan Sky Blue (Pivot).
-* **Live Price Flash**: Tampilan harga berkedip hijau saat naik dan merah saat turun.
-* **Mini Pivot Range Visualizer**: Indikator horizontal visual posisi harga relatif terhadap $S2 \rightarrow S1 \rightarrow P \rightarrow R1 \rightarrow R2$.
-* **Detail Modal**: Klik baris koin untuk melihat tabel lengkap Pivot $R3 - S3$ dan jarak persentasenya.
+* **Live Price Flash**: Tampilan harga berkedip hijau saat naik dan merah saat turun dengan animasi smooth `cubic-bezier`.
+* **Mini Pivot Range Visualizer**: Indikator horizontal visual posisi harga relatif terhadap $S4 \rightarrow S3 \rightarrow S2 \rightarrow S1 \rightarrow P \rightarrow R1 \rightarrow R2 \rightarrow R3 \rightarrow R4$.
+* **Detail Modal**: Klik baris koin untuk melihat tabel lengkap Pivot $S4 - R4$ dan jarak persentasenya.
 * **Filter Bar Interaktif**: Slider persentase, preset cepat ($< 1\%, < 2\%, < 3\%, < 5\%$), mode sideways $| \pm \% |$, dan pemilih kondisi Pivot.

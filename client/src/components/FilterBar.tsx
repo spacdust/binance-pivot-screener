@@ -19,6 +19,8 @@ import {
   ShieldAlert,
   Sparkles,
   AlertTriangle,
+  Flame,
+  AlertOctagon,
   SlidersHorizontal
 } from 'lucide-react';
 
@@ -66,13 +68,15 @@ const PIVOT_CONDITIONS: {
   { value: 'ALL', label: 'Semua Kondisi', icon: Layers, iconColor: 'text-zinc-400' },
   { value: 'AREA_P', label: 'Area P (Konsolidasi)', icon: Target, iconColor: 'text-sky-400' },
   { value: 'R1_TO_R2', label: 'Tembus R1 ➔ R2 (Breakout)', icon: ChevronsUp, iconColor: 'text-emerald-400' },
-  { value: 'R2_TO_R3', label: 'Tembus R2 ➔ R3 (Super Pump)', icon: Rocket, iconColor: 'text-purple-400' },
+  { value: 'R2_TO_R3', label: 'Tembus R2 ➔ R3 (Super Bullish)', icon: Rocket, iconColor: 'text-purple-400' },
+  { value: 'R3_TO_R4', label: 'Tembus R3 ➔ R4 (Hyper Pump)', icon: Flame, iconColor: 'text-fuchsia-400' },
+  { value: 'ABOVE_R4', label: 'Di atas R4 (Mega Pump)', icon: Sparkles, iconColor: 'text-pink-400' },
   { value: 'R1_TO_P', label: 'Tolak R1 ➔ P (Pullback)', icon: ArrowDownRight, iconColor: 'text-amber-400' },
   { value: 'S1_TO_P', label: 'Pantul S1 ➔ P (Reversal)', icon: ArrowUpRight, iconColor: 'text-teal-400' },
   { value: 'S1_TO_S2', label: 'Tembus S1 ➔ S2 (Breakdown)', icon: ChevronsDown, iconColor: 'text-rose-400' },
-  { value: 'S2_TO_S3', label: 'Tembus S2 ➔ S3 (Diskon Ekstrem)', icon: ShieldAlert, iconColor: 'text-red-500' },
-  { value: 'ABOVE_R3', label: 'Di atas R3 (Parabolic)', icon: Sparkles, iconColor: 'text-fuchsia-400' },
-  { value: 'BELOW_S3', label: 'Di bawah S3 (Kapitulasi)', icon: AlertTriangle, iconColor: 'text-red-500' },
+  { value: 'S2_TO_S3', label: 'Tembus S2 ➔ S3 (Diskon Ekstrem)', icon: ShieldAlert, iconColor: 'text-red-400' },
+  { value: 'S3_TO_S4', label: 'Tembus S3 ➔ S4 (Kapitulasi Berat)', icon: AlertTriangle, iconColor: 'text-red-500' },
+  { value: 'BELOW_S4', label: 'Di bawah S4 (Oversold Maksimal)', icon: AlertOctagon, iconColor: 'text-red-600' },
 ];
 
 export const FilterBar: React.FC<FilterBarProps> = ({
