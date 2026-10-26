@@ -1,7 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { CoinData, SelectedTimeframe, TopMoverCategory } from '../types';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { CoinData, FilterState, SelectedTimeframe, TopMoverCategory } from '../types';
 import { PivotVisualizer } from './PivotVisualizer';
-import { ArrowUpDown, ArrowUp, ArrowDown, Eye, Info, Zap } from 'lucide-react';
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Eye,
+  Info,
+  Zap,
+  SlidersHorizontal,
+  X,
+  Layers,
+  ChevronLeft
+} from 'lucide-react';
 import {
   checkPivotConfluence,
   classifyPriceZone,
@@ -15,6 +26,13 @@ interface ScreenerTableProps {
   selectedTimeframe: SelectedTimeframe;
   topMoverCategory?: TopMoverCategory;
   onSelectCoin: (coin: CoinData) => void;
+  isSidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
+  activeFilterCount?: number;
+  filters?: FilterState;
+  onFilterChange?: (updates: Partial<FilterState>) => void;
+  onResetFilters?: () => void;
+  confluenceCount?: number;
 }
 
 type SortField = 'symbol' | 'price' | 'volume24h' | 'm1' | 'm5' | 'm15' | 'm30' | 'h1' | 'h3' | 'h6' | 'h12' | 'h24' | 'distP' | 'distP1h' | 'distP5m';
@@ -24,11 +42,19 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   selectedTimeframe,
   topMoverCategory,
   onSelectCoin,
+  isSidebarOpen = true,
+  onToggleSidebar,
+  activeFilterCount = 0,
+  filters,
+  onFilterChange,
+  onResetFilters,
+  confluenceCount,
 }) => {
   const [sortField, setSortField] = useState<SortField>('volume24h');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
-  const pageSize = 25;
+  const [pageSize, setPageSize] = useState<number>(25);
+  const [density, setDensity] = useState<'compact' | 'normal'>('compact');
 
   // Respond to Top Mover Category changes
   useEffect(() => {
@@ -80,75 +106,77 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   };
 
   // Sorting logic
-  const sortedCoins = [...coins].sort((a, b) => {
-    let aVal: number | string = 0;
-    let bVal: number | string = 0;
+  const sortedCoins = useMemo(() => {
+    return [...coins].sort((a, b) => {
+      let aVal: number | string = 0;
+      let bVal: number | string = 0;
 
-    switch (sortField) {
-      case 'symbol':
-        aVal = a.symbol;
-        bVal = b.symbol;
-        return sortDirection === 'asc' ? (aVal as string).localeCompare(bVal as string) : (bVal as string).localeCompare(aVal as string);
-      case 'price':
-        aVal = a.price;
-        bVal = b.price;
-        break;
-      case 'volume24h':
-        aVal = a.volume24h;
-        bVal = b.volume24h;
-        break;
-      case 'm1':
-        aVal = a.changes.m1;
-        bVal = b.changes.m1;
-        break;
-      case 'm5':
-        aVal = a.changes.m5;
-        bVal = b.changes.m5;
-        break;
-      case 'm15':
-        aVal = a.changes.m15;
-        bVal = b.changes.m15;
-        break;
-      case 'm30':
-        aVal = a.changes.m30;
-        bVal = b.changes.m30;
-        break;
-      case 'h1':
-        aVal = a.changes.h1;
-        bVal = b.changes.h1;
-        break;
-      case 'h3':
-        aVal = a.changes.h3;
-        bVal = b.changes.h3;
-        break;
-      case 'h6':
-        aVal = a.changes.h6;
-        bVal = b.changes.h6;
-        break;
-      case 'h12':
-        aVal = a.changes.h12;
-        bVal = b.changes.h12;
-        break;
-      case 'h24':
-        aVal = a.changes.h24;
-        bVal = b.changes.h24;
-        break;
-      case 'distP':
-        aVal = a.pivotStatus.distP;
-        bVal = b.pivotStatus.distP;
-        break;
-      case 'distP1h':
-        aVal = a.pivotStatus1h?.distP ?? 0;
-        bVal = b.pivotStatus1h?.distP ?? 0;
-        break;
-      case 'distP5m':
-        aVal = a.pivotStatus5m?.distP ?? 0;
-        bVal = b.pivotStatus5m?.distP ?? 0;
-        break;
-    }
+      switch (sortField) {
+        case 'symbol':
+          aVal = a.symbol;
+          bVal = b.symbol;
+          return sortDirection === 'asc' ? (aVal as string).localeCompare(bVal as string) : (bVal as string).localeCompare(aVal as string);
+        case 'price':
+          aVal = a.price;
+          bVal = b.price;
+          break;
+        case 'volume24h':
+          aVal = a.volume24h;
+          bVal = b.volume24h;
+          break;
+        case 'm1':
+          aVal = a.changes.m1;
+          bVal = b.changes.m1;
+          break;
+        case 'm5':
+          aVal = a.changes.m5;
+          bVal = b.changes.m5;
+          break;
+        case 'm15':
+          aVal = a.changes.m15;
+          bVal = b.changes.m15;
+          break;
+        case 'm30':
+          aVal = a.changes.m30;
+          bVal = b.changes.m30;
+          break;
+        case 'h1':
+          aVal = a.changes.h1;
+          bVal = b.changes.h1;
+          break;
+        case 'h3':
+          aVal = a.changes.h3;
+          bVal = b.changes.h3;
+          break;
+        case 'h6':
+          aVal = a.changes.h6;
+          bVal = b.changes.h6;
+          break;
+        case 'h12':
+          aVal = a.changes.h12;
+          bVal = b.changes.h12;
+          break;
+        case 'h24':
+          aVal = a.changes.h24;
+          bVal = b.changes.h24;
+          break;
+        case 'distP':
+          aVal = a.pivotStatus.distP;
+          bVal = b.pivotStatus.distP;
+          break;
+        case 'distP1h':
+          aVal = a.pivotStatus1h?.distP ?? 0;
+          bVal = b.pivotStatus1h?.distP ?? 0;
+          break;
+        case 'distP5m':
+          aVal = a.pivotStatus5m?.distP ?? 0;
+          bVal = b.pivotStatus5m?.distP ?? 0;
+          break;
+      }
 
-    return sortDirection === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
-  });
+      return sortDirection === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+    });
+  }, [coins, sortField, sortDirection]);
 
   const totalPages = Math.ceil(sortedCoins.length / pageSize) || 1;
 
@@ -159,7 +187,63 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
     }
   }, [page, totalPages]);
 
-  const paginatedCoins = sortedCoins.slice((page - 1) * pageSize, page * pageSize);
+  const paginatedCoins = useMemo(() => {
+    return sortedCoins.slice((page - 1) * pageSize, page * pageSize);
+  }, [sortedCoins, page, pageSize]);
+
+  // Active filter dismissible pills
+  const activePills = useMemo(() => {
+    if (!filters || !onFilterChange) return [];
+    const pills: { id: string; label: string; onRemove: () => void }[] = [];
+
+    if (filters.searchQuery) {
+      pills.push({
+        id: 'search',
+        label: `Cari: "${filters.searchQuery}"`,
+        onRemove: () => onFilterChange({ searchQuery: '' }),
+      });
+    }
+
+    if (filters.onlyConfluence) {
+      pills.push({
+        id: 'confluence',
+        label: '⚡ 3TF Confluence',
+        onRemove: () => onFilterChange({ onlyConfluence: false }),
+      });
+    }
+
+    if (filters.topMoverCategory && filters.topMoverCategory !== 'ALL') {
+      const labels: Record<string, string> = {
+        TOP_GAINERS: 'Top Gainers',
+        TOP_LOSERS: 'Top Losers',
+        FLASH_MOVERS: 'Flash Spike',
+        TOP_VOLUME: 'Top Volume',
+      };
+      pills.push({
+        id: 'category',
+        label: labels[filters.topMoverCategory] || filters.topMoverCategory,
+        onRemove: () => onFilterChange({ topMoverCategory: 'ALL' }),
+      });
+    }
+
+    if (filters.pivotCondition && filters.pivotCondition !== 'ALL') {
+      pills.push({
+        id: 'pivot',
+        label: `Pivot: ${getConditionLabel(filters.pivotCondition)}`,
+        onRemove: () => onFilterChange({ pivotCondition: 'ALL' }),
+      });
+    }
+
+    if (filters.enablePercentFilter) {
+      pills.push({
+        id: 'percent',
+        label: `${filters.filterMode === 'absolute_below' ? '|±' : '<'}${filters.maxPercent}%| (${filters.selectedTimeframe})`,
+        onRemove: () => onFilterChange({ enablePercentFilter: false }),
+      });
+    }
+
+    return pills;
+  }, [filters, onFilterChange]);
 
   const formatPrice = (val: number) => {
     if (val >= 1000) return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -231,29 +315,164 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
     );
   };
 
+  const pyRow = density === 'compact' ? 'py-1.5' : 'py-2.5';
+
   return (
-    <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col">
-      {/* Table Container */}
-      <div className="overflow-x-auto">
+    <div className="flex-1 min-h-0 bg-zinc-900/80 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col shadow-xl">
+      {/* Top Workspace Toolbar */}
+      <div className="p-2.5 sm:p-3 border-b border-zinc-800 bg-zinc-950/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Toggle Sidebar Button */}
+          {onToggleSidebar && (
+            <button
+              onClick={onToggleSidebar}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                isSidebarOpen
+                  ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-750'
+                  : 'bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25 shadow-[0_0_10px_rgba(251,191,36,0.2)]'
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>{isSidebarOpen ? 'Tutup Filter' : 'Buka Filter'}</span>
+              {!isSidebarOpen && activeFilterCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-500 text-zinc-950">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Quick Metrics */}
+          <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+            <span>
+              Total:{' '}
+              <strong className="text-zinc-100 font-bold tabular-nums">
+                {coins.length}
+              </strong>{' '}
+              koin
+            </span>
+            {typeof confluenceCount === 'number' && confluenceCount > 0 && (
+              <button
+                onClick={() => onFilterChange?.({ onlyConfluence: !filters?.onlyConfluence })}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[11px] font-bold transition-all ${
+                  filters?.onlyConfluence
+                    ? 'bg-amber-400 text-zinc-950 border-amber-300 shadow-sm'
+                    : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                }`}
+              >
+                <Zap className="w-3 h-3 fill-current" />
+                <span>3TF Confluence: {confluenceCount}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Right Controls: Density Switch + Page Size */}
+        <div className="flex items-center gap-2.5 self-end sm:self-auto">
+          {/* Density Toggle (Rapat / Normal) */}
+          <div className="flex items-center bg-zinc-900/90 rounded-lg border border-zinc-800 p-0.5 text-xs">
+            <button
+              onClick={() => setDensity('compact')}
+              title="Compact View (Data lebih padat & banyak)"
+              className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                density === 'compact'
+                  ? 'bg-zinc-800 text-amber-400 font-bold'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              Rapat
+            </button>
+            <button
+              onClick={() => setDensity('normal')}
+              title="Normal View"
+              className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                density === 'normal'
+                  ? 'bg-zinc-800 text-amber-400 font-bold'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              Normal
+            </button>
+          </div>
+
+          {/* Page Size Selector */}
+          <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+            <span className="hidden sm:inline text-[11px]">Baris:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              className="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-amber-500 cursor-pointer"
+            >
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={500}>Semua</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Active Filter Pills Bar (Dismissible chips) */}
+      {activePills.length > 0 && (
+        <div className="px-3 py-1.5 border-b border-zinc-800/80 bg-zinc-950/40 flex items-center gap-1.5 flex-wrap text-xs shrink-0">
+          <span className="text-[11px] text-zinc-500 font-medium">Filter Aktif:</span>
+          {activePills.map((pill) => (
+            <span
+              key={pill.id}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono bg-zinc-800/90 border border-zinc-700/80 text-zinc-200 shadow-xs"
+            >
+              <span>{pill.label}</span>
+              <button
+                onClick={pill.onRemove}
+                className="text-zinc-400 hover:text-rose-400 transition-colors ml-0.5"
+                title="Hapus filter ini"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+          {onResetFilters && (
+            <button
+              onClick={onResetFilters}
+              className="text-[11px] text-zinc-400 hover:text-amber-400 ml-1 underline decoration-zinc-700 hover:decoration-amber-400 transition-colors"
+            >
+              Hapus Semua
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Table Scrollable Container: Sticky Header + Freeze Symbol Column */}
+      <div className="flex-1 overflow-auto custom-scrollbar relative">
         <table className="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr className="border-b border-zinc-800 bg-zinc-950/60 text-zinc-400 font-semibold uppercase tracking-wider text-[11px]">
-              <th className="py-3.5 px-4 w-12 text-center">#</th>
+          <thead className="sticky top-0 z-20 bg-zinc-950 shadow-sm border-b border-zinc-800">
+            <tr className="text-zinc-400 font-semibold uppercase tracking-wider text-[11px]">
+              {/* Frozen Column 1: Rank # */}
+              <th className="py-2.5 px-3 w-12 text-center sticky left-0 z-30 bg-zinc-950 border-r border-zinc-800/60 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+                #
+              </th>
+
+              {/* Frozen Column 2: Symbol & Volume */}
               <th
                 onClick={() => handleSort('symbol')}
-                className="py-3.5 px-4 cursor-pointer hover:text-zinc-200 transition-colors"
+                className="py-2.5 px-3 cursor-pointer hover:text-zinc-200 transition-colors sticky left-12 z-30 bg-zinc-950 min-w-[130px] border-r border-zinc-800/80 shadow-[2px_0_5px_rgba(0,0,0,0.3)]"
               >
                 Pasang / Volume {renderSortIcon('symbol')}
               </th>
+
+              {/* Unfrozen Table Columns */}
               <th
                 onClick={() => handleSort('price')}
-                className="py-3.5 px-4 cursor-pointer hover:text-zinc-200 transition-colors"
+                className="py-2.5 px-3 cursor-pointer hover:text-zinc-200 transition-colors min-w-[110px]"
               >
                 Harga Terakhir {renderSortIcon('price')}
               </th>
               <th
                 onClick={() => handleSort('m1')}
-                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
                   selectedTimeframe === 'm1' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
@@ -261,7 +480,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </th>
               <th
                 onClick={() => handleSort('m5')}
-                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
                   selectedTimeframe === 'm5' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
@@ -269,7 +488,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </th>
               <th
                 onClick={() => handleSort('m15')}
-                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
                   selectedTimeframe === 'm15' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
@@ -277,7 +496,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </th>
               <th
                 onClick={() => handleSort('m30')}
-                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
                   selectedTimeframe === 'm30' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
@@ -285,7 +504,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </th>
               <th
                 onClick={() => handleSort('h1')}
-                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
                   selectedTimeframe === 'h1' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
@@ -293,7 +512,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </th>
               <th
                 onClick={() => handleSort('h3')}
-                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
                   selectedTimeframe === 'h3' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
@@ -301,7 +520,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </th>
               <th
                 onClick={() => handleSort('h6')}
-                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
                   selectedTimeframe === 'h6' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
@@ -309,7 +528,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </th>
               <th
                 onClick={() => handleSort('h12')}
-                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
                   selectedTimeframe === 'h12' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
@@ -317,7 +536,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </th>
               <th
                 onClick={() => handleSort('h24')}
-                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                className={`py-2.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
                   selectedTimeframe === 'h24' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
@@ -325,30 +544,29 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               </th>
               <th
                 onClick={() => handleSort('distP5m')}
-                className="py-3.5 px-2 text-center min-w-[135px] cursor-pointer hover:text-zinc-200 transition-colors"
+                className="py-2.5 px-2 text-center min-w-[135px] cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 Pivot 5M (S4 ➔ R4) {renderSortIcon('distP5m')}
               </th>
               <th
                 onClick={() => handleSort('distP1h')}
-                className="py-3.5 px-2 text-center min-w-[135px] cursor-pointer hover:text-zinc-200 transition-colors"
+                className="py-2.5 px-2 text-center min-w-[135px] cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 Pivot 1H (S4 ➔ R4) {renderSortIcon('distP1h')}
               </th>
               <th
                 onClick={() => handleSort('distP')}
-                className="py-3.5 px-2 text-center min-w-[135px] cursor-pointer hover:text-zinc-200 transition-colors"
+                className="py-2.5 px-2 text-center min-w-[135px] cursor-pointer hover:text-zinc-200 transition-colors"
               >
                 Pivot Daily (S4 ➔ R4) {renderSortIcon('distP')}
               </th>
-              <th
-                className="py-3.5 px-3 min-w-[150px] cursor-pointer hover:text-zinc-200 transition-colors"
-              >
+              <th className="py-2.5 px-3 min-w-[150px] cursor-pointer hover:text-zinc-200 transition-colors">
                 Kondisi Pivot Daily
               </th>
-              <th className="py-3.5 px-3 text-center w-16">Aksi</th>
+              <th className="py-2.5 px-3 text-center w-14">Aksi</th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-zinc-800/60">
             {paginatedCoins.length === 0 ? (
               <tr>
@@ -378,6 +596,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 const range5m = calculateRangePercent(coin.price, coin.pivots5m);
                 const range1h = calculateRangePercent(coin.price, coin.pivots1h);
                 const rangeDaily = calculateRangePercent(coin.price, coin.pivots);
+
                 return (
                   <tr
                     key={coin.symbol}
@@ -388,20 +607,21 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         : 'hover:bg-zinc-800/40 border-l-4 border-l-transparent'
                     }`}
                   >
-                    <td className="py-3 px-3 text-center text-zinc-500 font-mono tabular-nums text-[11px]">
+                    {/* Frozen Column 1: Rank # */}
+                    <td className={`${pyRow} px-2 text-center text-zinc-500 font-mono tabular-nums text-[11px] sticky left-0 z-10 bg-zinc-950/95 group-hover:bg-zinc-900/95 border-r border-zinc-800/60 shadow-[2px_0_5px_rgba(0,0,0,0.3)]`}>
                       {rank}
                     </td>
 
-                    {/* Symbol & Volume & Confluence Badge */}
-                    <td className="py-3 px-3">
+                    {/* Frozen Column 2: Symbol & Volume */}
+                    <td className={`${pyRow} px-3 sticky left-12 z-10 bg-zinc-950/95 group-hover:bg-zinc-900/95 border-r border-zinc-800/80 shadow-[2px_0_5px_rgba(0,0,0,0.3)] min-w-[130px]`}>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-bold text-zinc-100 text-sm group-hover:text-amber-400 transition-colors">
+                        <span className={`font-bold text-zinc-100 group-hover:text-amber-400 transition-colors ${density === 'compact' ? 'text-xs' : 'text-sm'}`}>
                           {coin.baseAsset}
                         </span>
                         <span className="text-[10px] text-zinc-500 font-mono">/USDT</span>
                         {confluence.hasConfluence && (
                           <span
-                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border tracking-tight ${confluence.badgeStyle}`}
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold border tracking-tight ${confluence.badgeStyle}`}
                             title={confluence.label}
                           >
                             <Zap className="w-2.5 h-2.5 fill-current" />
@@ -409,15 +629,17 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-zinc-500 font-mono tabular-nums">
+                      <div className="text-[10px] text-zinc-500 font-mono tabular-nums">
                         ${(coin.volume24h / 1e6).toFixed(2)}M
                       </div>
                     </td>
 
-                    {/* Live Price with Super Smooth Flash Animation */}
-                    <td className="py-3 px-3">
+                    {/* Live Price with Smooth Flash Animation */}
+                    <td className={`${pyRow} px-3`}>
                       <div
-                        className={`font-mono tabular-nums text-xs sm:text-sm font-semibold transition-all inline-block px-2 py-0.5 rounded ${
+                        className={`font-mono tabular-nums font-semibold transition-all inline-block px-2 py-0.5 rounded ${
+                          density === 'compact' ? 'text-xs' : 'text-sm'
+                        } ${
                           flash === 'up'
                             ? 'tick-flash-up border border-emerald-500/30'
                             : flash === 'down'
@@ -430,20 +652,20 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Changes columns (1m to 24h) */}
-                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'm1' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m1, 'm1')}</td>
-                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'm5' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m5, 'm5')}</td>
-                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'm15' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m15, 'm15')}</td>
-                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'm30' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m30, 'm30')}</td>
-                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h1' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h1, 'h1')}</td>
-                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h3' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h3, 'h3')}</td>
-                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h6' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h6, 'h6')}</td>
-                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h12' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h12, 'h12')}</td>
-                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h24' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h24, 'h24')}</td>
+                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'm1' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m1, 'm1')}</td>
+                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'm5' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m5, 'm5')}</td>
+                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'm15' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m15, 'm15')}</td>
+                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'm30' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m30, 'm30')}</td>
+                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'h1' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h1, 'h1')}</td>
+                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'h3' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h3, 'h3')}</td>
+                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'h6' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h6, 'h6')}</td>
+                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'h12' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h12, 'h12')}</td>
+                    <td className={`${pyRow} px-1 text-center transition-colors ${selectedTimeframe === 'h24' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h24, 'h24')}</td>
 
                     {/* Pivot 5M Visualizer */}
-                    <td className="py-2 px-1.5 text-center">
+                    <td className="py-1 px-1.5 text-center">
                       {coin.pivots5m ? (
-                        <div className={`flex flex-col items-center gap-1 p-1 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
+                        <div className={`flex flex-col items-center gap-0.5 p-0.5 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
                           <PivotVisualizer
                             pivots={coin.pivots5m}
                             currentPrice={coin.price}
@@ -461,9 +683,9 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Pivot 1H Visualizer */}
-                    <td className="py-2 px-1.5 text-center">
+                    <td className="py-1 px-1.5 text-center">
                       {coin.pivots1h ? (
-                        <div className={`flex flex-col items-center gap-1 p-1 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
+                        <div className={`flex flex-col items-center gap-0.5 p-0.5 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
                           <PivotVisualizer
                             pivots={coin.pivots1h}
                             currentPrice={coin.price}
@@ -481,8 +703,8 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Pivot Daily Visualizer */}
-                    <td className="py-2 px-1.5 text-center">
-                      <div className={`flex flex-col items-center gap-1 p-1 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
+                    <td className="py-1 px-1.5 text-center">
+                      <div className={`flex flex-col items-center gap-0.5 p-0.5 ${confluence.hasConfluence ? confluence.visualizerRing : ''}`}>
                         <PivotVisualizer
                           pivots={coin.pivots}
                           currentPrice={coin.price}
@@ -495,23 +717,23 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Pivot Condition Badge */}
-                    <td className="py-3 px-4">
-                      <div className="flex flex-col gap-1">
+                    <td className={`${pyRow} px-3`}>
+                      <div className="flex flex-col gap-0.5">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${getConditionBadgeStyle(
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${getConditionBadgeStyle(
                             getConditionTagColor(dCond)
                           )}`}
                         >
                           {getConditionLabel(dCond)}
                         </span>
-                        <span className="text-[10px] text-zinc-500 font-mono tabular-nums">
+                        <span className="text-[9px] text-zinc-500 font-mono tabular-nums">
                           Dist P: {distPDaily > 0 ? '+' : ''}{distPDaily}%
                         </span>
                       </div>
                     </td>
 
                     {/* Action */}
-                    <td className="py-3 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className={`${pyRow} px-2 text-center`} onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => onSelectCoin(coin)}
                         className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 transition-colors"
@@ -530,7 +752,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
       {/* Pagination Footer */}
       {sortedCoins.length > 0 && (
-        <div className="p-3.5 border-t border-zinc-800 bg-zinc-950/60 flex items-center justify-between text-xs text-zinc-400">
+        <div className="p-2.5 sm:p-3 border-t border-zinc-800 bg-zinc-950/80 flex items-center justify-between text-xs text-zinc-400 shrink-0">
           <div>
             Menampilkan{' '}
             <span className="font-mono text-zinc-200">

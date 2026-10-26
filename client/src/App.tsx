@@ -2,12 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { useScreenerSocket } from './hooks/useScreenerSocket';
 import { FilterState, CoinData } from './types';
 import { Header } from './components/Header';
-import { StatsOverview } from './components/StatsOverview';
-import { FilterBar } from './components/FilterBar';
+import { FilterSidebar } from './components/FilterSidebar';
 import { ScreenerTable } from './components/ScreenerTable';
 import { CoinDetailModal } from './components/CoinDetailModal';
 import { checkPivotConfluence, classifyPriceZone } from './utils/pivotConfluence';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const initialFilters: FilterState = {
   searchQuery: '',
@@ -22,9 +21,10 @@ const initialFilters: FilterState = {
 };
 
 export const App: React.FC = () => {
-  const { coins, stats, isConnected, isLoading, lastMessageTime, refreshData } = useScreenerSocket();
+  const { coins, isConnected, lastMessageTime, refreshData } = useScreenerSocket();
   const [filters, setFilters] = useState<FilterState>(initialFilters);
   const [selectedCoin, setSelectedCoin] = useState<CoinData | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleFilterChange = (updates: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...updates }));
@@ -110,8 +110,18 @@ export const App: React.FC = () => {
     return coins.filter((c) => checkPivotConfluence(c).hasConfluence).length;
   }, [coins]);
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.searchQuery) count++;
+    if (filters.topMoverCategory !== 'ALL') count++;
+    if (filters.enablePercentFilter) count++;
+    if (filters.pivotCondition !== 'ALL') count++;
+    if (filters.onlyConfluence) count++;
+    return count;
+  }, [filters]);
+
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans">
+    <div className="h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans overflow-hidden">
       {/* App Header */}
       <Header
         totalCoins={coins.length}
@@ -120,39 +130,11 @@ export const App: React.FC = () => {
         lastUpdated={lastMessageTime}
       />
 
-      {/* Main Content Area: Expanded full-width without excessive side margins */}
-      <main className="flex-1 w-full px-2 sm:px-4 lg:px-6 py-4 space-y-4">
-        {/* Loading Overlay / Banner */}
-        {coins.length === 0 && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-center flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
-            <div>
-              <h3 className="text-base font-bold text-amber-300">
-                Menghubungkan ke Binance & Sinkronisasi Daily Pivots...
-              </h3>
-              <p className="text-xs text-zinc-400 mt-1 max-w-lg mx-auto">
-                Mengambil data candlestick multi-timeframe (1m - 24j) dan Daily Pivot untuk seluruh koin USDT aktif.
-              </p>
-              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-900/80 border border-zinc-800 text-[11px] text-zinc-400">
-                <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-                <span>
-                  Tip: Jika koin tidak kunjung muncul, pastikan koneksi internet tidak memblokir Binance (bisa gunakan Cloudflare WARP / DNS 1.1.1.1).
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Quick Stats & One-Click Filters */}
-        <StatsOverview
-          stats={stats}
-          totalFiltered={filteredCoins.length}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-        />
-
-        {/* Filter Controls Bar */}
-        <FilterBar
+      {/* Main Workspace: Collapsible Sidebar (Left) + Table Workspace (Right) */}
+      <div className="flex-1 flex overflow-hidden relative">
+        <FilterSidebar
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
           filters={filters}
           onFilterChange={handleFilterChange}
           onReset={handleResetFilters}
@@ -161,31 +143,44 @@ export const App: React.FC = () => {
           confluenceCount={confluenceCount}
         />
 
-        {/* Screener Data Table */}
-        <ScreenerTable
-          coins={filteredCoins}
-          selectedTimeframe={filters.selectedTimeframe}
-          topMoverCategory={filters.topMoverCategory}
-          onSelectCoin={(coin) => setSelectedCoin(coin)}
-        />
-      </main>
+        <main className="flex-1 min-w-0 flex flex-col h-full overflow-hidden p-2 sm:p-3">
+          {coins.length === 0 && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-center flex flex-col items-center justify-center gap-2 mb-2 shrink-0">
+              <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+              <div>
+                <h3 className="text-sm font-bold text-amber-300">
+                  Menghubungkan ke Binance & Sinkronisasi Pivots...
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5 max-w-lg mx-auto">
+                  Mengambil data candlestick multi-timeframe (1m - 24j) dan Daily, 1H, 5M Pivots untuk seluruh koin USDT.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <ScreenerTable
+            coins={filteredCoins}
+            selectedTimeframe={filters.selectedTimeframe}
+            topMoverCategory={filters.topMoverCategory}
+            onSelectCoin={(coin) => setSelectedCoin(coin)}
+            isSidebarOpen={isSidebarOpen}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            activeFilterCount={activeFilterCount}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onResetFilters={handleResetFilters}
+            confluenceCount={confluenceCount}
+          />
+        </main>
+      </div>
 
       {/* Coin Detail Modal */}
       <CoinDetailModal
         coin={liveSelectedCoin}
         onClose={() => setSelectedCoin(null)}
       />
-
-      {/* Footer */}
-      <footer className="border-t border-zinc-800/80 bg-zinc-950/60 py-4 text-center text-xs text-zinc-500">
-        <div className="w-full px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>Binance Coin Screener &bull; Real-time WebSocket Data</span>
-          <span className="font-mono text-[11px]">
-            Formula: Classic Pivot &bull; Multi-Timeframe: 1m, 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h &bull; Pivots: 5M, 1H, Daily (S4-R4)
-          </span>
-        </div>
-      </footer>
     </div>
   );
 };
+
 export default App;
