@@ -41,6 +41,10 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
   ];
 
   const tfList = [
+    { label: '1 Menit', key: 'm1', change: changes.m1, open: baselines.open1m },
+    { label: '5 Menit', key: 'm5', change: changes.m5, open: baselines.open5m },
+    { label: '15 Menit', key: 'm15', change: changes.m15, open: baselines.open15m },
+    { label: '30 Menit', key: 'm30', change: changes.m30, open: baselines.open30m },
     { label: '1 Jam', key: 'h1', change: changes.h1, open: baselines.open1h },
     { label: '3 Jam', key: 'h3', change: changes.h3, open: baselines.open3h },
     { label: '6 Jam', key: 'h6', change: changes.h6, open: baselines.open6h },
@@ -126,9 +130,9 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
           <div>
             <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Layers className="w-4 h-4 text-amber-400" />
-              Perubahan Multi-Timeframe (1h, 3h, 6h, 12h, 24h)
+              Perubahan Multi-Timeframe (1m s/d 24j)
             </h3>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
               {tfList.map((tf) => {
                 const isPos = tf.change >= 0;
                 return (

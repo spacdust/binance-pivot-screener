@@ -132,7 +132,7 @@ export const App: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>Binance Coin Screener &bull; Real-time WebSocket Data</span>
           <span className="font-mono text-[11px]">
-            Formula: Classic Pivot $P=(H+L+C)/3$ &bull; Timeframes: 1h, 3h, 6h, 12h, 24h
+            Formula: Classic Pivot $P=(H+L+C)/3$ &bull; Timeframes: 1m, 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h
           </span>
         </div>
       </footer>

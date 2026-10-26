@@ -62,21 +62,25 @@ describe('Comprehensive Screener Logic & Filter Simulation', () => {
     assert.match(result.label, /R1 ➔ P/);
   });
 
-  test('Multi-timeframe percentage filter logic simulation', () => {
+  test('Multi-timeframe percentage filter logic simulation (1m to 24h)', () => {
     const mockCoins = [
-      { symbol: 'COIN_A', changes: { h1: 0.2, h3: 0.5, h6: 1.1, h12: 2.0, h24: 3.5 }, condition: 'AREA_P' },
-      { symbol: 'COIN_B', changes: { h1: -1.0, h3: -2.0, h6: -4.0, h12: -6.0, h24: -8.0 }, condition: 'S1_TO_S2' },
-      { symbol: 'COIN_C', changes: { h1: 1.5, h3: 3.2, h6: 4.8, h12: 5.2, h24: 4.9 }, condition: 'R1_TO_R2' },
-      { symbol: 'COIN_D', changes: { h1: 0.1, h3: 0.2, h6: 0.3, h12: 0.4, h24: 0.8 }, condition: 'AREA_P' },
+      { symbol: 'COIN_A', changes: { m1: 0.05, m5: 0.1, m15: 0.15, m30: 0.2, h1: 0.2, h3: 0.5, h6: 1.1, h12: 2.0, h24: 3.5 }, condition: 'AREA_P' },
+      { symbol: 'COIN_B', changes: { m1: -0.5, m5: -1.2, m15: -1.8, m30: -2.5, h1: -1.0, h3: -2.0, h6: -4.0, h12: -6.0, h24: -8.0 }, condition: 'S1_TO_S2' },
+      { symbol: 'COIN_C', changes: { m1: 0.8, m5: 1.5, m15: 2.0, m30: 2.8, h1: 1.5, h3: 3.2, h6: 4.8, h12: 5.2, h24: 4.9 }, condition: 'R1_TO_R2' },
+      { symbol: 'COIN_D', changes: { m1: 0.01, m5: 0.02, m15: 0.05, m30: 0.1, h1: 0.1, h3: 0.2, h6: 0.3, h12: 0.4, h24: 0.8 }, condition: 'AREA_P' },
     ];
 
     // Filter: 24h change < 5% (absolute)
     const filter24hUnder5 = mockCoins.filter(c => Math.abs(c.changes.h24) < 5);
     assert.deepEqual(filter24hUnder5.map(c => c.symbol), ['COIN_A', 'COIN_C', 'COIN_D']);
 
-    // Filter: 1h change < 1% (absolute)
-    const filter1hUnder1 = mockCoins.filter(c => Math.abs(c.changes.h1) < 1);
-    assert.deepEqual(filter1hUnder1.map(c => c.symbol), ['COIN_A', 'COIN_D']);
+    // Filter: 5m change < 0.5% (absolute)
+    const filter5mUnder05 = mockCoins.filter(c => Math.abs(c.changes.m5) < 0.5);
+    assert.deepEqual(filter5mUnder05.map(c => c.symbol), ['COIN_A', 'COIN_D']);
+
+    // Filter: 1m change < 0.1% (absolute)
+    const filter1mUnder01 = mockCoins.filter(c => Math.abs(c.changes.m1) < 0.1);
+    assert.deepEqual(filter1mUnder01.map(c => c.symbol), ['COIN_A', 'COIN_D']);
 
     // Filter combined: 24h < 5% AND Condition === 'AREA_P'
     const filterCombined = mockCoins.filter(c => Math.abs(c.changes.h24) < 5 && c.condition === 'AREA_P');

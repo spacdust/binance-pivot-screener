@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-xs text-zinc-400">
-              Multi-Timeframe Change (1h - 24h) & Daily Pivot Points (P, S1, S2, R1, R2)
+              Multi-Timeframe Change (1m - 24j) & Daily Pivot Points (P, S1, S2, R1, R2)
             </p>
           </div>
         </div>

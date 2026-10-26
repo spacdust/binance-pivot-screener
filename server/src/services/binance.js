@@ -74,13 +74,14 @@ export class BinanceService {
     }
   }
 
-  // Step 2: Fetch 1d kline (yesterday) for Daily Pivot & 1h klines for multi-TF
+  // Step 2: Fetch 1d kline for Pivot, 1h klines for 1h-24h, and 1m klines for 1m-30m
   async fetchSymbolKlines(symbol) {
     try {
-      // 1. Fetch yesterday's daily candle (limit=2: index 0 is yesterday, index 1 is ongoing today)
-      const dailyKlines = await this.safeFetch(
-        `${BINANCE_REST_BASE}/klines?symbol=${symbol}&interval=1d&limit=2`
-      );
+      const [dailyKlines, hourlyKlines, minuteKlines] = await Promise.all([
+        this.safeFetch(`${BINANCE_REST_BASE}/klines?symbol=${symbol}&interval=1d&limit=2`),
+        this.safeFetch(`${BINANCE_REST_BASE}/klines?symbol=${symbol}&interval=1h&limit=25`),
+        this.safeFetch(`${BINANCE_REST_BASE}/klines?symbol=${symbol}&interval=1m&limit=35`)
+      ]);
 
       if (!dailyKlines || dailyKlines.length < 2) {
         return null;
@@ -92,11 +93,6 @@ export class BinanceService {
       const prevClose = parseFloat(prevDay[4]);
       const pivots = calculateDailyPivots(prevHigh, prevLow, prevClose);
 
-      // 2. Fetch last 25 1-hour candles for baseline prices (1h, 3h, 6h, 12h, 24h)
-      const hourlyKlines = await this.safeFetch(
-        `${BINANCE_REST_BASE}/klines?symbol=${symbol}&interval=1h&limit=25`
-      );
-
       let open1h = null;
       let open3h = null;
       let open6h = null;
@@ -105,7 +101,6 @@ export class BinanceService {
 
       if (hourlyKlines && hourlyKlines.length >= 2) {
         const len = hourlyKlines.length;
-        // Candle at len - 1 is current unfinished 1h candle, len - 2 is 1h ago
         open1h = parseFloat(hourlyKlines[Math.max(0, len - 2)][1]);
         open3h = parseFloat(hourlyKlines[Math.max(0, len - 4)][1]);
         open6h = parseFloat(hourlyKlines[Math.max(0, len - 7)][1]);
@@ -113,9 +108,26 @@ export class BinanceService {
         open24h = parseFloat(hourlyKlines[0][1]);
       }
 
+      let open1m = null;
+      let open5m = null;
+      let open15m = null;
+      let open30m = null;
+
+      if (minuteKlines && minuteKlines.length >= 2) {
+        const mLen = minuteKlines.length;
+        open1m = parseFloat(minuteKlines[Math.max(0, mLen - 2)][1]);
+        open5m = parseFloat(minuteKlines[Math.max(0, mLen - 6)][1]);
+        open15m = parseFloat(minuteKlines[Math.max(0, mLen - 16)][1]);
+        open30m = parseFloat(minuteKlines[Math.max(0, mLen - 31)][1]);
+      }
+
       return {
         pivots,
         baselines: {
+          open1m,
+          open5m,
+          open15m,
+          open30m,
           open1h,
           open3h,
           open6h,
@@ -169,6 +181,10 @@ export class BinanceService {
               baselines: klineData.baselines,
               pivotStatus: pivotClassification,
               changes: {
+                m1: klineData.baselines.open1m ? Number((((initialPrice - klineData.baselines.open1m) / klineData.baselines.open1m) * 100).toFixed(2)) : 0,
+                m5: klineData.baselines.open5m ? Number((((initialPrice - klineData.baselines.open5m) / klineData.baselines.open5m) * 100).toFixed(2)) : 0,
+                m15: klineData.baselines.open15m ? Number((((initialPrice - klineData.baselines.open15m) / klineData.baselines.open15m) * 100).toFixed(2)) : 0,
+                m30: klineData.baselines.open30m ? Number((((initialPrice - klineData.baselines.open30m) / klineData.baselines.open30m) * 100).toFixed(2)) : 0,
                 h1: Number(momentum1h.toFixed(2)),
                 h3: klineData.baselines.open3h ? Number((((initialPrice - klineData.baselines.open3h) / klineData.baselines.open3h) * 100).toFixed(2)) : 0,
                 h6: klineData.baselines.open6h ? Number((((initialPrice - klineData.baselines.open6h) / klineData.baselines.open6h) * 100).toFixed(2)) : 0,
@@ -231,8 +247,12 @@ export class BinanceService {
 
           const currentPrice = parseFloat(closePrice);
           const vol = parseFloat(quoteVolume);
-          const { open1h, open3h, open6h, open12h, open24h } = coin.baselines;
+          const { open1m, open5m, open15m, open30m, open1h, open3h, open6h, open12h, open24h } = coin.baselines;
 
+          const change1m = open1m ? ((currentPrice - open1m) / open1m) * 100 : (coin.changes?.m1 || 0);
+          const change5m = open5m ? ((currentPrice - open5m) / open5m) * 100 : (coin.changes?.m5 || 0);
+          const change15m = open15m ? ((currentPrice - open15m) / open15m) * 100 : (coin.changes?.m15 || 0);
+          const change30m = open30m ? ((currentPrice - open30m) / open30m) * 100 : (coin.changes?.m30 || 0);
           const change1h = open1h ? ((currentPrice - open1h) / open1h) * 100 : coin.changes.h1;
           const change3h = open3h ? ((currentPrice - open3h) / open3h) * 100 : coin.changes.h3;
           const change6h = open6h ? ((currentPrice - open6h) / open6h) * 100 : coin.changes.h6;
@@ -245,6 +265,10 @@ export class BinanceService {
           coin.price = currentPrice;
           coin.volume24h = vol;
           coin.changes = {
+            m1: Number(change1m.toFixed(2)),
+            m5: Number(change5m.toFixed(2)),
+            m15: Number(change15m.toFixed(2)),
+            m30: Number(change30m.toFixed(2)),
             h1: Number(change1h.toFixed(2)),
             h3: Number(change3h.toFixed(2)),
             h6: Number(change6h.toFixed(2)),
@@ -287,13 +311,13 @@ export class BinanceService {
 
   // Periodic routines
   startPeriodicSync() {
-    // 1. Refresh hourly baselines every 10 minutes
+    // 1. Refresh multi-timeframe baselines (1m to 24h) every 5 minutes
     setInterval(async () => {
       if (this.trackedSymbols.size > 0 && !this.isSyncing) {
-        console.log('[BinanceService] Refreshing hourly baselines...');
+        console.log('[BinanceService] Refreshing multi-timeframe baselines (1m to 24h)...');
         await this.syncAllKlines(Array.from(this.trackedSymbols));
       }
-    }, 10 * 60 * 1000);
+    }, 5 * 60 * 1000);
 
     // 2. Check for daily UTC 00:00 rollover to recalculate Daily Pivots
     setInterval(async () => {

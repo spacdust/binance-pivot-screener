@@ -9,7 +9,7 @@ interface ScreenerTableProps {
   onSelectCoin: (coin: CoinData) => void;
 }
 
-type SortField = 'symbol' | 'price' | 'volume24h' | 'h1' | 'h3' | 'h6' | 'h12' | 'h24' | 'distP';
+type SortField = 'symbol' | 'price' | 'volume24h' | 'm1' | 'm5' | 'm15' | 'm30' | 'h1' | 'h3' | 'h6' | 'h12' | 'h24' | 'distP';
 
 export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   coins,
@@ -68,6 +68,22 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       case 'volume24h':
         aVal = a.volume24h;
         bVal = b.volume24h;
+        break;
+      case 'm1':
+        aVal = a.changes.m1;
+        bVal = b.changes.m1;
+        break;
+      case 'm5':
+        aVal = a.changes.m5;
+        bVal = b.changes.m5;
+        break;
+      case 'm15':
+        aVal = a.changes.m15;
+        bVal = b.changes.m15;
+        break;
+      case 'm30':
+        aVal = a.changes.m30;
+        bVal = b.changes.m30;
         break;
       case 'h1':
         aVal = a.changes.h1;
@@ -177,44 +193,76 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 Harga Terakhir {renderSortIcon('price')}
               </th>
               <th
-                onClick={() => handleSort('h1')}
-                className={`py-3.5 px-3 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h1' ? 'text-amber-400' : ''
+                onClick={() => handleSort('m1')}
+                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                  selectedTimeframe === 'm1' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
                 }`}
               >
-                1 Jam {renderSortIcon('h1')}
+                1m {renderSortIcon('m1')}
+              </th>
+              <th
+                onClick={() => handleSort('m5')}
+                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                  selectedTimeframe === 'm5' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                }`}
+              >
+                5m {renderSortIcon('m5')}
+              </th>
+              <th
+                onClick={() => handleSort('m15')}
+                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                  selectedTimeframe === 'm15' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                }`}
+              >
+                15m {renderSortIcon('m15')}
+              </th>
+              <th
+                onClick={() => handleSort('m30')}
+                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                  selectedTimeframe === 'm30' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                }`}
+              >
+                30m {renderSortIcon('m30')}
+              </th>
+              <th
+                onClick={() => handleSort('h1')}
+                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                  selectedTimeframe === 'h1' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                }`}
+              >
+                1j {renderSortIcon('h1')}
               </th>
               <th
                 onClick={() => handleSort('h3')}
-                className={`py-3.5 px-3 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h3' ? 'text-amber-400' : ''
+                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                  selectedTimeframe === 'h3' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
                 }`}
               >
-                3 Jam {renderSortIcon('h3')}
+                3j {renderSortIcon('h3')}
               </th>
               <th
                 onClick={() => handleSort('h6')}
-                className={`py-3.5 px-3 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h6' ? 'text-amber-400' : ''
+                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                  selectedTimeframe === 'h6' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
                 }`}
               >
-                6 Jam {renderSortIcon('h6')}
+                6j {renderSortIcon('h6')}
               </th>
               <th
                 onClick={() => handleSort('h12')}
-                className={`py-3.5 px-3 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h12' ? 'text-amber-400' : ''
+                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                  selectedTimeframe === 'h12' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
                 }`}
               >
-                12 Jam {renderSortIcon('h12')}
+                12j {renderSortIcon('h12')}
               </th>
               <th
                 onClick={() => handleSort('h24')}
-                className={`py-3.5 px-3 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h24' ? 'text-amber-400' : ''
+                className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
+                  selectedTimeframe === 'h24' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
                 }`}
               >
-                24 Jam {renderSortIcon('h24')}
+                24j {renderSortIcon('h24')}
               </th>
               <th className="py-3.5 px-4 min-w-[160px]">
                 Posisi Pivot (S2 ➔ R2)
@@ -231,7 +279,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           <tbody className="divide-y divide-zinc-800/60">
             {paginatedCoins.length === 0 ? (
               <tr>
-                <td colSpan={11} className="py-12 text-center text-zinc-500">
+                <td colSpan={15} className="py-12 text-center text-zinc-500">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Info className="w-8 h-8 text-zinc-600" />
                     <p className="text-sm font-medium">Tidak ada koin yang sesuai kriteria filter.</p>
@@ -249,12 +297,12 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     onClick={() => onSelectCoin(coin)}
                     className="hover:bg-zinc-800/40 cursor-pointer transition-colors group"
                   >
-                    <td className="py-3 px-4 text-center text-zinc-500 font-mono text-[11px]">
+                    <td className="py-3 px-3 text-center text-zinc-500 font-mono text-[11px]">
                       {rank}
                     </td>
 
                     {/* Symbol & Volume */}
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-3">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-zinc-100 text-sm group-hover:text-amber-400 transition-colors">
                           {coin.baseAsset}
@@ -267,9 +315,9 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Live Price with Flash Animation */}
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-3">
                       <div
-                        className={`font-mono text-sm font-bold transition-colors inline-block px-1.5 py-0.5 rounded ${
+                        className={`font-mono text-xs sm:text-sm font-bold transition-colors inline-block px-1.5 py-0.5 rounded ${
                           flash === 'up'
                             ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500'
                             : flash === 'down'
@@ -281,12 +329,16 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                       </div>
                     </td>
 
-                    {/* Changes columns */}
-                    <td className="py-3 px-3 text-center">{renderChangeCell(coin.changes.h1, 'h1')}</td>
-                    <td className="py-3 px-3 text-center">{renderChangeCell(coin.changes.h3, 'h3')}</td>
-                    <td className="py-3 px-3 text-center">{renderChangeCell(coin.changes.h6, 'h6')}</td>
-                    <td className="py-3 px-3 text-center">{renderChangeCell(coin.changes.h12, 'h12')}</td>
-                    <td className="py-3 px-3 text-center">{renderChangeCell(coin.changes.h24, 'h24')}</td>
+                    {/* Changes columns (1m to 24h) */}
+                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.m1, 'm1')}</td>
+                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.m5, 'm5')}</td>
+                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.m15, 'm15')}</td>
+                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.m30, 'm30')}</td>
+                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.h1, 'h1')}</td>
+                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.h3, 'h3')}</td>
+                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.h6, 'h6')}</td>
+                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.h12, 'h12')}</td>
+                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.h24, 'h24')}</td>
 
                     {/* Pivot Visualizer */}
                     <td className="py-3 px-4">

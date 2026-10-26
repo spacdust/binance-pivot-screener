@@ -3,7 +3,7 @@
 Aplikasi **Crypto Coin Screener Binance** berbasis **React + Vite + Tailwind CSS (shadcn/ui style darkmode)** dan **Node.js Express + WebSocket backend**.
 
 Dirancang khusus untuk memfilter pergerakan harga koin Binance secara realtime berdasarkan:
-1. **Perubahan Persentase Multi-Timeframe** (1 Jam, 3 Jam, 6 Jam, 12 Jam, 24 Jam)
+1. **Perubahan Persentase Multi-Timeframe** (1 Menit, 5 Menit, 15 Menit, 30 Menit, 1 Jam, 3 Jam, 6 Jam, 12 Jam, 24 Jam)
 2. **Kondisi Daily Pivot Points (Classic)**:
    - 🎯 **Area P**: Harga berkonsolidasi di sekitar Pivot Point harian
    - 🔴 **Tembus S1 ➔ Menuju S2**: *Bearish Breakdown* menembus Support 1

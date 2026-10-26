@@ -10,11 +10,15 @@ interface FilterBarProps {
 }
 
 const TIMEFRAMES: { key: SelectedTimeframe; label: string }[] = [
-  { key: 'h24', label: '24 Jam' },
-  { key: 'h12', label: '12 Jam' },
-  { key: 'h6', label: '6 Jam' },
-  { key: 'h3', label: '3 Jam' },
-  { key: 'h1', label: '1 Jam' },
+  { key: 'h24', label: '24j' },
+  { key: 'h12', label: '12j' },
+  { key: 'h6', label: '6j' },
+  { key: 'h3', label: '3j' },
+  { key: 'h1', label: '1j' },
+  { key: 'm30', label: '30m' },
+  { key: 'm15', label: '15m' },
+  { key: 'm5', label: '5m' },
+  { key: 'm1', label: '1m' },
 ];
 
 const QUICK_PERCENT_PRESETS = [1, 2, 3, 5, 10];
@@ -79,21 +83,21 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       {/* Row 2: Timeframe selector & Percentage Filter Controls */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
         {/* Timeframe Buttons */}
-        <div className="lg:col-span-5 flex flex-col gap-1.5">
+        <div className="lg:col-span-6 flex flex-col gap-1.5">
           <label className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-amber-400" />
-            Pilih Timeframe Perubahan Harga:
+            Pilih Timeframe Perubahan Harga (1m s/d 24j):
           </label>
-          <div className="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 gap-1">
+          <div className="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 gap-1 overflow-x-auto">
             {TIMEFRAMES.map((tf) => {
               const active = filters.selectedTimeframe === tf.key;
               return (
                 <button
                   key={tf.key}
                   onClick={() => onFilterChange({ selectedTimeframe: tf.key })}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all ${
+                  className={`flex-1 min-w-[38px] py-1.5 px-1.5 text-center rounded-lg text-xs font-mono font-semibold transition-all whitespace-nowrap ${
                     active
-                      ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/20'
+                      ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/20 font-bold'
                       : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
                   }`}
                 >
@@ -105,7 +109,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
 
         {/* Percentage Filter Threshold */}
-        <div className="lg:col-span-7 flex flex-col gap-1.5">
+        <div className="lg:col-span-6 flex flex-col gap-1.5">
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <input

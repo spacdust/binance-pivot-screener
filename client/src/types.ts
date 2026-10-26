@@ -37,6 +37,10 @@ export interface PivotStatus {
 }
 
 export interface TimeframeChanges {
+  m1: number;
+  m5: number;
+  m15: number;
+  m30: number;
   h1: number;
   h3: number;
   h6: number;
@@ -52,6 +56,10 @@ export interface CoinData {
   volume24h: number;
   pivots: Pivots;
   baselines: {
+    open1m: number | null;
+    open5m: number | null;
+    open15m: number | null;
+    open30m: number | null;
     open1h: number | null;
     open3h: number | null;
     open6h: number | null;
@@ -76,7 +84,7 @@ export interface ScreenerStats {
   belowS2: number;
 }
 
-export type SelectedTimeframe = 'h24' | 'h12' | 'h6' | 'h3' | 'h1';
+export type SelectedTimeframe = 'h24' | 'h12' | 'h6' | 'h3' | 'h1' | 'm30' | 'm15' | 'm5' | 'm1';
 
 export interface FilterState {
   searchQuery: string;
