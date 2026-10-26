@@ -58,7 +58,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
     if (flashes.size > 0) {
       setPriceFlashMap(flashes);
-      const timer = setTimeout(() => setPriceFlashMap(new Map()), 600);
+      const timer = setTimeout(() => setPriceFlashMap(new Map()), 1100);
       return () => clearTimeout(timer);
     }
   }, [coins]);
@@ -179,13 +179,16 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
   const renderChangeCell = (val: number, tfKey: SelectedTimeframe) => {
     const isSelected = selectedTimeframe === tfKey;
-    const isPos = val >= 0;
+    const isPos = val > 0;
+    const isZero = val === 0;
     return (
       <span
-        className={`inline-block px-2 py-0.5 rounded text-xs font-mono font-semibold transition-all ${
-          isSelected ? 'ring-1 ring-amber-400/70 font-bold' : ''
+        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-mono tabular-nums font-semibold transition-all duration-300 ${
+          isSelected ? 'ring-1 ring-amber-400/80 font-bold bg-amber-500/15 text-amber-200' : ''
         } ${
-          isPos
+          isZero
+            ? 'text-zinc-500 bg-zinc-800/30'
+            : isPos
             ? 'text-emerald-400 bg-emerald-500/10'
             : 'text-rose-400 bg-rose-500/10'
         }`}
@@ -288,7 +291,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 24j {renderSortIcon('h24')}
               </th>
               <th className="py-3.5 px-4 min-w-[160px]">
-                Posisi Pivot (S2 ➔ R2)
+                Posisi Pivot (S3 ➔ R3)
               </th>
               <th
                 onClick={() => handleSort('distP')}
@@ -320,7 +323,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     onClick={() => onSelectCoin(coin)}
                     className="hover:bg-zinc-800/40 cursor-pointer transition-colors group"
                   >
-                    <td className="py-3 px-3 text-center text-zinc-500 font-mono text-[11px]">
+                    <td className="py-3 px-3 text-center text-zinc-500 font-mono tabular-nums text-[11px]">
                       {rank}
                     </td>
 
@@ -332,20 +335,20 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         </span>
                         <span className="text-[10px] text-zinc-500 font-mono">/USDT</span>
                       </div>
-                      <div className="text-[11px] text-zinc-500 font-mono">
+                      <div className="text-[11px] text-zinc-500 font-mono tabular-nums">
                         ${(coin.volume24h / 1e6).toFixed(2)}M
                       </div>
                     </td>
 
-                    {/* Live Price with Flash Animation */}
+                    {/* Live Price with Super Smooth Flash Animation */}
                     <td className="py-3 px-3">
                       <div
-                        className={`font-mono text-xs sm:text-sm font-bold transition-colors inline-block px-1.5 py-0.5 rounded ${
+                        className={`font-mono tabular-nums text-xs sm:text-sm font-semibold transition-all inline-block px-2 py-0.5 rounded ${
                           flash === 'up'
-                            ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500'
+                            ? 'tick-flash-up border border-emerald-500/30'
                             : flash === 'down'
-                            ? 'bg-rose-500/20 text-rose-400 ring-1 ring-rose-500'
-                            : 'text-zinc-100'
+                            ? 'tick-flash-down border border-rose-500/30'
+                            : 'text-zinc-100 border border-transparent'
                         }`}
                       >
                         ${formatPrice(coin.price)}
@@ -382,7 +385,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         >
                           {coin.pivotStatus.label}
                         </span>
-                        <span className="text-[10px] text-zinc-500 font-mono">
+                        <span className="text-[10px] text-zinc-500 font-mono tabular-nums">
                           Dist P: {coin.pivotStatus.distP > 0 ? '+' : ''}{coin.pivotStatus.distP}%
                         </span>
                       </div>

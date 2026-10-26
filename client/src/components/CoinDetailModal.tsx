@@ -102,12 +102,12 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-900/60 border border-zinc-800 rounded-xl p-4">
             <div>
               <span className="text-xs text-zinc-400">Harga Terakhir:</span>
-              <div className="text-2xl font-bold font-mono text-zinc-100 mt-0.5">
+              <div className="text-2xl font-bold font-mono tabular-nums text-zinc-100 mt-0.5">
                 ${formatPrice(price)}
               </div>
               <div className="text-xs text-zinc-400 mt-1">
                 Jarak ke Pivot P:{' '}
-                <span className={`font-mono font-semibold ${pivotStatus.distP >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`font-mono tabular-nums font-semibold ${pivotStatus.distP >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {pivotStatus.distP > 0 ? '+' : ''}{pivotStatus.distP}%
                 </span>
               </div>
@@ -142,14 +142,14 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
                   >
                     <div className="text-[11px] text-zinc-400 font-medium">{tf.label}</div>
                     <div
-                      className={`text-sm sm:text-base font-bold font-mono mt-1 ${
+                      className={`text-sm sm:text-base font-bold font-mono tabular-nums mt-1 ${
                         isPos ? 'text-emerald-400' : 'text-rose-400'
                       }`}
                     >
                       {isPos ? '+' : ''}{tf.change}%
                     </div>
                     {tf.open && (
-                      <div className="text-[10px] text-zinc-500 font-mono mt-0.5 truncate">
+                      <div className="text-[10px] text-zinc-500 font-mono tabular-nums mt-0.5 truncate">
                         ${formatPrice(tf.open)}
                       </div>
                     )}
@@ -166,7 +166,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
                 <Target className="w-4 h-4 text-sky-400" />
                 Level Daily Pivot Points (Standar Harian)
               </h3>
-              <span className="text-[11px] text-zinc-500 font-mono">
+              <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
                 Basis Candle Kemarin: H: ${formatPrice(pivots.H)} | L: ${formatPrice(pivots.L)} | C: ${formatPrice(pivots.C)}
               </span>
             </div>
@@ -194,11 +194,11 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
                     </div>
 
                     <div className="flex items-center gap-6">
-                      <span className="font-mono text-zinc-100 font-medium">
+                      <span className="font-mono tabular-nums text-zinc-100 font-medium">
                         ${formatPrice(lvl.val)}
                       </span>
                       <span
-                        className={`font-mono text-[11px] w-16 text-right ${getDistColor(
+                        className={`font-mono tabular-nums text-[11px] w-16 text-right ${getDistColor(
                           lvl.val
                         )}`}
                       >

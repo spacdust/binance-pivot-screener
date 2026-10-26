@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScreenerStats, PivotConditionType, FilterState } from '../types';
+import { ScreenerStats, FilterState } from '../types';
 import { Target, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Layers } from 'lucide-react';
 
 interface StatsOverviewProps {
@@ -35,22 +35,24 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
             });
           }
         }}
-        className={`p-3.5 rounded-xl border text-left transition-all ${
+        className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group ${
           isUnder5Active
             ? 'bg-amber-500/10 border-amber-500/50 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/50'
             : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/80 hover:border-zinc-700'
         }`}
       >
-        <div className="flex items-center justify-between text-xs mb-1.5">
-          <span className="text-zinc-400 font-medium flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5 text-amber-400" />
-            24h &lt; 5%
-          </span>
+        <div className="flex items-center justify-between text-xs mb-2">
+          <div className="flex items-center gap-1.5 text-zinc-400 font-medium">
+            <span className="p-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400">
+              <Layers className="w-3 h-3 stroke-[2.2]" />
+            </span>
+            <span className="text-zinc-300 text-xs">24h &lt; 5%</span>
+          </div>
           {isUnder5Active && (
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#fbbf24]"></span>
           )}
         </div>
-        <div className="text-2xl font-bold font-mono text-zinc-100">
+        <div className="text-2xl font-bold font-mono tabular-nums text-zinc-100 tracking-tight">
           {stats.under5pct24h}
         </div>
         <p className="text-[11px] text-zinc-500 mt-1 truncate">
@@ -65,22 +67,24 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
             pivotCondition: filters.pivotCondition === 'AREA_P' ? 'ALL' : 'AREA_P'
           });
         }}
-        className={`p-3.5 rounded-xl border text-left transition-all ${
+        className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group ${
           filters.pivotCondition === 'AREA_P'
             ? 'bg-sky-500/10 border-sky-500/50 shadow-lg shadow-sky-500/10 ring-1 ring-sky-500/50'
             : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/80 hover:border-zinc-700'
         }`}
       >
-        <div className="flex items-center justify-between text-xs mb-1.5">
-          <span className="text-zinc-400 font-medium flex items-center gap-1">
-            <Target className="w-3.5 h-3.5 text-sky-400" />
-            Area P
-          </span>
+        <div className="flex items-center justify-between text-xs mb-2">
+          <div className="flex items-center gap-1.5 text-zinc-400 font-medium">
+            <span className="p-1 rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-400">
+              <Target className="w-3 h-3 stroke-[2.2]" />
+            </span>
+            <span className="text-zinc-300 text-xs">Area P</span>
+          </div>
           {filters.pivotCondition === 'AREA_P' && (
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8]"></span>
           )}
         </div>
-        <div className="text-2xl font-bold font-mono text-sky-400">
+        <div className="text-2xl font-bold font-mono tabular-nums text-sky-400 tracking-tight">
           {stats.areaP}
         </div>
         <p className="text-[11px] text-zinc-500 mt-1 truncate">
@@ -95,22 +99,24 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
             pivotCondition: filters.pivotCondition === 'R1_TO_R2' ? 'ALL' : 'R1_TO_R2'
           });
         }}
-        className={`p-3.5 rounded-xl border text-left transition-all ${
+        className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group ${
           filters.pivotCondition === 'R1_TO_R2'
             ? 'bg-emerald-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/50'
             : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/80 hover:border-zinc-700'
         }`}
       >
-        <div className="flex items-center justify-between text-xs mb-1.5">
-          <span className="text-zinc-400 font-medium flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-            R1 ➔ R2
-          </span>
+        <div className="flex items-center justify-between text-xs mb-2">
+          <div className="flex items-center gap-1.5 text-zinc-400 font-medium">
+            <span className="p-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+              <TrendingUp className="w-3 h-3 stroke-[2.2]" />
+            </span>
+            <span className="text-zinc-300 text-xs">R1 ➔ R2</span>
+          </div>
           {filters.pivotCondition === 'R1_TO_R2' && (
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"></span>
           )}
         </div>
-        <div className="text-2xl font-bold font-mono text-emerald-400">
+        <div className="text-2xl font-bold font-mono tabular-nums text-emerald-400 tracking-tight">
           {stats.r1ToR2}
         </div>
         <p className="text-[11px] text-zinc-500 mt-1 truncate">
@@ -125,22 +131,24 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
             pivotCondition: filters.pivotCondition === 'S1_TO_P' ? 'ALL' : 'S1_TO_P'
           });
         }}
-        className={`p-3.5 rounded-xl border text-left transition-all ${
+        className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group ${
           filters.pivotCondition === 'S1_TO_P'
             ? 'bg-teal-500/10 border-teal-500/50 shadow-lg shadow-teal-500/10 ring-1 ring-teal-500/50'
             : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/80 hover:border-zinc-700'
         }`}
       >
-        <div className="flex items-center justify-between text-xs mb-1.5">
-          <span className="text-zinc-400 font-medium flex items-center gap-1">
-            <ArrowUpRight className="w-3.5 h-3.5 text-teal-400" />
-            S1 ➔ P
-          </span>
+        <div className="flex items-center justify-between text-xs mb-2">
+          <div className="flex items-center gap-1.5 text-zinc-400 font-medium">
+            <span className="p-1 rounded-md bg-teal-500/10 border border-teal-500/20 text-teal-400">
+              <ArrowUpRight className="w-3 h-3 stroke-[2.2]" />
+            </span>
+            <span className="text-zinc-300 text-xs">S1 ➔ P</span>
+          </div>
           {filters.pivotCondition === 'S1_TO_P' && (
-            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_6px_#2dd4bf]"></span>
           )}
         </div>
-        <div className="text-2xl font-bold font-mono text-teal-400">
+        <div className="text-2xl font-bold font-mono tabular-nums text-teal-400 tracking-tight">
           {stats.s1ToP}
         </div>
         <p className="text-[11px] text-zinc-500 mt-1 truncate">
@@ -155,22 +163,24 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
             pivotCondition: filters.pivotCondition === 'S1_TO_S2' ? 'ALL' : 'S1_TO_S2'
           });
         }}
-        className={`p-3.5 rounded-xl border text-left transition-all ${
+        className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group ${
           filters.pivotCondition === 'S1_TO_S2'
             ? 'bg-rose-500/10 border-rose-500/50 shadow-lg shadow-rose-500/10 ring-1 ring-rose-500/50'
             : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/80 hover:border-zinc-700'
         }`}
       >
-        <div className="flex items-center justify-between text-xs mb-1.5">
-          <span className="text-zinc-400 font-medium flex items-center gap-1">
-            <TrendingDown className="w-3.5 h-3.5 text-rose-400" />
-            S1 ➔ S2
-          </span>
+        <div className="flex items-center justify-between text-xs mb-2">
+          <div className="flex items-center gap-1.5 text-zinc-400 font-medium">
+            <span className="p-1 rounded-md bg-rose-500/10 border border-rose-500/20 text-rose-400">
+              <TrendingDown className="w-3 h-3 stroke-[2.2]" />
+            </span>
+            <span className="text-zinc-300 text-xs">S1 ➔ S2</span>
+          </div>
           {filters.pivotCondition === 'S1_TO_S2' && (
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_6px_#fb7185]"></span>
           )}
         </div>
-        <div className="text-2xl font-bold font-mono text-rose-400">
+        <div className="text-2xl font-bold font-mono tabular-nums text-rose-400 tracking-tight">
           {stats.s1ToS2}
         </div>
         <p className="text-[11px] text-zinc-500 mt-1 truncate">
@@ -185,22 +195,24 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
             pivotCondition: filters.pivotCondition === 'R1_TO_P' ? 'ALL' : 'R1_TO_P'
           });
         }}
-        className={`p-3.5 rounded-xl border text-left transition-all ${
+        className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group ${
           filters.pivotCondition === 'R1_TO_P'
             ? 'bg-amber-500/10 border-amber-500/50 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/50'
             : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/80 hover:border-zinc-700'
         }`}
       >
-        <div className="flex items-center justify-between text-xs mb-1.5">
-          <span className="text-zinc-400 font-medium flex items-center gap-1">
-            <ArrowDownRight className="w-3.5 h-3.5 text-amber-400" />
-            R1 ➔ P
-          </span>
+        <div className="flex items-center justify-between text-xs mb-2">
+          <div className="flex items-center gap-1.5 text-zinc-400 font-medium">
+            <span className="p-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400">
+              <ArrowDownRight className="w-3 h-3 stroke-[2.2]" />
+            </span>
+            <span className="text-zinc-300 text-xs">R1 ➔ P</span>
+          </div>
           {filters.pivotCondition === 'R1_TO_P' && (
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#fbbf24]"></span>
           )}
         </div>
-        <div className="text-2xl font-bold font-mono text-amber-400">
+        <div className="text-2xl font-bold font-mono tabular-nums text-amber-400 tracking-tight">
           {stats.r1ToP}
         </div>
         <p className="text-[11px] text-zinc-500 mt-1 truncate">

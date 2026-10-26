@@ -61,7 +61,13 @@ export default {
           r2: '#ec4899',      // Pink for R2
           s1: '#f59e0b',      // Amber for S1
           s2: '#ef4444',      // Red for S2
+          s3: '#dc2626',      // Crimson for S3
+          r3: '#c026d3',      // Fuchsia for R3
         }
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
         lg: "0.5rem",
