@@ -11,6 +11,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const distPath = path.resolve(__dirname, '../../client/dist');
 
+// Process level crash guards
+process.on('uncaughtException', (err) => {
+  console.error('[Process] Uncaught Exception:', err.message);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[Process] Unhandled Rejection:', reason);
+});
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -35,8 +43,8 @@ app.get('/api/screener', (req, res) => {
   // Summary statistics
   const stats = {
     total: coins.length,
-    under5pct24h: coins.filter(c => Math.abs(c.changes.h24) < 5).length,
-    under2pct24h: coins.filter(c => Math.abs(c.changes.h24) < 2).length,
+    under5pct24h: coins.filter(c => c?.changes?.h24 != null && Math.abs(c.changes.h24) < 5).length,
+    under2pct24h: coins.filter(c => c?.changes?.h24 != null && Math.abs(c.changes.h24) < 2).length,
     areaP: coins.filter(c => c.pivotStatus?.condition === 'AREA_P').length,
     r1ToR2: coins.filter(c => c.pivotStatus?.condition === 'R1_TO_R2').length,
     r2ToR3: coins.filter(c => c.pivotStatus?.condition === 'R2_TO_R3').length,
@@ -119,12 +127,13 @@ app.get('/api/logo/:symbol', async (req, res) => {
     const contentType = upstreamRes.headers.get('content-type') || 'image/png';
     const buffer = Buffer.from(await upstreamRes.arrayBuffer());
 
-    logoBufferCache.set(symbol, { buffer, contentType });
+    logoBufferCache.set(rawSymbol, { buffer, contentType });
+    logoBufferCache.set(cleanSymbol, { buffer, contentType });
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
     res.send(buffer);
   } catch (err) {
-    console.warn(`[LogoProxy] Failed to fetch upstream logo for ${symbol}:`, err.message);
+    console.warn(`[LogoProxy] Failed to fetch upstream logo for ${rawSymbol}:`, err.message);
     res.status(502).send('Error fetching upstream logo');
   }
 });

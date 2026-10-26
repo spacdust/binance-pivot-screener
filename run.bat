@@ -53,6 +53,9 @@ if not exist "client\dist\" (
     call npm --prefix client run build
 )
 
+:: Bebaskan port 5000 jika ada proses node gantung sebelumnya
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000" ^| findstr "LISTENING"') do taskkill /F /PID %%a >nul 2>nul
+
 echo.
 echo ========================================================
 echo  Backend Server : http://localhost:5000
