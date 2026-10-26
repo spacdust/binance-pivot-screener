@@ -1,0 +1,89 @@
+export interface Pivots {
+  H: number;
+  L: number;
+  C: number;
+  P: number;
+  R1: number;
+  S1: number;
+  R2: number;
+  S2: number;
+  R3: number;
+  S3: number;
+}
+
+export type PivotConditionType =
+  | 'ALL'
+  | 'AREA_P'
+  | 'S1_TO_S2'
+  | 'S1_TO_P'
+  | 'R1_TO_R2'
+  | 'R1_TO_P'
+  | 'P_TO_R1'
+  | 'P_TO_S1'
+  | 'ABOVE_R2'
+  | 'BELOW_S2';
+
+export interface PivotStatus {
+  condition: PivotConditionType;
+  label: string;
+  description: string;
+  tagColor: 'blue' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'red' | 'green' | 'fuchsia' | 'sky' | 'orange';
+  distP: number;
+  distR1: number;
+  distS1: number;
+  distR2: number;
+  distS2: number;
+  rangePercent: number;
+}
+
+export interface TimeframeChanges {
+  h1: number;
+  h3: number;
+  h6: number;
+  h12: number;
+  h24: number;
+}
+
+export interface CoinData {
+  symbol: string;
+  baseAsset: string;
+  quoteAsset: string;
+  price: number;
+  volume24h: number;
+  pivots: Pivots;
+  baselines: {
+    open1h: number | null;
+    open3h: number | null;
+    open6h: number | null;
+    open12h: number | null;
+    open24h: number | null;
+  };
+  pivotStatus: PivotStatus;
+  changes: TimeframeChanges;
+  lastUpdated: number;
+}
+
+export interface ScreenerStats {
+  total: number;
+  under5pct24h: number;
+  under2pct24h: number;
+  areaP: number;
+  r1ToR2: number;
+  r1ToP: number;
+  s1ToS2: number;
+  s1ToP: number;
+  aboveR2: number;
+  belowS2: number;
+}
+
+export type SelectedTimeframe = 'h24' | 'h12' | 'h6' | 'h3' | 'h1';
+
+export interface FilterState {
+  searchQuery: string;
+  selectedTimeframe: SelectedTimeframe;
+  maxPercent: number; // e.g. 5 for < 5%
+  enablePercentFilter: boolean;
+  filterMode: 'below' | 'above' | 'absolute_below'; // absolute_below means |change| < 5%
+  pivotCondition: PivotConditionType;
+  minVolume: number; // in USDT, e.g. 1000000
+}
