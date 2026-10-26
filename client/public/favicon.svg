@@ -1,20 +1,59 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
   <defs>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FCD535"/>
-      <stop offset="100%" stop-color="#F0B90B"/>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#181a20"/>
+      <stop offset="100%" stop-color="#0e1114"/>
+    </linearGradient>
+
+    <!-- Candlestick Gradients -->
+    <linearGradient id="barGreen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2ebd85"/>
+      <stop offset="100%" stop-color="#0ecb81"/>
+    </linearGradient>
+    <linearGradient id="barYellow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fcd535"/>
+      <stop offset="100%" stop-color="#f0b90b"/>
+    </linearGradient>
+
+    <!-- Laser Beam Gradient -->
+    <linearGradient id="beamGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f0b90b"/>
+      <stop offset="100%" stop-color="#0ecb81"/>
     </linearGradient>
   </defs>
-  <!-- Sleek dark container for optimal contrast on both dark and light browser tabs -->
-  <rect width="128" height="128" rx="28" fill="#181a20"/>
-  <rect x="1.5" y="1.5" width="125" height="125" rx="26.5" fill="none" stroke="#2b313a" stroke-width="3"/>
-  
-  <!-- Authentic Binance Gold Emblem -->
-  <g transform="translate(22.85, 22.85) scale(0.65)" fill="url(#gold)">
-    <polygon points="38.171,53.203 62.759,28.616 87.36,53.216 101.667,38.909 62.759,0 23.864,38.896"/>
-    <rect x="3.644" y="53.188" transform="matrix(0.7071 0.7071 -0.7071 0.7071 48.7933 8.8106)" width="20.233" height="20.234"/>
-    <polygon points="38.171,73.408 62.759,97.995 87.359,73.396 101.674,87.695 101.667,87.703 62.759,126.611 23.863,87.716 23.843,87.696"/>
-    <rect x="101.64" y="53.189" transform="matrix(-0.7071 0.7071 -0.7071 -0.7071 235.5457 29.0503)" width="20.234" height="20.233"/>
-    <polygon points="77.271,63.298 77.277,63.298 62.759,48.78 52.03,59.509 52.029,59.509 50.797,60.742 48.254,63.285 48.254,63.285 48.234,63.305 48.254,63.326 62.759,77.831 77.277,63.313 77.284,63.305"/>
-  </g>
+
+  <!-- Dark Rounded Container with Border -->
+  <rect width="128" height="128" rx="28" fill="url(#bgGrad)"/>
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="#2b313a" stroke-width="3"/>
+
+  <!-- Radar Scanner Ring (The Screener Field) -->
+  <circle cx="64" cy="64" r="46" fill="#12151a" stroke="#2b313a" stroke-width="3.5"/>
+  <circle cx="64" cy="64" r="30" fill="none" stroke="#f0b90b" stroke-opacity="0.25" stroke-width="2" stroke-dasharray="4 3"/>
+
+  <!-- Screener Scope Crosshair Reticles -->
+  <path d="M64 8 L64 22 M64 106 L64 120 M8 64 L22 64 M106 64 L120 64" stroke="#f0b90b" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Candlesticks (Financial Market Momentum) -->
+  <!-- Candle 1 (Left: Support) -->
+  <line x1="42" y1="50" x2="42" y2="88" stroke="#f0b90b" stroke-width="3.5" stroke-linecap="round"/>
+  <rect x="35" y="58" width="14" height="22" rx="3" fill="url(#barYellow)"/>
+
+  <!-- Candle 2 (Center: Pivot Area) -->
+  <line x1="64" y1="38" x2="64" y2="82" stroke="#0ecb81" stroke-width="3.5" stroke-linecap="round"/>
+  <rect x="57" y="46" width="14" height="26" rx="3" fill="url(#barGreen)"/>
+
+  <!-- Candle 3 (Right: Breakout Target) -->
+  <line x1="86" y1="26" x2="86" y2="76" stroke="#0ecb81" stroke-width="3.5" stroke-linecap="round"/>
+  <rect x="79" y="34" width="14" height="30" rx="3" fill="url(#barGreen)"/>
+
+  <!-- Glowing Pivot Center Level Line (P) -->
+  <line x1="22" y1="64" x2="106" y2="64" stroke="#f0b90b" stroke-width="2.5" stroke-dasharray="4 3" stroke-opacity="0.85"/>
+
+  <!-- Screener Laser Trend / Scanner Sweep -->
+  <line x1="30" y1="80" x2="94" y2="26" stroke="url(#beamGrad)" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Target Found Blip Indicator -->
+  <circle cx="94" cy="26" r="7" fill="#0ecb81" stroke="#ffffff" stroke-width="2.5"/>
+  <circle cx="94" cy="26" r="11" fill="none" stroke="#0ecb81" stroke-width="1.5" opacity="0.6"/>
 </svg>

@@ -22,14 +22,26 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="h-[48px] border-b border-[#2b313a] bg-[#181a20] sticky top-0 z-30 px-3 sm:px-4 flex items-center justify-between shrink-0 select-none">
       {/* Brand & Market Identity */}
       <div className="flex items-center gap-3">
-        {/* Authentic Binance Diamond Mark */}
-        <div className="flex items-center justify-center w-7 h-7 rounded-xs bg-[#f0b90b]/10 border border-[#f0b90b]/30">
-          <svg className="w-4 h-4" viewBox="0 0 126.611 126.611" fill="#F0B90B">
-            <polygon points="38.171,53.203 62.759,28.616 87.36,53.216 101.667,38.909 62.759,0 23.864,38.896" />
-            <rect x="3.644" y="53.188" transform="matrix(0.7071 0.7071 -0.7071 0.7071 48.7933 8.8106)" width="20.233" height="20.234" />
-            <polygon points="38.171,73.408 62.759,97.995 87.359,73.396 101.674,87.695 101.667,87.703 62.759,126.611 23.863,87.716 23.843,87.696" />
-            <rect x="101.64" y="53.189" transform="matrix(-0.7071 0.7071 -0.7071 -0.7071 235.5457 29.0503)" width="20.234" height="20.233" />
-            <polygon points="77.271,63.298 77.277,63.298 62.759,48.78 52.03,59.509 52.029,59.509 50.797,60.742 48.254,63.285 48.254,63.285 48.234,63.305 48.254,63.326 62.759,77.831 77.277,63.313 77.284,63.305" />
+        {/* Pro Market Screener Mark */}
+        <div className="flex items-center justify-center w-7 h-7 rounded-xs bg-[#181a20] border border-[#2b313a] shadow-xs">
+          <svg className="w-4.5 h-4.5" viewBox="0 0 128 128" fill="none">
+            {/* Scope Ring */}
+            <circle cx="64" cy="64" r="46" stroke="#2b313a" strokeWidth="6" />
+            <circle cx="64" cy="64" r="30" stroke="#f0b90b" strokeOpacity="0.3" strokeWidth="4" strokeDasharray="6 6" />
+            {/* Reticles */}
+            <path d="M64 8 L64 22 M64 106 L64 120 M8 64 L22 64 M106 64 L120 64" stroke="#f0b90b" strokeWidth="7" strokeLinecap="round" />
+            {/* Candlesticks */}
+            <line x1="42" y1="50" x2="42" y2="88" stroke="#f0b90b" strokeWidth="5" strokeLinecap="round" />
+            <rect x="35" y="58" width="14" height="22" rx="3" fill="#f0b90b" />
+            <line x1="64" y1="38" x2="64" y2="82" stroke="#0ecb81" strokeWidth="5" strokeLinecap="round" />
+            <rect x="57" y="46" width="14" height="26" rx="3" fill="#0ecb81" />
+            <line x1="86" y1="26" x2="86" y2="76" stroke="#0ecb81" strokeWidth="5" strokeLinecap="round" />
+            <rect x="79" y="34" width="14" height="30" rx="3" fill="#0ecb81" />
+            {/* Pivot Center Level */}
+            <line x1="22" y1="64" x2="106" y2="64" stroke="#f0b90b" strokeWidth="4" strokeDasharray="6 6" strokeOpacity="0.85" />
+            {/* Laser Trend Line */}
+            <line x1="30" y1="80" x2="94" y2="26" stroke="#0ecb81" strokeWidth="5" strokeLinecap="round" />
+            <circle cx="94" cy="26" r="8" fill="#0ecb81" stroke="#ffffff" strokeWidth="3" />
           </svg>
         </div>
 
