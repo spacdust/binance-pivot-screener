@@ -1,8 +1,17 @@
 import WebSocket from 'ws';
 import { calculateDailyPivots, classifyPivotCondition } from './pivot.js';
 
-const BINANCE_REST_BASE = 'https://api.binance.com/api/v3';
-const BINANCE_WS_URL = 'wss://stream.binance.com:9443/ws/!miniTicker@arr';
+const REST_MIRRORS = [
+  'https://api.binance.com/api/v3',
+  'https://data-api.binance.vision/api/v3',
+  'https://api1.binance.com/api/v3',
+  'https://api3.binance.com/api/v3',
+];
+
+const WS_MIRRORS = [
+  'wss://stream.binance.com:9443/ws/!miniTicker@arr',
+  'wss://data-stream.binance.vision/ws/!miniTicker@arr',
+];
 
 export class BinanceService {
   constructor() {
@@ -14,6 +23,8 @@ export class BinanceService {
     this.lastDailySync = 0;
     this.lastHourlySync = 0;
     this.isSyncing = false;
+    this.activeRestMirrorIndex = 0;
+    this.activeWsMirrorIndex = 0;
   }
 
   // Subscribe callback for price/screener updates
@@ -32,26 +43,47 @@ export class BinanceService {
     }
   }
 
-  // Helper for fetch with timeout and retries
-  async safeFetch(url) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    try {
-      const res = await fetch(url, { signal: controller.signal });
-      if (!res.ok) {
+  // Resilient fetch with automatic multi-mirror failover
+  async safeFetch(path) {
+    const cleanPath = path.startsWith('http')
+      ? path.replace(/^https?:\/\/[^/]+\/api\/v3/, '')
+      : (path.startsWith('/') ? path : `/${path}`);
+
+    let lastError = null;
+    const startIndex = this.activeRestMirrorIndex;
+
+    for (let i = 0; i < REST_MIRRORS.length; i++) {
+      const mirrorIndex = (startIndex + i) % REST_MIRRORS.length;
+      const base = REST_MIRRORS[mirrorIndex];
+      const url = `${base}${cleanPath}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 6000);
+
+      try {
+        const res = await fetch(url, { signal: controller.signal });
+        if (res.ok) {
+          if (mirrorIndex !== this.activeRestMirrorIndex) {
+            console.log(`[BinanceService] Switched active REST mirror to: ${base}`);
+            this.activeRestMirrorIndex = mirrorIndex;
+          }
+          return await res.json();
+        }
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      } catch (err) {
+        lastError = err;
+      } finally {
+        clearTimeout(timeout);
       }
-      return await res.json();
-    } finally {
-      clearTimeout(timeout);
     }
+
+    throw new Error(`All Binance mirrors failed for ${cleanPath}: ${lastError?.message}`);
   }
 
   // Step 1: Discover top USDT pairs by 24h quote volume
   async fetchTopUsdtSymbols(limit = 150) {
     try {
       console.log(`[BinanceService] Fetching 24h ticker for symbol discovery...`);
-      const tickers = await this.safeFetch(`${BINANCE_REST_BASE}/ticker/24hr`);
+      const tickers = await this.safeFetch('/ticker/24hr');
       
       const filtered = tickers.filter(t => 
         t.symbol.endsWith('USDT') &&
@@ -78,9 +110,9 @@ export class BinanceService {
   async fetchSymbolKlines(symbol) {
     try {
       const [dailyKlines, hourlyKlines, minuteKlines] = await Promise.all([
-        this.safeFetch(`${BINANCE_REST_BASE}/klines?symbol=${symbol}&interval=1d&limit=2`),
-        this.safeFetch(`${BINANCE_REST_BASE}/klines?symbol=${symbol}&interval=1h&limit=25`),
-        this.safeFetch(`${BINANCE_REST_BASE}/klines?symbol=${symbol}&interval=1m&limit=35`)
+        this.safeFetch(`/klines?symbol=${symbol}&interval=1d&limit=2`),
+        this.safeFetch(`/klines?symbol=${symbol}&interval=1h&limit=25`),
+        this.safeFetch(`/klines?symbol=${symbol}&interval=1m&limit=35`)
       ]);
 
       if (!dailyKlines || dailyKlines.length < 2) {
@@ -199,6 +231,18 @@ export class BinanceService {
         })
       );
       completed += batch.length;
+      
+      // Progressive broadcast: notify clients so coins appear immediately!
+      if (this.symbolsData.size > 0 && (completed % 20 === 0 || completed === symbolsList.length)) {
+        this.notifyListeners({
+          type: 'FULL_SNAPSHOT',
+          data: Array.from(this.symbolsData.values()),
+          isPartial: completed < symbolsList.length,
+          completed: this.symbolsData.size,
+          total: symbolsList.length
+        });
+      }
+
       // Small pause to be gentle with Binance API
       await new Promise(r => setTimeout(r, 60));
     }
@@ -211,7 +255,10 @@ export class BinanceService {
     // Notify clients of initial data ready
     this.notifyListeners({
       type: 'FULL_SNAPSHOT',
-      data: Array.from(this.symbolsData.values())
+      data: Array.from(this.symbolsData.values()),
+      isPartial: false,
+      completed: this.symbolsData.size,
+      total: symbolsList.length
     });
   }
 
@@ -223,11 +270,12 @@ export class BinanceService {
       } catch (e) {}
     }
 
-    console.log(`[BinanceService] Connecting to Binance WebSocket ${BINANCE_WS_URL}...`);
-    this.ws = new WebSocket(BINANCE_WS_URL);
+    const wsUrl = WS_MIRRORS[this.activeWsMirrorIndex];
+    console.log(`[BinanceService] Connecting to Binance WebSocket (${wsUrl})...`);
+    this.ws = new WebSocket(wsUrl);
 
     this.ws.on('open', () => {
-      console.log('[BinanceService] Connected to Binance MiniTicker WebSocket!');
+      console.log(`[BinanceService] Connected to Binance MiniTicker WebSocket! (${wsUrl})`);
       this.isWsConnected = true;
     });
 
@@ -299,13 +347,14 @@ export class BinanceService {
     });
 
     this.ws.on('error', (err) => {
-      console.error('[BinanceService] WS error:', err.message);
+      console.warn(`[BinanceService] WS error on ${wsUrl}:`, err.message);
+      this.activeWsMirrorIndex = (this.activeWsMirrorIndex + 1) % WS_MIRRORS.length;
     });
 
     this.ws.on('close', () => {
-      console.warn('[BinanceService] WS connection closed. Reconnecting in 5s...');
+      console.warn('[BinanceService] WS connection closed. Reconnecting in 3s...');
       this.isWsConnected = false;
-      setTimeout(() => this.connectWebSocket(), 5000);
+      setTimeout(() => this.connectWebSocket(), 3000);
     });
   }
 

@@ -34,8 +34,8 @@ if not exist "client\node_modules\" (
 )
 
 echo.
-echo [INFO] Membuka browser (http://localhost:5173)...
-start /min cmd /c "timeout /t 3 /nobreak >nul & start http://localhost:5173"
+echo [INFO] Membuka browser (http://localhost:5173) setelah server siap...
+start /min cmd /c "timeout /t 5 /nobreak >nul & start http://localhost:5173"
 
 echo [INFO] Menjalankan Server (Port 5000) dan Client Vite (Port 5173)...
 echo Tekan Ctrl+C untuk menghentikan aplikasi.

@@ -15,27 +15,48 @@ export function useScreenerSocket() {
 
   // Fetch initial REST snapshot as fallback / fast start
   const fetchInitialData = useCallback(async () => {
-    try {
-      const res = await fetch('/api/screener');
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && Array.isArray(json.data)) {
-          const newMap = new Map<string, CoinData>();
-          json.data.forEach((coin: CoinData) => {
-            newMap.set(coin.symbol, coin);
-          });
-          setCoinsMap(newMap);
-          setStats(json.stats);
-          setIsLoading(false);
+    const urls = [
+      '/api/screener',
+      `http://${window.location.hostname}:5000/api/screener`,
+    ];
+
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+            setCoinsMap((prev) => {
+              const newMap = new Map(prev);
+              json.data.forEach((coin: CoinData) => {
+                newMap.set(coin.symbol, coin);
+              });
+              return newMap;
+            });
+            if (json.stats) setStats(json.stats);
+            setIsLoading(false);
+            return;
+          }
         }
+      } catch (err) {
+        // Try next URL fallback
       }
-    } catch (err) {
-      console.warn('Initial REST fetch failed, waiting for WebSocket...', err);
     }
   }, []);
 
+  // Poll until data arrives (helps during initial server startup sync)
   useEffect(() => {
     fetchInitialData();
+    const interval = setInterval(() => {
+      setCoinsMap((current) => {
+        if (current.size === 0) {
+          fetchInitialData();
+        }
+        return current;
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, [fetchInitialData]);
 
   // Connect WebSocket
@@ -68,12 +89,16 @@ export function useScreenerSocket() {
           setLastMessageTime(Date.now());
 
           if (message.type === 'FULL_SNAPSHOT') {
-            const newMap = new Map<string, CoinData>();
-            message.data.forEach((coin: CoinData) => {
-              newMap.set(coin.symbol, coin);
-            });
-            setCoinsMap(newMap);
-            setIsLoading(false);
+            if (message.data && Array.isArray(message.data) && message.data.length > 0) {
+              setCoinsMap((prev) => {
+                const newMap = new Map(prev);
+                message.data.forEach((coin: CoinData) => {
+                  newMap.set(coin.symbol, coin);
+                });
+                return newMap;
+              });
+              setIsLoading(false);
+            }
           } else if (message.type === 'TICKER_UPDATE') {
             // Buffer updates to batch re-renders smoothly (every 150ms)
             pendingUpdatesRef.current.push(...message.data);

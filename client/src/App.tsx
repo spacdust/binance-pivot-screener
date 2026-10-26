@@ -83,16 +83,22 @@ export const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Loading Overlay / Banner */}
-        {isLoading && (
+        {coins.length === 0 && (
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-center flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
             <div>
               <h3 className="text-base font-bold text-amber-300">
-                Menghubungkan ke Binance & Menghitung Daily Pivots...
+                Menghubungkan ke Binance & Sinkronisasi Daily Pivots...
               </h3>
-              <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto">
-                Mengambil data candle kemarin (High, Low, Close) dan candle multi-timeframe 1h-24h untuk seluruh koin USDT aktif.
+              <p className="text-xs text-zinc-400 mt-1 max-w-lg mx-auto">
+                Mengambil data candlestick multi-timeframe (1m - 24j) dan Daily Pivot untuk seluruh koin USDT aktif.
               </p>
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-900/80 border border-zinc-800 text-[11px] text-zinc-400">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                <span>
+                  Tip: Jika koin tidak kunjung muncul, pastikan koneksi internet tidak memblokir Binance (bisa gunakan Cloudflare WARP / DNS 1.1.1.1).
+                </span>
+              </div>
             </div>
           </div>
         )}
