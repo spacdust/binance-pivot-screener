@@ -183,17 +183,25 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
     const isSelected = selectedTimeframe === tfKey;
     const isPos = val > 0;
     const isZero = val === 0;
+
+    let colorStyles = '';
+    if (isZero) {
+      colorStyles = isSelected
+        ? 'text-zinc-300 bg-zinc-800/70 ring-1 ring-zinc-600/60 font-bold'
+        : 'text-zinc-500 bg-zinc-800/30 font-semibold';
+    } else if (isPos) {
+      colorStyles = isSelected
+        ? 'text-emerald-400 bg-emerald-500/20 ring-1 ring-emerald-500/60 font-bold shadow-sm'
+        : 'text-emerald-400 bg-emerald-500/10 font-semibold';
+    } else {
+      colorStyles = isSelected
+        ? 'text-rose-400 bg-rose-500/20 ring-1 ring-rose-500/60 font-bold shadow-sm'
+        : 'text-rose-400 bg-rose-500/10 font-semibold';
+    }
+
     return (
       <span
-        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-mono tabular-nums font-semibold transition-all duration-300 ${
-          isSelected ? 'ring-1 ring-amber-400/80 font-bold bg-amber-500/15 text-amber-200' : ''
-        } ${
-          isZero
-            ? 'text-zinc-500 bg-zinc-800/30'
-            : isPos
-            ? 'text-emerald-400 bg-emerald-500/10'
-            : 'text-rose-400 bg-rose-500/10'
-        }`}
+        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-mono tabular-nums transition-all duration-200 ${colorStyles}`}
       >
         {isPos ? '+' : ''}{val.toFixed(2)}%
       </span>
@@ -223,7 +231,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               <th
                 onClick={() => handleSort('m1')}
                 className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'm1' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                  selectedTimeframe === 'm1' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
                 1m {renderSortIcon('m1')}
@@ -231,7 +239,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               <th
                 onClick={() => handleSort('m5')}
                 className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'm5' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                  selectedTimeframe === 'm5' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
                 5m {renderSortIcon('m5')}
@@ -239,7 +247,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               <th
                 onClick={() => handleSort('m15')}
                 className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'm15' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                  selectedTimeframe === 'm15' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
                 15m {renderSortIcon('m15')}
@@ -247,7 +255,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               <th
                 onClick={() => handleSort('m30')}
                 className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'm30' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                  selectedTimeframe === 'm30' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
                 30m {renderSortIcon('m30')}
@@ -255,7 +263,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               <th
                 onClick={() => handleSort('h1')}
                 className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h1' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                  selectedTimeframe === 'h1' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
                 1j {renderSortIcon('h1')}
@@ -263,7 +271,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               <th
                 onClick={() => handleSort('h3')}
                 className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h3' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                  selectedTimeframe === 'h3' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
                 3j {renderSortIcon('h3')}
@@ -271,7 +279,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               <th
                 onClick={() => handleSort('h6')}
                 className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h6' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                  selectedTimeframe === 'h6' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
                 6j {renderSortIcon('h6')}
@@ -279,7 +287,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               <th
                 onClick={() => handleSort('h12')}
                 className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h12' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                  selectedTimeframe === 'h12' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
                 12j {renderSortIcon('h12')}
@@ -287,7 +295,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               <th
                 onClick={() => handleSort('h24')}
                 className={`py-3.5 px-2 text-center cursor-pointer hover:text-zinc-200 transition-colors ${
-                  selectedTimeframe === 'h24' ? 'text-amber-400 font-bold bg-amber-500/10' : ''
+                  selectedTimeframe === 'h24' ? 'text-amber-400 font-bold bg-amber-500/10 border-b-2 border-amber-400' : 'border-b-2 border-transparent'
                 }`}
               >
                 24j {renderSortIcon('h24')}
@@ -358,15 +366,15 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Changes columns (1m to 24h) */}
-                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.m1, 'm1')}</td>
-                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.m5, 'm5')}</td>
-                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.m15, 'm15')}</td>
-                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.m30, 'm30')}</td>
-                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.h1, 'h1')}</td>
-                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.h3, 'h3')}</td>
-                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.h6, 'h6')}</td>
-                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.h12, 'h12')}</td>
-                    <td className="py-3 px-1 text-center">{renderChangeCell(coin.changes.h24, 'h24')}</td>
+                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'm1' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m1, 'm1')}</td>
+                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'm5' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m5, 'm5')}</td>
+                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'm15' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m15, 'm15')}</td>
+                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'm30' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.m30, 'm30')}</td>
+                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h1' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h1, 'h1')}</td>
+                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h3' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h3, 'h3')}</td>
+                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h6' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h6, 'h6')}</td>
+                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h12' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h12, 'h12')}</td>
+                    <td className={`py-3 px-1 text-center transition-colors ${selectedTimeframe === 'h24' ? 'bg-amber-500/[0.04]' : ''}`}>{renderChangeCell(coin.changes.h24, 'h24')}</td>
 
                     {/* Pivot Visualizer */}
                     <td className="py-3 px-4">
