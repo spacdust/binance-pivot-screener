@@ -46,8 +46,11 @@ export function useScreenerSocket() {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      // In Vite dev proxy, /ws routes to ws://localhost:5000/ws
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      // In development, connect directly to backend port 5000 to bypass Vite proxy socket aborts
+      const host = import.meta.env.DEV
+        ? `${window.location.hostname}:5000`
+        : window.location.host;
+      const wsUrl = `${protocol}//${host}/ws`;
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;

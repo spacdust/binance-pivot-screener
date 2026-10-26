@@ -69,17 +69,21 @@ wss.on('connection', (ws) => {
   // Send initial snapshot on connect
   const coins = binanceService.getAllCoins();
   if (coins.length > 0) {
-    ws.send(JSON.stringify({
-      type: 'FULL_SNAPSHOT',
-      data: coins,
-      timestamp: Date.now()
-    }));
+    try {
+      ws.send(JSON.stringify({
+        type: 'FULL_SNAPSHOT',
+        data: coins,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      clients.delete(ws);
+    }
   }
 
   ws.on('message', (message) => {
     try {
       const msg = JSON.parse(message.toString());
-      if (msg.type === 'PING') {
+      if (msg.type === 'PING' && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'PONG', timestamp: Date.now() }));
       }
     } catch (e) {}
@@ -91,7 +95,6 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('error', (err) => {
-    console.error('[WS] Client error:', err.message);
     clients.delete(ws);
   });
 });
@@ -102,7 +105,13 @@ binanceService.subscribe((payload) => {
   const message = JSON.stringify(payload);
   for (const client of clients) {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
+      try {
+        client.send(message);
+      } catch (err) {
+        clients.delete(client);
+      }
+    } else {
+      clients.delete(client);
     }
   }
 });

@@ -14,6 +14,12 @@ export default defineConfig({
       '/ws': {
         target: 'ws://localhost:5000',
         ws: true,
+        configure: (proxy) => {
+          proxy.on('error', (err: any) => {
+            if (err.code === 'ECONNABORTED' || err.code === 'ECONNRESET') return;
+            console.warn('[Vite WS Proxy]', err.message);
+          });
+        },
       },
     },
   },
