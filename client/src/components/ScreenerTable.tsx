@@ -713,12 +713,12 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       <div className="flex-1 overflow-auto custom-scrollbar relative">
         <table
           className="w-full table-fixed text-left border-collapse text-xs select-none"
-          style={{ minWidth: timeMode === 'standard' ? '1503px' : '1611px' }}
+          style={{ minWidth: timeMode === 'standard' ? '1518px' : '1626px' }}
         >
           {/* Rigid colgroup definitions to lock column widths in concrete */}
           <colgroup>
             <col className="w-[42px]" />
-            <col className="w-[165px]" />
+            <col className="w-[180px]" />
             <col className="w-[105px]" />
             {timeMode === 'standard' ? (
               <>
@@ -766,7 +766,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               {/* Frozen Column 2: Symbol & Volume */}
               <th
                 onClick={() => handleSort('symbol')}
-                className="py-2 px-2.5 w-[165px] min-w-[165px] max-w-[165px] cursor-pointer hover:text-[#eaecef] transition-colors sticky left-[42px] z-30 bg-[#181a20] border-r border-[#2b313a] overflow-hidden"
+                className="py-2 px-2.5 w-[180px] min-w-[180px] max-w-[180px] cursor-pointer hover:text-[#eaecef] transition-colors sticky left-[42px] z-30 bg-[#181a20] border-r border-[#2b313a] overflow-hidden"
               >
                 Kontrak PERP {renderSortIcon('symbol')}
               </th>
@@ -981,6 +981,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 const range5m = calculateRangePercent(coin.price, targetPivots5m);
                 const range1h = calculateRangePercent(coin.price, targetPivots1h);
                 const rangeDaily = calculateRangePercent(coin.price, targetPivotsDaily);
+                const displayName = coin.baseAsset || coin.symbol.replace(/USDT$/, '');
 
                 return (
                   <tr
@@ -998,19 +999,26 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Frozen Column 2: Symbol & Volume */}
-                    <td className={`${pyRow} px-2.5 w-[165px] min-w-[165px] max-w-[165px] sticky left-[42px] z-10 bg-[#181a20] group-hover:bg-[#1e2329] border-r border-[#2b313a] overflow-hidden`}>
+                    <td className={`${pyRow} px-2.5 w-[180px] min-w-[180px] max-w-[180px] sticky left-[42px] z-10 bg-[#181a20] group-hover:bg-[#1e2329] border-r border-[#2b313a] overflow-hidden`}>
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="shrink-0">
-                          <CoinIcon symbol={coin.baseAsset} logoUrl={coin.logoUrl} size={density === 'compact' ? 'sm' : 'md'} />
+                          <CoinIcon symbol={displayName} logoUrl={coin.logoUrl} size={density === 'compact' ? 'sm' : 'md'} />
                         </div>
                         <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+                          {/* Line 1: Coin Name (Bold, Always Visible) + /USDT + PERP Badge */}
                           <div className="flex items-center gap-1 min-w-0 whitespace-nowrap overflow-hidden">
-                            <span className={`font-bold text-[#eaecef] group-hover:text-[#f0b90b] transition-colors truncate ${density === 'compact' ? 'text-xs' : 'text-sm'}`}>
-                              {coin.baseAsset}
+                            <span className={`font-bold text-[#eaecef] group-hover:text-[#f0b90b] transition-colors shrink-0 ${density === 'compact' ? 'text-xs' : 'text-sm'}`}>
+                              {displayName}
                             </span>
                             <span className="text-[10px] text-[#848e9c] font-mono shrink-0">/USDT</span>
                             <span className="px-1 py-0.2 rounded-xs text-[9px] font-mono font-semibold bg-[#22262e] border border-[#2b313a] text-[#f0b90b]/90 shrink-0">
                               PERP
+                            </span>
+                          </div>
+                          {/* Line 2: 24h Volume + 3TF Confluence Badge */}
+                          <div className="flex items-center gap-1.5 min-w-0 whitespace-nowrap overflow-hidden leading-tight mt-0.5">
+                            <span className="text-[10px] text-[#848e9c] font-mono tabular-nums shrink-0">
+                              ${(coin.volume24h / 1e6).toFixed(2)}M
                             </span>
                             {confluence.hasConfluence && (
                               <span
@@ -1018,12 +1026,9 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                                 title={confluence.label}
                               >
                                 <Zap className="w-2.5 h-2.5 fill-current shrink-0" />
-                                <span className="truncate max-w-[45px]">{confluence.badgeText}</span>
+                                <span>{confluence.badgeText}</span>
                               </span>
                             )}
-                          </div>
-                          <div className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-tight">
-                            ${(coin.volume24h / 1e6).toFixed(2)}M
                           </div>
                         </div>
                       </div>

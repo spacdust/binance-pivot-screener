@@ -370,7 +370,7 @@ export class BinanceService {
               return Number((((initialPrice - openVal) / openVal) * 100).toFixed(2));
             };
 
-            const baseAsset = symbol.replace('USDT', '');
+            const baseAsset = symbol.replace(/USDT$/, '');
             const cleanBase = baseAsset.replace(/^1000+/, '');
             const logoUrl = this.assetLogos.get(baseAsset) || this.assetLogos.get(cleanBase) || null;
             this.symbolsData.set(symbol, {
