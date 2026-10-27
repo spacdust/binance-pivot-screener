@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CoinData, Pivots } from '../types';
-import { X, ExternalLink, Target, Layers, BarChart2, TrendingUp, Info } from 'lucide-react';
+import { X, ExternalLink, Target, Layers, BarChart2, TrendingUp, Info, Maximize2, Minimize2 } from 'lucide-react';
 import { classifyPriceZone, getConditionLabel } from '../utils/pivotConfluence';
 import { CoinIcon } from './CoinIcon';
 import { TradingViewChart } from './TradingViewChart';
@@ -15,6 +15,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
 
   const [activeTab, setActiveTab] = useState<'chart' | 'table'>('chart');
   const [activePivotTf, setActivePivotTf] = useState<'daily' | 'weekly' | 'monthly' | '1h' | '5m'>('daily');
+  const [isMaximized, setIsMaximized] = useState<boolean>(false);
   const { symbol, price, pivots, pivotsWeekly, pivotsMonthly, pivots1h, pivots5m, changes, pivotStatus, pivotStatusWeekly, pivotStatusMonthly, pivotStatus1h, pivotStatus5m, baselines, volume24h } = coin;
 
   const currentPivots: Pivots = (
@@ -85,9 +86,15 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs animate-in fade-in duration-150 ${
+      isMaximized ? 'p-0' : 'p-1.5 sm:p-3'
+    }`}>
       <div
-        className="bg-[#181a20] border border-[#2b313a] rounded-sm w-full max-w-6xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden"
+        className={`bg-[#181a20] border border-[#2b313a] flex flex-col shadow-2xl overflow-hidden transition-all duration-150 ${
+          isMaximized
+            ? 'w-screen h-screen max-w-none max-h-none rounded-none border-0'
+            : 'w-[98.5vw] max-w-[1780px] h-[96vh] max-h-[96vh] rounded-sm'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal */}
@@ -117,6 +124,13 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
             >
               <ExternalLink className="w-4 h-4" />
             </a>
+            <button
+              onClick={() => setIsMaximized((m) => !m)}
+              className="p-1.5 rounded-xs bg-[#12151a] hover:bg-[#22262e] text-[#848e9c] hover:text-[#f0b90b] border border-[#2b313a] transition-colors cursor-pointer"
+              title={isMaximized ? "Perkecil Tampilan" : "Perbesar Widescreen Layar Penuh (Edge-to-Edge)"}
+            >
+              {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
             <button
               onClick={onClose}
               className="p-1.5 rounded-xs bg-[#12151a] hover:bg-[#22262e] text-[#848e9c] hover:text-[#eaecef] border border-[#2b313a] transition-colors cursor-pointer"
@@ -175,7 +189,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
               <TradingViewChart
                 symbol={symbol}
                 initialInterval="15"
-                height="530px"
+                height={isMaximized ? "calc(100vh - 240px)" : "calc(96vh - 270px)"}
               />
 
               {/* Pivot Levels Quick Reference Strip */}
