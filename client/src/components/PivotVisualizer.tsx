@@ -18,7 +18,7 @@ export const PivotVisualizer: React.FC<PivotVisualizerProps> = ({
   const r4Val = pivots.R4 ?? (pivots.R3 + (pivots.R3 - pivots.R2));
 
   return (
-    <div className="w-full flex flex-col min-w-[115px] max-w-[155px] mx-auto select-none">
+    <div className="w-[116px] flex flex-col mx-auto select-none shrink-0">
       {/* 8-Zone Precision Segmented Track with Clear R / S / P Boundaries */}
       <div className="relative h-2 bg-[#12151a] rounded-xs border border-[#2b313a] flex items-center overflow-visible shadow-xs">
         {/* Support Half: S4..S3 (12.5%), S3..S2 (12.5%), S2..S1 (12.5%), S1..P (12.5%) */}
@@ -77,7 +77,7 @@ export const PivotVisualizer: React.FC<PivotVisualizerProps> = ({
 
         {/* Precise Small Current Price Marker (5px Sharp Dot, Zero Blurry Glare) */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-[5px] h-[5px] rounded-full bg-white ring-1 ring-black/90 pointer-events-none z-20 transition-all duration-200"
+          className="absolute top-1/2 -translate-y-1/2 w-[5px] h-[5px] rounded-full bg-white ring-1 ring-black/90 pointer-events-none z-20 transition-[left] duration-150 ease-out"
           style={{ left: `calc(${clampedPercent}% - 2.5px)` }}
         />
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { CoinData, FilterState, SelectedTimeframe, TopMoverCategory } from '../types';
 import { PivotVisualizer } from './PivotVisualizer';
 import { CoinIcon } from './CoinIcon';
@@ -12,7 +12,10 @@ import {
   SlidersHorizontal,
   X,
   Layers,
-  ChevronLeft
+  ChevronLeft,
+  Lock,
+  Activity,
+  RotateCw
 } from 'lucide-react';
 import {
   checkPivotConfluence,
@@ -82,67 +85,28 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   const [density, setDensity] = useState<'compact' | 'normal'>('compact');
   const [pivotMode, setPivotMode] = useState<'tradingview' | 'micro'>('tradingview');
   const [timeMode, setTimeMode] = useState<'standard' | 'detailed'>('standard');
+  const [autoResort, setAutoResort] = useState<boolean>(false);
+  const [orderedSymbols, setOrderedSymbols] = useState<string[]>([]);
 
-  // Respond to Top Mover Category changes
-  useEffect(() => {
-    if (!topMoverCategory || topMoverCategory === 'ALL') return;
-    if (topMoverCategory === 'TOP_GAINERS') {
-      setSortField(selectedTimeframe);
-      setSortDirection('desc');
-    } else if (topMoverCategory === 'TOP_LOSERS') {
-      setSortField(selectedTimeframe);
-      setSortDirection('asc');
-    } else if (topMoverCategory === 'FLASH_MOVERS') {
-      setSortField('m5');
-      setSortDirection('desc');
-    } else if (topMoverCategory === 'TOP_VOLUME') {
-      setSortField('volume24h');
-      setSortDirection('desc');
-    }
-    setPage(1);
-  }, [topMoverCategory, selectedTimeframe]);
-
-  // Flash tracker for price changes
-  const prevPricesRef = useRef<Map<string, number>>(new Map());
-  const [priceFlashMap, setPriceFlashMap] = useState<Map<string, 'up' | 'down'>>(new Map());
-
-  useEffect(() => {
-    const flashes = new Map<string, 'up' | 'down'>();
-    coins.forEach((c) => {
-      const prev = prevPricesRef.current.get(c.symbol);
-      if (prev !== undefined && prev !== c.price) {
-        flashes.set(c.symbol, c.price > prev ? 'up' : 'down');
-      }
-      prevPricesRef.current.set(c.symbol, c.price);
-    });
-
-    if (flashes.size > 0) {
-      setPriceFlashMap(flashes);
-      const timer = setTimeout(() => setPriceFlashMap(new Map()), 1100);
-      return () => clearTimeout(timer);
-    }
-  }, [coins]);
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  };
-
-  // Sorting logic
-  const sortedCoins = useMemo(() => {
-    return [...coins].sort((a, b) => {
+  // Robust coin comparator across all sortable metrics
+  const compareCoins = useCallback(
+    (
+      a: CoinData,
+      b: CoinData,
+      field: SortField,
+      dir: 'asc' | 'desc',
+      pMode: 'tradingview' | 'micro'
+    ): number => {
       let aVal: number | string = 0;
       let bVal: number | string = 0;
 
-      switch (sortField) {
+      switch (field) {
         case 'symbol':
           aVal = a.symbol;
           bVal = b.symbol;
-          return sortDirection === 'asc' ? (aVal as string).localeCompare(bVal as string) : (bVal as string).localeCompare(aVal as string);
+          return dir === 'asc'
+            ? (aVal as string).localeCompare(bVal as string)
+            : (bVal as string).localeCompare(aVal as string);
         case 'price':
           aVal = a.price;
           bVal = b.price;
@@ -220,34 +184,172 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           bVal = b.changes.h24;
           break;
         case 'distP':
-          aVal = pivotMode === 'tradingview'
-            ? Number((((a.price - (a.pivotsMonthly?.P ?? a.pivots.P)) / (a.pivotsMonthly?.P ?? a.pivots.P)) * 100).toFixed(2))
-            : a.pivotStatus.distP;
-          bVal = pivotMode === 'tradingview'
-            ? Number((((b.price - (b.pivotsMonthly?.P ?? b.pivots.P)) / (b.pivotsMonthly?.P ?? b.pivots.P)) * 100).toFixed(2))
-            : b.pivotStatus.distP;
+          aVal =
+            pMode === 'tradingview'
+              ? Number(
+                  (
+                    ((a.price - (a.pivotsMonthly?.P ?? a.pivots.P)) /
+                      (a.pivotsMonthly?.P ?? a.pivots.P)) *
+                    100
+                  ).toFixed(2)
+                )
+              : a.pivotStatus.distP;
+          bVal =
+            pMode === 'tradingview'
+              ? Number(
+                  (
+                    ((b.price - (b.pivotsMonthly?.P ?? b.pivots.P)) /
+                      (b.pivotsMonthly?.P ?? b.pivots.P)) *
+                    100
+                  ).toFixed(2)
+                )
+              : b.pivotStatus.distP;
           break;
         case 'distP1h':
-          aVal = pivotMode === 'tradingview'
-            ? Number((((a.price - (a.pivotsWeekly?.P ?? a.pivots.P)) / (a.pivotsWeekly?.P ?? a.pivots.P)) * 100).toFixed(2))
-            : (a.pivotStatus1h?.distP ?? 0);
-          bVal = pivotMode === 'tradingview'
-            ? Number((((b.price - (b.pivotsWeekly?.P ?? b.pivots.P)) / (b.pivotsWeekly?.P ?? b.pivots.P)) * 100).toFixed(2))
-            : (b.pivotStatus1h?.distP ?? 0);
+          aVal =
+            pMode === 'tradingview'
+              ? Number(
+                  (
+                    ((a.price - (a.pivotsWeekly?.P ?? a.pivots.P)) /
+                      (a.pivotsWeekly?.P ?? a.pivots.P)) *
+                    100
+                  ).toFixed(2)
+                )
+              : a.pivotStatus1h?.distP ?? 0;
+          bVal =
+            pMode === 'tradingview'
+              ? Number(
+                  (
+                    ((b.price - (b.pivotsWeekly?.P ?? b.pivots.P)) /
+                      (b.pivotsWeekly?.P ?? b.pivots.P)) *
+                    100
+                  ).toFixed(2)
+                )
+              : b.pivotStatus1h?.distP ?? 0;
           break;
         case 'distP5m':
-          aVal = pivotMode === 'tradingview'
-            ? Number((((a.price - a.pivots.P) / a.pivots.P) * 100).toFixed(2))
-            : (a.pivotStatus5m?.distP ?? 0);
-          bVal = pivotMode === 'tradingview'
-            ? Number((((b.price - b.pivots.P) / b.pivots.P) * 100).toFixed(2))
-            : (b.pivotStatus5m?.distP ?? 0);
+          aVal =
+            pMode === 'tradingview'
+              ? Number((((a.price - a.pivots.P) / a.pivots.P) * 100).toFixed(2))
+              : a.pivotStatus5m?.distP ?? 0;
+          bVal =
+            pMode === 'tradingview'
+              ? Number((((b.price - b.pivots.P) / b.pivots.P) * 100).toFixed(2))
+              : b.pivotStatus5m?.distP ?? 0;
           break;
       }
 
-      return sortDirection === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+      return dir === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+    },
+    []
+  );
+
+  // Re-calculate the solid symbol ordering based on current coins snapshot
+  const reorderCoins = useCallback(
+    (coinsToSort = coins, field = sortField, dir = sortDirection, pMode = pivotMode) => {
+      const sorted = [...coinsToSort].sort((a, b) => compareCoins(a, b, field, dir, pMode));
+      setOrderedSymbols(sorted.map((c) => c.symbol));
+    },
+    [coins, sortField, sortDirection, pivotMode, compareCoins]
+  );
+
+  // Initialize symbol ordering on first batch of coins
+  useEffect(() => {
+    if (orderedSymbols.length === 0 && coins.length > 0) {
+      const sorted = [...coins].sort((a, b) => compareCoins(a, b, sortField, sortDirection, pivotMode));
+      setOrderedSymbols(sorted.map((c) => c.symbol));
+    }
+  }, [coins, orderedSymbols.length, sortField, sortDirection, pivotMode, compareCoins]);
+
+  // Respond to Top Mover Category changes
+  useEffect(() => {
+    if (!topMoverCategory || topMoverCategory === 'ALL') return;
+    let targetField: SortField = 'volume24h';
+    let targetDir: 'asc' | 'desc' = 'desc';
+
+    if (topMoverCategory === 'TOP_GAINERS') {
+      targetField = selectedTimeframe;
+      targetDir = 'desc';
+    } else if (topMoverCategory === 'TOP_LOSERS') {
+      targetField = selectedTimeframe;
+      targetDir = 'asc';
+    } else if (topMoverCategory === 'FLASH_MOVERS') {
+      targetField = 'm5';
+      targetDir = 'desc';
+    } else if (topMoverCategory === 'TOP_VOLUME') {
+      targetField = 'volume24h';
+      targetDir = 'desc';
+    }
+    setSortField(targetField);
+    setSortDirection(targetDir);
+    setPage(1);
+    reorderCoins(coins, targetField, targetDir, pivotMode);
+  }, [topMoverCategory, selectedTimeframe, pivotMode, coins, reorderCoins]);
+
+  // Flash tracker for price changes
+  const prevPricesRef = useRef<Map<string, number>>(new Map());
+  const [priceFlashMap, setPriceFlashMap] = useState<Map<string, 'up' | 'down'>>(new Map());
+
+  useEffect(() => {
+    const flashes = new Map<string, 'up' | 'down'>();
+    coins.forEach((c) => {
+      const prev = prevPricesRef.current.get(c.symbol);
+      if (prev !== undefined && prev !== c.price) {
+        flashes.set(c.symbol, c.price > prev ? 'up' : 'down');
+      }
+      prevPricesRef.current.set(c.symbol, c.price);
     });
-  }, [coins, sortField, sortDirection, pivotMode]);
+
+    if (flashes.size > 0) {
+      setPriceFlashMap(flashes);
+      const timer = setTimeout(() => setPriceFlashMap(new Map()), 1100);
+      return () => clearTimeout(timer);
+    }
+  }, [coins]);
+
+  const handleSort = (field: SortField) => {
+    let nextDir: 'asc' | 'desc' = 'desc';
+    if (sortField === field) {
+      nextDir = sortDirection === 'asc' ? 'desc' : 'asc';
+      setSortDirection(nextDir);
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+    reorderCoins(coins, field, nextDir, pivotMode);
+  };
+
+  // Sorting logic: Stable (pinned row positions while data updates live) vs Live auto-resort
+  const sortedCoins = useMemo(() => {
+    if (autoResort) {
+      return [...coins].sort((a, b) => compareCoins(a, b, sortField, sortDirection, pivotMode));
+    }
+
+    if (orderedSymbols.length === 0) {
+      return [...coins].sort((a, b) => compareCoins(a, b, sortField, sortDirection, pivotMode));
+    }
+
+    // STABLE MODE: Preserve established row order, updating CoinData in-place live
+    const map = new Map<string, CoinData>(coins.map((c) => [c.symbol, c]));
+    const result: CoinData[] = [];
+    const seen = new Set<string>();
+
+    for (const sym of orderedSymbols) {
+      const c = map.get(sym);
+      if (c) {
+        result.push(c);
+        seen.add(sym);
+      }
+    }
+
+    for (const c of coins) {
+      if (!seen.has(c.symbol)) {
+        result.push(c);
+      }
+    }
+
+    return result;
+  }, [coins, autoResort, orderedSymbols, sortField, sortDirection, pivotMode, compareCoins]);
 
   const totalPages = Math.ceil(sortedCoins.length / pageSize) || 1;
 
@@ -344,30 +446,32 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   };
 
   const renderSortIcon = (field: SortField) => {
-    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 text-[#474d57] inline ml-1" />;
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 text-[#474d57] inline ml-1 shrink-0" />;
     return sortDirection === 'asc' ? (
-      <ArrowUp className="w-3 h-3 text-[#f0b90b] inline ml-1" />
+      <ArrowUp className="w-3 h-3 text-[#f0b90b] inline ml-1 shrink-0" />
     ) : (
-      <ArrowDown className="w-3 h-3 text-[#f0b90b] inline ml-1" />
+      <ArrowDown className="w-3 h-3 text-[#f0b90b] inline ml-1 shrink-0" />
     );
   };
 
-  const renderChangeCell = (val: number) => {
+  const renderChangeCell = (val: number, isDetail = false) => {
     const isPos = val > 0;
     const isNeg = val < 0;
 
-    // Authentic Binance Spot typography
+    // Authentic Binance Spot typography with rigid fixed dimensions to prevent any layout shifts
     const textColor = isPos ? 'text-[#0ecb81]' : isNeg ? 'text-[#f6465d]' : 'text-[#848e9c]';
-    const highlight =
+    const bg =
       Math.abs(val) >= 5
         ? isPos
-          ? 'bg-[#0ecb81]/12 font-bold px-1 rounded-xs'
-          : 'bg-[#f6465d]/12 font-bold px-1 rounded-xs'
-        : 'font-medium';
+          ? 'bg-[#0ecb81]/15 font-bold'
+          : 'bg-[#f6465d]/15 font-bold'
+        : 'bg-transparent font-medium';
+
+    const widthClass = isDetail ? 'w-[48px]' : 'w-[58px]';
 
     return (
       <span
-        className={`inline-block text-[11px] font-mono tabular-nums ${textColor} ${highlight}`}
+        className={`inline-block ${widthClass} text-center py-0.5 rounded-xs text-[11px] font-mono tabular-nums leading-tight select-none ${textColor} ${bg}`}
       >
         {isPos ? '+' : ''}{val.toFixed(2)}%
       </span>
@@ -426,8 +530,51 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           </div>
         </div>
 
-        {/* Right Controls: Time Mode + Pivot Mode + Density Switch + Page Size */}
+        {/* Right Controls: Stability + Re-sort + Time Mode + Pivot Mode + Density Switch + Page Size */}
         <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+          {/* Row Stability Toggle (Stabil vs Live Sort) */}
+          <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
+            <button
+              onClick={() => {
+                reorderCoins();
+                setAutoResort(false);
+              }}
+              title="Urutan baris stabil & tidak loncat saat harga bergerak. Nilai tetap terupdate live."
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                !autoResort
+                  ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                  : 'text-[#848e9c] hover:text-[#eaecef]'
+              }`}
+            >
+              <Lock className="w-3 h-3" />
+              <span>Stabil</span>
+            </button>
+            <button
+              onClick={() => setAutoResort(true)}
+              title="Posisi baris bergerak dinamis secara real-time saat persentase/harga berubah"
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                autoResort
+                  ? 'bg-[#2b313a] text-[#0ecb81] font-bold'
+                  : 'text-[#848e9c] hover:text-[#eaecef]'
+              }`}
+            >
+              <Activity className="w-3 h-3" />
+              <span>Live Sort</span>
+            </button>
+          </div>
+
+          {/* Quick Re-sort Button (visible in Stabil mode) */}
+          {!autoResort && (
+            <button
+              onClick={() => reorderCoins()}
+              title="Perbarui urutan peringkat sekarang dengan data terbaru"
+              className="flex items-center gap-1 px-2 py-1 rounded-xs text-[11px] font-medium bg-[#1e2329] hover:bg-[#2b313a] text-[#eaecef] border border-[#2b313a] transition-colors cursor-pointer"
+            >
+              <RotateCw className="w-3 h-3 text-[#f0b90b]" />
+              <span className="hidden md:inline">Urutkan Ulang</span>
+            </button>
+          )}
+
           {/* Time Mode Selector (Standar vs Detail) */}
           <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
             <button
@@ -457,7 +604,10 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           {/* Pivot Mode Selector (TV Auto vs Micro Candle) */}
           <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
             <button
-              onClick={() => setPivotMode('tradingview')}
+              onClick={() => {
+                setPivotMode('tradingview');
+                reorderCoins(coins, sortField, sortDirection, 'tradingview');
+              }}
               title="Standar TradingView Auto: M5 (Daily 1D), 1H (Weekly 1W), Daily (Monthly 1M)"
               className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
                 pivotMode === 'tradingview'
@@ -468,7 +618,10 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               TV Auto
             </button>
             <button
-              onClick={() => setPivotMode('micro')}
+              onClick={() => {
+                setPivotMode('micro');
+                reorderCoins(coins, sortField, sortDirection, 'micro');
+              }}
               title="Micro-Candle: Pivot dihitung dari candle 5m, 1h, dan 1d masing-masing"
               className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
                 pivotMode === 'micro'
@@ -558,83 +711,128 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
       {/* Table Scrollable Container: Sticky Header + Freeze Symbol Column */}
       <div className="flex-1 overflow-auto custom-scrollbar relative">
-        <table className="w-full text-left border-collapse text-xs">
+        <table
+          className="w-full table-fixed text-left border-collapse text-xs select-none"
+          style={{ minWidth: timeMode === 'standard' ? '1503px' : '1611px' }}
+        >
+          {/* Rigid colgroup definitions to lock column widths in concrete */}
+          <colgroup>
+            <col className="w-[42px]" />
+            <col className="w-[165px]" />
+            <col className="w-[105px]" />
+            {timeMode === 'standard' ? (
+              <>
+                <col className="w-[66px]" />
+                <col className="w-[66px]" />
+                <col className="w-[66px]" />
+                <col className="w-[66px]" />
+                <col className="w-[66px]" />
+                <col className="w-[66px]" />
+                <col className="w-[66px]" />
+                <col className="w-[66px]" />
+                <col className="w-[66px]" />
+              </>
+            ) : (
+              <>
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+                <col className="w-[54px]" />
+              </>
+            )}
+            <col className="w-[130px]" />
+            <col className="w-[130px]" />
+            <col className="w-[130px]" />
+            <col className="w-[155px]" />
+            <col className="w-[52px]" />
+          </colgroup>
+
           <thead className="sticky top-0 z-20 bg-[#181a20] shadow-xs border-b border-[#2b313a]">
             <tr className="text-[#848e9c] font-semibold uppercase tracking-wider text-[11px]">
               {/* Frozen Column 1: Rank # */}
-              <th className="py-2 px-3 w-12 text-center sticky left-0 z-30 bg-[#181a20] border-r border-[#2b313a]">
+              <th className="py-2 px-1 w-[42px] min-w-[42px] max-w-[42px] text-center sticky left-0 z-30 bg-[#181a20] border-r border-[#2b313a]">
                 #
               </th>
 
               {/* Frozen Column 2: Symbol & Volume */}
               <th
                 onClick={() => handleSort('symbol')}
-                className="py-2 px-3 cursor-pointer hover:text-[#eaecef] transition-colors sticky left-12 z-30 bg-[#181a20] min-w-[130px] border-r border-[#2b313a]"
+                className="py-2 px-2.5 w-[165px] min-w-[165px] max-w-[165px] cursor-pointer hover:text-[#eaecef] transition-colors sticky left-[42px] z-30 bg-[#181a20] border-r border-[#2b313a] overflow-hidden"
               >
-                Kontrak PERP / Volume {renderSortIcon('symbol')}
+                Kontrak PERP {renderSortIcon('symbol')}
               </th>
 
               {/* Unfrozen Table Columns */}
               <th
                 onClick={() => handleSort('price')}
-                className="py-2 px-3 cursor-pointer hover:text-[#eaecef] transition-colors min-w-[110px]"
+                className="py-2 px-2 w-[105px] min-w-[105px] max-w-[105px] text-right cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
               >
-                Harga Terakhir {renderSortIcon('price')}
+                Harga {renderSortIcon('price')}
               </th>
-              {/* Unfrozen Table Columns - Timeframe Percentage Headers */}
+
+              {/* Timeframe Percentage Headers */}
               {timeMode === 'standard' ? (
                 <>
                   <th
                     onClick={() => handleSort('m1')}
-                    className="py-2 px-2 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     1m {renderSortIcon('m1')}
                   </th>
                   <th
                     onClick={() => handleSort('m5')}
-                    className="py-2 px-2 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     5m {renderSortIcon('m5')}
                   </th>
                   <th
                     onClick={() => handleSort('m15')}
-                    className="py-2 px-2 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     15m {renderSortIcon('m15')}
                   </th>
                   <th
                     onClick={() => handleSort('m30')}
-                    className="py-2 px-2 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     30m {renderSortIcon('m30')}
                   </th>
                   <th
                     onClick={() => handleSort('h1')}
-                    className="py-2 px-2 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     1j {renderSortIcon('h1')}
                   </th>
                   <th
                     onClick={() => handleSort('h3')}
-                    className="py-2 px-2 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     3j {renderSortIcon('h3')}
                   </th>
                   <th
                     onClick={() => handleSort('h6')}
-                    className="py-2 px-2 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     6j {renderSortIcon('h6')}
                   </th>
                   <th
                     onClick={() => handleSort('h12')}
-                    className="py-2 px-2 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     12j {renderSortIcon('h12')}
                   </th>
                   <th
                     onClick={() => handleSort('h24')}
-                    className="py-2 px-2 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     24j {renderSortIcon('h24')}
                   </th>
@@ -643,79 +841,79 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 <>
                   <th
                     onClick={() => handleSort('m1')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     1m {renderSortIcon('m1')}
                   </th>
                   <th
                     onClick={() => handleSort('m5')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     5m {renderSortIcon('m5')}
                   </th>
                   <th
                     onClick={() => handleSort('m10')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     10m {renderSortIcon('m10')}
                   </th>
                   <th
                     onClick={() => handleSort('m15')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     15m {renderSortIcon('m15')}
                   </th>
                   <th
                     onClick={() => handleSort('m20')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     20m {renderSortIcon('m20')}
                   </th>
                   <th
                     onClick={() => handleSort('m25')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     25m {renderSortIcon('m25')}
                   </th>
                   <th
                     onClick={() => handleSort('m30')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     30m {renderSortIcon('m30')}
                   </th>
                   <th
                     onClick={() => handleSort('m35')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     35m {renderSortIcon('m35')}
                   </th>
                   <th
                     onClick={() => handleSort('m40')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     40m {renderSortIcon('m40')}
                   </th>
                   <th
                     onClick={() => handleSort('m45')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     45m {renderSortIcon('m45')}
                   </th>
                   <th
                     onClick={() => handleSort('m50')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     50m {renderSortIcon('m50')}
                   </th>
                   <th
                     onClick={() => handleSort('m55')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                   >
                     55m {renderSortIcon('m55')}
                   </th>
                   <th
                     onClick={() => handleSort('h1')}
-                    className="py-2 px-1 text-center cursor-pointer hover:text-[#eaecef] transition-colors font-bold text-[#f0b90b]"
+                    className="py-2 px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center cursor-pointer hover:text-[#eaecef] transition-colors font-bold text-[#f0b90b] overflow-hidden"
                   >
                     1H {renderSortIcon('h1')}
                   </th>
@@ -723,29 +921,29 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               )}
               <th
                 onClick={() => handleSort('distP5m')}
-                className="py-2 px-2 text-center min-w-[135px] cursor-pointer hover:text-[#eaecef] transition-colors"
+                className="py-2 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                 title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart 5m menggunakan Pivot Daily (1D)' : 'Pivot dari candle 5m sebelumnya'}
               >
-                {pivotMode === 'tradingview' ? 'Pivot 5M (Daily 1D)' : 'Pivot 5M (Candle)'} {renderSortIcon('distP5m')}
+                {pivotMode === 'tradingview' ? 'Pivot 5M (1D)' : 'Pivot 5M'} {renderSortIcon('distP5m')}
               </th>
               <th
                 onClick={() => handleSort('distP1h')}
-                className="py-2 px-2 text-center min-w-[135px] cursor-pointer hover:text-[#eaecef] transition-colors"
+                className="py-2 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                 title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart 1H menggunakan Pivot Weekly (1W)' : 'Pivot dari candle 1h sebelumnya'}
               >
-                {pivotMode === 'tradingview' ? 'Pivot 1H (Weekly 1W)' : 'Pivot 1H (Candle)'} {renderSortIcon('distP1h')}
+                {pivotMode === 'tradingview' ? 'Pivot 1H (1W)' : 'Pivot 1H'} {renderSortIcon('distP1h')}
               </th>
               <th
                 onClick={() => handleSort('distP')}
-                className="py-2 px-2 text-center min-w-[135px] cursor-pointer hover:text-[#eaecef] transition-colors"
+                className="py-2 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                 title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart Daily menggunakan Pivot Monthly (1M)' : 'Pivot Daily (1D)'}
               >
-                {pivotMode === 'tradingview' ? 'Pivot Daily (Monthly 1M)' : 'Pivot Daily (1D)'} {renderSortIcon('distP')}
+                {pivotMode === 'tradingview' ? 'Pivot Daily (1M)' : 'Pivot Daily'} {renderSortIcon('distP')}
               </th>
-              <th className="py-2 px-3 min-w-[150px] cursor-pointer hover:text-[#eaecef] transition-colors">
+              <th className="py-2 px-2 w-[155px] min-w-[155px] max-w-[155px] cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden">
                 Kondisi Pivot Daily
               </th>
-              <th className="py-2 px-3 text-center w-14">Aksi</th>
+              <th className="py-2 px-1 w-[52px] min-w-[52px] max-w-[52px] text-center">Aksi</th>
             </tr>
           </thead>
 
@@ -795,44 +993,46 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     }`}
                   >
                     {/* Frozen Column 1: Rank # */}
-                    <td className={`${pyRow} px-2 text-center text-[#848e9c] font-mono tabular-nums text-[11px] sticky left-0 z-10 bg-[#181a20] group-hover:bg-[#1e2329] border-r border-[#2b313a]`}>
+                    <td className={`${pyRow} px-1 w-[42px] min-w-[42px] max-w-[42px] text-center text-[#848e9c] font-mono tabular-nums text-[11px] sticky left-0 z-10 bg-[#181a20] group-hover:bg-[#1e2329] border-r border-[#2b313a]`}>
                       {rank}
                     </td>
 
                     {/* Frozen Column 2: Symbol & Volume */}
-                    <td className={`${pyRow} px-2.5 sm:px-3 sticky left-12 z-10 bg-[#181a20] group-hover:bg-[#1e2329] border-r border-[#2b313a] min-w-[145px]`}>
-                      <div className="flex items-center gap-2">
-                        <CoinIcon symbol={coin.baseAsset} logoUrl={coin.logoUrl} size={density === 'compact' ? 'sm' : 'md'} />
-                        <div className="flex flex-col min-w-0">
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <span className={`font-bold text-[#eaecef] group-hover:text-[#f0b90b] transition-colors ${density === 'compact' ? 'text-xs' : 'text-sm'}`}>
+                    <td className={`${pyRow} px-2.5 w-[165px] min-w-[165px] max-w-[165px] sticky left-[42px] z-10 bg-[#181a20] group-hover:bg-[#1e2329] border-r border-[#2b313a] overflow-hidden`}>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="shrink-0">
+                          <CoinIcon symbol={coin.baseAsset} logoUrl={coin.logoUrl} size={density === 'compact' ? 'sm' : 'md'} />
+                        </div>
+                        <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+                          <div className="flex items-center gap-1 min-w-0 whitespace-nowrap overflow-hidden">
+                            <span className={`font-bold text-[#eaecef] group-hover:text-[#f0b90b] transition-colors truncate ${density === 'compact' ? 'text-xs' : 'text-sm'}`}>
                               {coin.baseAsset}
                             </span>
-                            <span className="text-[10px] text-[#848e9c] font-mono">/USDT</span>
-                            <span className="px-1 py-0.2 rounded-xs text-[9px] font-mono font-semibold bg-[#22262e] border border-[#2b313a] text-[#f0b90b]/90">
+                            <span className="text-[10px] text-[#848e9c] font-mono shrink-0">/USDT</span>
+                            <span className="px-1 py-0.2 rounded-xs text-[9px] font-mono font-semibold bg-[#22262e] border border-[#2b313a] text-[#f0b90b]/90 shrink-0">
                               PERP
                             </span>
                             {confluence.hasConfluence && (
                               <span
-                                className={`inline-flex items-center gap-1 px-1 py-0.2 rounded-xs text-[9px] font-mono font-medium border tracking-tight ${confluence.badgeStyle}`}
+                                className={`inline-flex items-center gap-0.5 px-1 py-0.2 rounded-xs text-[9px] font-mono font-medium border tracking-tight shrink-0 ${confluence.badgeStyle}`}
                                 title={confluence.label}
                               >
-                                <Zap className="w-2.5 h-2.5 fill-current" />
-                                {confluence.badgeText}
+                                <Zap className="w-2.5 h-2.5 fill-current shrink-0" />
+                                <span className="truncate max-w-[45px]">{confluence.badgeText}</span>
                               </span>
                             )}
                           </div>
-                          <div className="text-[10px] text-[#848e9c] font-mono tabular-nums">
+                          <div className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-tight">
                             ${(coin.volume24h / 1e6).toFixed(2)}M
                           </div>
                         </div>
                       </div>
                     </td>
 
-                    {/* Live Price with Smooth Flash Animation */}
-                    <td className={`${pyRow} px-3`}>
+                    {/* Live Price with Solid Fixed Alignment & Color Flash */}
+                    <td className={`${pyRow} px-2 w-[105px] min-w-[105px] max-w-[105px] text-right overflow-hidden`}>
                       <div
-                        className={`font-mono tabular-nums font-semibold transition-all inline-block px-1.5 py-0.5 rounded-xs ${
+                        className={`font-mono tabular-nums font-semibold transition-colors duration-200 inline-block w-full text-right px-1 py-0.5 rounded-xs ${
                           density === 'compact' ? 'text-xs' : 'text-sm'
                         } ${
                           flash === 'up'
@@ -849,44 +1049,44 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     {/* Changes columns */}
                     {timeMode === 'standard' ? (
                       <>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m1)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m5)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m15)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m30)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.h1)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.h3)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.h6)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.h12)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.h24)}</td>
+                        <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m1, false)}</td>
+                        <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m5, false)}</td>
+                        <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m15, false)}</td>
+                        <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m30, false)}</td>
+                        <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.h1, false)}</td>
+                        <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.h3, false)}</td>
+                        <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.h6, false)}</td>
+                        <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.h12, false)}</td>
+                        <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.h24, false)}</td>
                       </>
                     ) : (
                       <>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m1)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m5)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m10 ?? 0)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m15)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m20 ?? 0)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m25 ?? 0)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m30)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m35 ?? 0)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m40 ?? 0)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m45 ?? 0)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m50 ?? 0)}</td>
-                        <td className={`${pyRow} px-1 text-center`}>{renderChangeCell(coin.changes.m55 ?? 0)}</td>
-                        <td className={`${pyRow} px-1 text-center font-medium`}>{renderChangeCell(coin.changes.h1)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m1, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m5, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m10 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m15, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m20 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m25 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m30, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m35 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m40 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m45 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m50 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m55 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[54px] min-w-[54px] max-w-[54px] text-center font-medium overflow-hidden`}>{renderChangeCell(coin.changes.h1, true)}</td>
                       </>
                     )}
 
                     {/* Pivot 5M Visualizer */}
-                    <td className="py-1 px-1.5 text-center">
-                      <div className="flex flex-col items-center gap-0.5 py-0.5">
+                    <td className="py-1 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center overflow-hidden">
+                      <div className="flex flex-col items-center gap-0.5 py-0.5 w-[116px] mx-auto overflow-hidden">
                         <PivotVisualizer
                           pivots={targetPivots5m}
                           currentPrice={coin.price}
                           rangePercent={range5m}
                         />
                         {mCond && (
-                          <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block mt-0.5">
+                          <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap w-full text-center block mt-0.5">
                             {getPivotCode(mCond)} ({distP5m > 0 ? '+' : ''}{distP5m}%)
                           </span>
                         )}
@@ -894,15 +1094,15 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Pivot 1H Visualizer */}
-                    <td className="py-1 px-1.5 text-center">
-                      <div className="flex flex-col items-center gap-0.5 py-0.5">
+                    <td className="py-1 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center overflow-hidden">
+                      <div className="flex flex-col items-center gap-0.5 py-0.5 w-[116px] mx-auto overflow-hidden">
                         <PivotVisualizer
                           pivots={targetPivots1h}
                           currentPrice={coin.price}
                           rangePercent={range1h}
                         />
                         {hCond && (
-                          <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block mt-0.5">
+                          <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap w-full text-center block mt-0.5">
                             {getPivotCode(hCond)} ({distP1h > 0 ? '+' : ''}{distP1h}%)
                           </span>
                         )}
@@ -910,24 +1110,24 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Pivot Daily Visualizer */}
-                    <td className="py-1 px-1.5 text-center">
-                      <div className="flex flex-col items-center gap-0.5 py-0.5">
+                    <td className="py-1 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center overflow-hidden">
+                      <div className="flex flex-col items-center gap-0.5 py-0.5 w-[116px] mx-auto overflow-hidden">
                         <PivotVisualizer
                           pivots={targetPivotsDaily}
                           currentPrice={coin.price}
                           rangePercent={rangeDaily}
                         />
-                        <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap max-w-[145px] block mt-0.5">
+                        <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap w-full text-center block mt-0.5">
                           {getPivotCode(dCond)} ({distPDaily > 0 ? '+' : ''}{distPDaily}%)
                         </span>
                       </div>
                     </td>
 
                     {/* Pivot Condition Badge */}
-                    <td className={`${pyRow} px-3`}>
-                      <div className="flex flex-col gap-0.5">
+                    <td className={`${pyRow} px-2 w-[155px] min-w-[155px] max-w-[155px] overflow-hidden`}>
+                      <div className="flex flex-col gap-0.5 w-[140px] overflow-hidden">
                         <span
-                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-medium border ${getConditionBadgeStyle(
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-medium border max-w-full overflow-hidden ${getConditionBadgeStyle(
                             getConditionTagColor(dailyBaseCond)
                           )}`}
                           title={`Kondisi Pivot Daily (1D): ${getConditionLabel(dailyBaseCond)}`}
@@ -942,10 +1142,10 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Action */}
-                    <td className={`${pyRow} px-2 text-center`} onClick={(e) => e.stopPropagation()}>
+                    <td className={`${pyRow} px-1 w-[52px] min-w-[52px] max-w-[52px] text-center`} onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => onSelectCoin(coin)}
-                        className="p-1.5 rounded-xs bg-[#22262e] hover:bg-[#2b313a] text-[#848e9c] hover:text-[#eaecef] transition-colors"
+                        className="p-1.5 rounded-xs bg-[#22262e] hover:bg-[#2b313a] text-[#848e9c] hover:text-[#eaecef] transition-colors cursor-pointer"
                         title="Lihat Detail Pivot"
                       >
                         <Eye className="w-3.5 h-3.5" />
