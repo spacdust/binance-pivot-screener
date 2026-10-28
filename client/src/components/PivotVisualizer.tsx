@@ -240,21 +240,16 @@ Jarak ke P: ${deltaP > 0 ? '+' : ''}${deltaP.toFixed(2)}%`}
         <div className="absolute left-[75%] -top-[0.5px] -bottom-[0.5px] w-[1px] bg-[#0ecb81]/60 pointer-events-none -translate-x-1/2" />
         <div className="absolute left-[87.5%] top-[1px] bottom-[1px] w-[1px] bg-[#0ecb81]/40 pointer-events-none -translate-x-1/2" />
 
-        {/* Precision Laser Pin Indicator (Pin Head + White Laser Hairline) */}
+        {/* Solid Precision Needle Bar (Clean, Solid, No Fuzzy Floating Balls) */}
         <div
-          className="absolute -top-[5px] -bottom-[5px] pointer-events-none z-20 transition-[left] duration-150 ease-out flex flex-col items-center -translate-x-1/2"
+          className="absolute -top-[2.5px] -bottom-[2.5px] w-[3px] rounded-xs bg-white ring-1 ring-black/90 shadow-sm pointer-events-none z-20 transition-[left] duration-150 ease-out -translate-x-1/2 flex items-center justify-center overflow-hidden"
           style={{ left: `${clampedPercent}%` }}
         >
-          {/* Glowing Pin Head */}
+          {/* Subtle Color Accent Core */}
           <div
-            className="w-[6px] h-[6px] rounded-full ring-1 ring-black/90 shadow-sm transition-colors duration-150"
-            style={{
-              backgroundColor: pinColorHex,
-              boxShadow: `0 0 5px ${pinColorHex}`,
-            }}
+            className="w-[1px] h-full transition-colors duration-150"
+            style={{ backgroundColor: pinColorHex }}
           />
-          {/* Laser Hairline Needle through Track */}
-          <div className="w-[1.5px] flex-1 bg-white ring-1 ring-black/80 shadow-[0_0_3px_rgba(255,255,255,0.95)]" />
         </div>
       </div>
 
