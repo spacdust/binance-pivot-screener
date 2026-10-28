@@ -110,6 +110,30 @@ app.get('/api/logo/:symbol', async (req, res) => {
     logoUrl = binanceService.assetLogos.get(rawSymbol) || binanceService.assetLogos.get(cleanSymbol);
   }
 
+  // 3. Dynamic fallback resolver for newly listed tokens
+  if (!logoUrl) {
+    const lower = cleanSymbol.toLowerCase();
+    const candidateUrls = [
+      `https://assets.coincap.io/assets/icons/${lower}@2x.png`,
+      `https://public.bnbstatic.com/static/image/crypto/${lower}.png`,
+      `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${lower}.png`
+    ];
+
+    for (const testUrl of candidateUrls) {
+      try {
+        const testRes = await dohFetch(testUrl, { method: 'HEAD', timeout: 2500 });
+        if (testRes.ok) {
+          logoUrl = testUrl;
+          binanceService.assetLogos.set(rawSymbol, logoUrl);
+          binanceService.assetLogos.set(cleanSymbol, logoUrl);
+          break;
+        }
+      } catch (e) {
+        // Continue to next candidate
+      }
+    }
+  }
+
   if (!logoUrl) {
     return res.status(404).send('Logo not found');
   }

@@ -106,6 +106,12 @@ export const CoinIcon: React.FC<CoinIconProps> = ({
     sources.push(cachedOfficialUrl);
   }
 
+  // 4. Direct public CDN fallback (instant availability even during backend restarts)
+  const coincapUrl = `https://assets.coincap.io/assets/icons/${unscaledSymbol.toLowerCase()}@2x.png`;
+  if (!sources.includes(coincapUrl)) {
+    sources.push(coincapUrl);
+  }
+
   const currentSrc = sources[sourceIndex];
 
   const sizeClasses = {
