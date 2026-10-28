@@ -19,11 +19,8 @@ import {
 } from 'lucide-react';
 import {
   checkPivotConfluence,
-  classifyPriceZone,
   calculateRangePercent,
   getConditionLabel,
-  getConditionTagColor,
-  getPivotCode,
 } from '../utils/pivotConfluence';
 
 interface ScreenerTableProps {
@@ -425,26 +422,6 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
     return val.toFixed(8);
   };
 
-  const getConditionBadgeStyle = (tagColor: string) => {
-    switch (tagColor) {
-      case 'cyan':
-        return 'bg-[#f0b90b]/10 text-[#f0b90b] border-[#f0b90b]/30';
-      case 'emerald':
-      case 'green':
-      case 'purple':
-      case 'fuchsia':
-      case 'pink':
-        return 'bg-[#0ecb81]/10 text-[#0ecb81] border-[#0ecb81]/30';
-      case 'amber':
-        return 'bg-[#f0b90b]/10 text-[#f0b90b] border-[#f0b90b]/30';
-      case 'rose':
-      case 'red':
-        return 'bg-[#f6465d]/10 text-[#f6465d] border-[#f6465d]/30';
-      default:
-        return 'bg-[#22262e] text-[#848e9c] border-[#2b313a]';
-    }
-  };
-
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) return <ArrowUpDown className="w-3 h-3 text-[#474d57] inline ml-1 shrink-0" />;
     return sortDirection === 'asc' ? (
@@ -713,7 +690,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       <div className="flex-1 overflow-auto custom-scrollbar relative">
         <table
           className="w-full table-fixed text-left border-collapse text-xs select-none"
-          style={{ minWidth: timeMode === 'standard' ? '1518px' : '1626px' }}
+          style={{ minWidth: timeMode === 'standard' ? '1513px' : '1621px' }}
         >
           {/* Rigid colgroup definitions to lock column widths in concrete */}
           <colgroup>
@@ -749,10 +726,9 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 <col className="w-[54px]" />
               </>
             )}
-            <col className="w-[130px]" />
-            <col className="w-[130px]" />
-            <col className="w-[130px]" />
-            <col className="w-[155px]" />
+            <col className="w-[180px]" />
+            <col className="w-[180px]" />
+            <col className="w-[180px]" />
             <col className="w-[52px]" />
           </colgroup>
 
@@ -921,27 +897,24 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               )}
               <th
                 onClick={() => handleSort('distP5m')}
-                className="py-2 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
+                className="py-2 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                 title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart 5m menggunakan Pivot Daily (1D)' : 'Pivot dari candle 5m sebelumnya'}
               >
                 {pivotMode === 'tradingview' ? 'Pivot 5M (1D)' : 'Pivot 5M'} {renderSortIcon('distP5m')}
               </th>
               <th
                 onClick={() => handleSort('distP1h')}
-                className="py-2 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
+                className="py-2 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                 title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart 1H menggunakan Pivot Weekly (1W)' : 'Pivot dari candle 1h sebelumnya'}
               >
                 {pivotMode === 'tradingview' ? 'Pivot 1H (1W)' : 'Pivot 1H'} {renderSortIcon('distP1h')}
               </th>
               <th
                 onClick={() => handleSort('distP')}
-                className="py-2 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
+                className="py-2 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
                 title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart Daily menggunakan Pivot Monthly (1M)' : 'Pivot Daily (1D)'}
               >
                 {pivotMode === 'tradingview' ? 'Pivot Daily (1M)' : 'Pivot Daily'} {renderSortIcon('distP')}
-              </th>
-              <th className="py-2 px-2 w-[155px] min-w-[155px] max-w-[155px] cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden">
-                Kondisi Pivot Daily
               </th>
               <th className="py-2 px-1 w-[52px] min-w-[52px] max-w-[52px] text-center">Aksi</th>
             </tr>
@@ -950,7 +923,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           <tbody className="divide-y divide-[#22262e]">
             {paginatedCoins.length === 0 ? (
               <tr>
-                <td colSpan={timeMode === 'standard' ? 17 : 21} className="py-12 text-center text-[#848e9c]">
+                <td colSpan={timeMode === 'standard' ? 16 : 20} className="py-12 text-center text-[#848e9c]">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Info className="w-8 h-8 text-[#474d57]" />
                     <p className="text-sm font-medium">Tidak ada koin yang sesuai kriteria filter.</p>
@@ -968,11 +941,6 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 const targetPivots5m = pivotMode === 'tradingview' ? coin.pivots : (coin.pivots5m || coin.pivots);
                 const targetPivots1h = pivotMode === 'tradingview' ? (coin.pivotsWeekly || coin.pivots) : (coin.pivots1h || coin.pivots);
                 const targetPivotsDaily = pivotMode === 'tradingview' ? (coin.pivotsMonthly || coin.pivots) : coin.pivots;
-
-                const mCond = classifyPriceZone(coin.price, targetPivots5m) ?? coin.pivotStatus?.condition;
-                const hCond = classifyPriceZone(coin.price, targetPivots1h) ?? (pivotMode === 'tradingview' ? (coin.pivotStatusWeekly?.condition ?? coin.pivotStatus?.condition) : coin.pivotStatus1h?.condition);
-                const dCond = classifyPriceZone(coin.price, targetPivotsDaily) ?? (pivotMode === 'tradingview' ? (coin.pivotStatusMonthly?.condition ?? coin.pivotStatus?.condition) : coin.pivotStatus?.condition);
-                const dailyBaseCond = classifyPriceZone(coin.price, coin.pivots) ?? coin.pivotStatus?.condition;
 
                 const distP5m = Number((((coin.price - targetPivots5m.P) / targetPivots5m.P) * 100).toFixed(2));
                 const distP1h = Number((((coin.price - targetPivots1h.P) / targetPivots1h.P) * 100).toFixed(2));
@@ -1083,67 +1051,36 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     )}
 
                     {/* Pivot 5M Visualizer */}
-                    <td className="py-1 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center overflow-hidden">
-                      <div className="flex flex-col items-center gap-0.5 py-0.5 w-[116px] mx-auto overflow-hidden">
-                        <PivotVisualizer
-                          pivots={targetPivots5m}
-                          currentPrice={coin.price}
-                          rangePercent={range5m}
-                        />
-                        {mCond && (
-                          <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap w-full text-center block mt-0.5">
-                            {getPivotCode(mCond)} ({distP5m > 0 ? '+' : ''}{distP5m}%)
-                          </span>
-                        )}
-                      </div>
+                    <td className="py-1 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center overflow-hidden">
+                      <PivotVisualizer
+                        pivots={targetPivots5m}
+                        currentPrice={coin.price}
+                        rangePercent={range5m}
+                        distP={distP5m}
+                        timeframeLabel={pivotMode === 'tradingview' ? '5M (1D)' : '5M'}
+                      />
                     </td>
 
                     {/* Pivot 1H Visualizer */}
-                    <td className="py-1 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center overflow-hidden">
-                      <div className="flex flex-col items-center gap-0.5 py-0.5 w-[116px] mx-auto overflow-hidden">
-                        <PivotVisualizer
-                          pivots={targetPivots1h}
-                          currentPrice={coin.price}
-                          rangePercent={range1h}
-                        />
-                        {hCond && (
-                          <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap w-full text-center block mt-0.5">
-                            {getPivotCode(hCond)} ({distP1h > 0 ? '+' : ''}{distP1h}%)
-                          </span>
-                        )}
-                      </div>
+                    <td className="py-1 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center overflow-hidden">
+                      <PivotVisualizer
+                        pivots={targetPivots1h}
+                        currentPrice={coin.price}
+                        rangePercent={range1h}
+                        distP={distP1h}
+                        timeframeLabel={pivotMode === 'tradingview' ? '1H (1W)' : '1H'}
+                      />
                     </td>
 
                     {/* Pivot Daily Visualizer */}
-                    <td className="py-1 px-1 w-[130px] min-w-[130px] max-w-[130px] text-center overflow-hidden">
-                      <div className="flex flex-col items-center gap-0.5 py-0.5 w-[116px] mx-auto overflow-hidden">
-                        <PivotVisualizer
-                          pivots={targetPivotsDaily}
-                          currentPrice={coin.price}
-                          rangePercent={rangeDaily}
-                        />
-                        <span className="text-[10px] text-[#848e9c] font-mono tabular-nums leading-none truncate whitespace-nowrap w-full text-center block mt-0.5">
-                          {getPivotCode(dCond)} ({distPDaily > 0 ? '+' : ''}{distPDaily}%)
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Pivot Condition Badge */}
-                    <td className={`${pyRow} px-2 w-[155px] min-w-[155px] max-w-[155px] overflow-hidden`}>
-                      <div className="flex flex-col gap-0.5 w-[140px] overflow-hidden">
-                        <span
-                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-medium border max-w-full overflow-hidden ${getConditionBadgeStyle(
-                            getConditionTagColor(dailyBaseCond)
-                          )}`}
-                          title={`Kondisi Pivot Daily (1D): ${getConditionLabel(dailyBaseCond)}`}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
-                          <span className="truncate">{getConditionLabel(dailyBaseCond)}</span>
-                        </span>
-                        <span className="text-[9px] text-[#848e9c] font-mono tabular-nums">
-                          Dist P: {distPDaily > 0 ? '+' : ''}{distPDaily}%
-                        </span>
-                      </div>
+                    <td className="py-1 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center overflow-hidden">
+                      <PivotVisualizer
+                        pivots={targetPivotsDaily}
+                        currentPrice={coin.price}
+                        rangePercent={rangeDaily}
+                        distP={distPDaily}
+                        timeframeLabel={pivotMode === 'tradingview' ? 'Daily (1M)' : 'Daily'}
+                      />
                     </td>
 
                     {/* Action */}
