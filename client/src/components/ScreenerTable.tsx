@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { CoinData, FilterState, SelectedTimeframe, TopMoverCategory } from '../types';
-import { PivotVisualizer } from './PivotVisualizer';
+import { PivotVisualizer, PivotVisualStyle } from './PivotVisualizer';
 import { CoinIcon } from './CoinIcon';
 import {
   ArrowUpDown,
@@ -81,6 +81,15 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   const [pageSize, setPageSize] = useState<number>(25);
   const [density, setDensity] = useState<'compact' | 'normal'>('compact');
   const [pivotMode, setPivotMode] = useState<'tradingview' | 'micro'>('tradingview');
+  const [pivotStyle, setPivotStyle] = useState<PivotVisualStyle>(() => {
+    const saved = localStorage.getItem('pivot_visual_style');
+    return saved === 'zone_zoom' ? 'zone_zoom' : 'hud';
+  });
+
+  const handlePivotStyleChange = (style: PivotVisualStyle) => {
+    setPivotStyle(style);
+    localStorage.setItem('pivot_visual_style', style);
+  };
   const [timeMode, setTimeMode] = useState<'standard' | 'detailed'>('standard');
   const [autoResort, setAutoResort] = useState<boolean>(false);
   const [orderedSymbols, setOrderedSymbols] = useState<string[]>([]);
@@ -610,6 +619,32 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
             </button>
           </div>
 
+          {/* Pivot Style Selector (HUD Slider vs Zone Zoom) */}
+          <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
+            <button
+              onClick={() => handlePivotStyleChange('hud')}
+              title="Tema 1 (Default): Chunky HUD Slider dengan spektrum S4..P..R4 dan slider thumb 8px jelas"
+              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                pivotStyle === 'hud'
+                  ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                  : 'text-[#848e9c] hover:text-[#eaecef]'
+              }`}
+            >
+              HUD Slider
+            </button>
+            <button
+              onClick={() => handlePivotStyleChange('zone_zoom')}
+              title="Tema 2: Dedicated Zone Meter (S1 ↔ P) zoom presisi bebas lelah mata"
+              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                pivotStyle === 'zone_zoom'
+                  ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                  : 'text-[#848e9c] hover:text-[#eaecef]'
+              }`}
+            >
+              Zone Zoom
+            </button>
+          </div>
+
           {/* Density Toggle (Rapat / Normal) */}
           <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
             <button
@@ -1058,6 +1093,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         rangePercent={range5m}
                         distP={distP5m}
                         timeframeLabel={pivotMode === 'tradingview' ? '5M (1D)' : '5M'}
+                        visualStyle={pivotStyle}
                       />
                     </td>
 
@@ -1069,6 +1105,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         rangePercent={range1h}
                         distP={distP1h}
                         timeframeLabel={pivotMode === 'tradingview' ? '1H (1W)' : '1H'}
+                        visualStyle={pivotStyle}
                       />
                     </td>
 
@@ -1080,6 +1117,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         rangePercent={rangeDaily}
                         distP={distPDaily}
                         timeframeLabel={pivotMode === 'tradingview' ? 'Daily (1M)' : 'Daily'}
+                        visualStyle={pivotStyle}
                       />
                     </td>
 

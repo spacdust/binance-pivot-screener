@@ -1,12 +1,15 @@
 import React from 'react';
 import { Pivots } from '../types';
 
+export type PivotVisualStyle = 'hud' | 'zone_zoom';
+
 interface PivotVisualizerProps {
   pivots: Pivots;
   currentPrice: number;
   rangePercent: number; // 0 (S4) to 100 (R4)
   distP?: number;
   timeframeLabel?: string;
+  visualStyle?: PivotVisualStyle;
 }
 
 const formatPrice = (val: number): string => {
@@ -23,6 +26,7 @@ export const PivotVisualizer: React.FC<PivotVisualizerProps> = ({
   rangePercent,
   distP,
   timeframeLabel,
+  visualStyle = 'hud',
 }) => {
   if (!pivots || isNaN(currentPrice)) {
     return (
@@ -183,6 +187,13 @@ export const PivotVisualizer: React.FC<PivotVisualizerProps> = ({
       ? 'bg-[#0ecb81]/18 border-x border-[#0ecb81]/40'
       : 'bg-[#f6465d]/18 border-x border-[#f6465d]/40';
 
+  const getPillBadgeStyle = (name: string) => {
+    if (name === 'P') return 'bg-[#f0b90b]/15 text-[#f0b90b] border-[#f0b90b]/40';
+    if (name.startsWith('R') || name === '>R4') return 'bg-[#0ecb81]/15 text-[#0ecb81] border-[#0ecb81]/40';
+    if (name.startsWith('S') || name === '<S4') return 'bg-[#f6465d]/15 text-[#f6465d] border-[#f6465d]/40';
+    return 'bg-[#22262e] text-[#848e9c] border-[#2b313a]';
+  };
+
   return (
     <div
       className="w-[166px] flex flex-col mx-auto select-none shrink-0 py-0.5 group/pv"
@@ -191,171 +202,209 @@ Zona: ${zoneCode} (${lowerName} $${formatPrice(lowerVal)} ↔ ${upperName} $${fo
 Posisi Rentang: ${intraPct}% (${positionText})
 Jarak ke P: ${deltaP > 0 ? '+' : ''}${deltaP.toFixed(2)}%`}
     >
-      {/* Precision Ruler Bar with Active Zone Illumination */}
-      <div className="relative h-[10px] bg-[#12151a] rounded-xs border border-[#2b313a] flex items-center overflow-visible shadow-xs mt-1">
-        {/* Subtle Background Segments */}
-        <div className="h-full w-[12.5%] border-r border-[#2b313a]/50 bg-[#f6465d]/12" />
-        <div className="h-full w-[12.5%] border-r border-[#2b313a]/50 bg-[#f6465d]/08" />
-        <div className="h-full w-[12.5%] border-r border-[#2b313a]/50 bg-[#f6465d]/05" />
-        <div className="h-full w-[12.5%] border-r border-[#2b313a]/50 bg-[#f6465d]/02" />
-        <div className="h-full w-[12.5%] border-r border-[#2b313a]/50 bg-[#0ecb81]/02" />
-        <div className="h-full w-[12.5%] border-r border-[#2b313a]/50 bg-[#0ecb81]/05" />
-        <div className="h-full w-[12.5%] border-r border-[#2b313a]/50 bg-[#0ecb81]/08" />
-        <div className="h-full w-[12.5%] bg-[#0ecb81]/12" />
+      {visualStyle === 'hud' ? (
+        /* ================= THEME 1: CHUNKY HUD SLIDER (DEFAULT) ================= */
+        <>
+          {/* Track 12px with Chunky 8px Thumb */}
+          <div className="relative h-[12px] bg-[#12151a] rounded-xs border border-[#2b313a] flex items-center overflow-visible shadow-xs mt-1">
+            {/* Left Support Half (0..50%) */}
+            <div className="h-full w-1/2 bg-[#f6465d]/08 border-r border-[#2b313a]/60" />
+            {/* Right Resistance Half (50..100%) */}
+            <div className="h-full w-1/2 bg-[#0ecb81]/08" />
 
-        {/* Active Zone Soft Glow Highlight */}
-        <div
-          className={`absolute top-0 bottom-0 pointer-events-none transition-all duration-150 ${zoneHighlightClass}`}
-          style={{
-            left: `${activeZoneLeft}%`,
-            width: `${activeZoneWidth}%`,
-          }}
-        />
+            {/* Active Zone Soft Glow Highlight */}
+            <div
+              className={`absolute top-0 bottom-0 pointer-events-none transition-all duration-150 ${zoneHighlightClass}`}
+              style={{
+                left: `${activeZoneLeft}%`,
+                width: `${activeZoneWidth}%`,
+              }}
+            />
 
-        {/* Level Ticks: S3, S2, S1 */}
-        <div className="absolute left-[12.5%] top-[1px] bottom-[1px] w-[1px] bg-[#f6465d]/40 pointer-events-none -translate-x-1/2" />
-        <div className="absolute left-[25%] -top-[0.5px] -bottom-[0.5px] w-[1px] bg-[#f6465d]/60 pointer-events-none -translate-x-1/2" />
-        <div className="absolute left-[37.5%] -top-[1.5px] -bottom-[1.5px] w-[1.5px] bg-[#f6465d] pointer-events-none -translate-x-1/2" />
+            {/* Landmark Tick: S1 (37.5%) */}
+            <div
+              className="absolute left-[37.5%] top-0 bottom-0 w-[1.5px] bg-[#f6465d] pointer-events-none -translate-x-1/2"
+              title={`S1: ${formatPrice(pivots.S1)}`}
+            />
 
-        {/* S1 ↔ P Midpoint Dotted Guide (43.75%) */}
-        <div
-          className="absolute left-[43.75%] top-[1px] bottom-[1px] w-[1px] border-r border-dotted border-white/25 pointer-events-none -translate-x-1/2"
-          title="Titik Tengah 50% S1 - P"
-        />
+            {/* S1 ↔ P Midpoint Dotted Guide (43.75%) */}
+            <div
+              className="absolute left-[43.75%] top-[1px] bottom-[1px] w-[1px] border-r border-dotted border-white/20 pointer-events-none -translate-x-1/2"
+              title="Titik Tengah 50% S1 - P"
+            />
 
-        {/* Center Pivot P Prominent Gold Notch (50%) */}
-        <div
-          className="absolute left-1/2 -top-[3px] -bottom-[3px] w-[2px] bg-[#f0b90b] pointer-events-none -translate-x-1/2 z-10 shadow-[0_0_5px_rgba(240,185,11,0.8)]"
-          title={`Center Pivot (P): ${formatPrice(pivots.P)}`}
-        />
+            {/* Center Pivot P Prominent Gold Notch (50%) */}
+            <div
+              className="absolute left-1/2 -top-[2px] -bottom-[2px] w-[2.5px] bg-[#f0b90b] pointer-events-none -translate-x-1/2 z-10 shadow-[0_0_5px_rgba(240,185,11,0.8)]"
+              title={`Center Pivot (P): ${formatPrice(pivots.P)}`}
+            />
 
-        {/* P ↔ R1 Midpoint Dotted Guide (56.25%) */}
-        <div
-          className="absolute left-[56.25%] top-[1px] bottom-[1px] w-[1px] border-r border-dotted border-white/25 pointer-events-none -translate-x-1/2"
-          title="Titik Tengah 50% P - R1"
-        />
+            {/* P ↔ R1 Midpoint Dotted Guide (56.25%) */}
+            <div
+              className="absolute left-[56.25%] top-[1px] bottom-[1px] w-[1px] border-r border-dotted border-white/20 pointer-events-none -translate-x-1/2"
+              title="Titik Tengah 50% P - R1"
+            />
 
-        {/* Level Ticks: R1, R2, R3 */}
-        <div className="absolute left-[62.5%] -top-[1.5px] -bottom-[1.5px] w-[1.5px] bg-[#0ecb81] pointer-events-none -translate-x-1/2" />
-        <div className="absolute left-[75%] -top-[0.5px] -bottom-[0.5px] w-[1px] bg-[#0ecb81]/60 pointer-events-none -translate-x-1/2" />
-        <div className="absolute left-[87.5%] top-[1px] bottom-[1px] w-[1px] bg-[#0ecb81]/40 pointer-events-none -translate-x-1/2" />
+            {/* Landmark Tick: R1 (62.5%) */}
+            <div
+              className="absolute left-[62.5%] top-0 bottom-0 w-[1.5px] bg-[#0ecb81] pointer-events-none -translate-x-1/2"
+              title={`R1: ${formatPrice(pivots.R1)}`}
+            />
 
-        {/* Solid Precision Needle Bar (Clean, Solid, No Fuzzy Floating Balls) */}
-        <div
-          className="absolute -top-[2.5px] -bottom-[2.5px] w-[3px] rounded-xs bg-white ring-1 ring-black/90 shadow-sm pointer-events-none z-20 transition-[left] duration-150 ease-out -translate-x-1/2 flex items-center justify-center overflow-hidden"
-          style={{ left: `${clampedPercent}%` }}
-        >
-          {/* Subtle Color Accent Core */}
-          <div
-            className="w-[1px] h-full transition-colors duration-150"
-            style={{ backgroundColor: pinColorHex }}
-          />
-        </div>
-      </div>
+            {/* Chunky Slider Thumb (8px wide x 16px high - Instantly spotted without squinting) */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[8px] h-[16px] rounded-xs bg-white border border-black shadow-md z-20 flex items-center justify-center pointer-events-none transition-[left] duration-150 ease-out"
+              style={{ left: `${clampedPercent}%` }}
+            >
+              <div
+                className="w-[2px] h-[8px] rounded-2xs transition-colors duration-150"
+                style={{ backgroundColor: pinColorHex }}
+              />
+            </div>
+          </div>
 
-      {/* Complete Milestone Scale with P, S4, R4 Clearly Visible */}
-      <div className="relative w-full h-[11px] text-[8px] font-mono leading-none mt-1 select-none">
-        <span
-          className={`absolute left-0 transition-colors ${
-            lowerName === 'S4' ? 'text-[#f6465d] font-bold' : 'text-[#f6465d]/60'
-          }`}
-          title={`S4: ${formatPrice(effectiveS4)}`}
-        >
-          S4
-        </span>
-        <span
-          className={`absolute left-[12.5%] -translate-x-1/2 transition-colors ${
-            lowerName === 'S3' ? 'text-[#f6465d] font-bold' : 'text-[#f6465d]/40'
-          }`}
-          title={`S3: ${formatPrice(pivots.S3)}`}
-        >
-          S3
-        </span>
-        <span
-          className={`absolute left-[25%] -translate-x-1/2 transition-colors ${
-            lowerName === 'S2' ? 'text-[#f6465d] font-bold' : 'text-[#f6465d]/50'
-          }`}
-          title={`S2: ${formatPrice(pivots.S2)}`}
-        >
-          S2
-        </span>
-        <span
-          className={`absolute left-[37.5%] -translate-x-1/2 transition-colors ${
-            lowerName === 'S1' || upperName === 'S1'
-              ? 'text-[#f6465d] font-bold scale-105'
-              : 'text-[#f6465d]/70'
-          }`}
-          title={`S1: ${formatPrice(pivots.S1)}`}
-        >
-          S1
-        </span>
-        <span
-          className={`absolute left-1/2 -translate-x-1/2 font-bold transition-all ${
-            lowerName === 'P' || upperName === 'P'
-              ? 'text-[#f0b90b] drop-shadow-xs scale-110'
-              : 'text-[#f0b90b]/80'
-          }`}
-          title={`Center Pivot (P): ${formatPrice(pivots.P)}`}
-        >
-          P
-        </span>
-        <span
-          className={`absolute left-[62.5%] -translate-x-1/2 transition-colors ${
-            lowerName === 'R1' || upperName === 'R1'
-              ? 'text-[#0ecb81] font-bold scale-105'
-              : 'text-[#0ecb81]/70'
-          }`}
-          title={`R1: ${formatPrice(pivots.R1)}`}
-        >
-          R1
-        </span>
-        <span
-          className={`absolute left-[75%] -translate-x-1/2 transition-colors ${
-            upperName === 'R2' ? 'text-[#0ecb81] font-bold' : 'text-[#0ecb81]/50'
-          }`}
-          title={`R2: ${formatPrice(pivots.R2)}`}
-        >
-          R2
-        </span>
-        <span
-          className={`absolute left-[87.5%] -translate-x-1/2 transition-colors ${
-            upperName === 'R3' ? 'text-[#0ecb81] font-bold' : 'text-[#0ecb81]/40'
-          }`}
-          title={`R3: ${formatPrice(pivots.R3)}`}
-        >
-          R3
-        </span>
-        <span
-          className={`absolute right-0 transition-colors ${
-            upperName === 'R4' ? 'text-[#0ecb81] font-bold' : 'text-[#0ecb81]/60'
-          }`}
-          title={`R4: ${formatPrice(effectiveR4)}`}
-        >
-          R4
-        </span>
-      </div>
+          {/* Clean 5-Anchor Scale: S4 · S1 · P · R1 · R4 */}
+          <div className="flex justify-between text-[8px] font-mono leading-none mt-1 select-none px-0.5">
+            <span
+              className={`transition-colors ${
+                lowerName === 'S4' ? 'text-[#f6465d] font-bold scale-105' : 'text-[#f6465d] font-bold'
+              }`}
+              title={`S4: ${formatPrice(effectiveS4)}`}
+            >
+              S4
+            </span>
+            <span
+              className={`transition-colors ${
+                lowerName === 'S1' || upperName === 'S1' ? 'text-[#f6465d] font-bold scale-105' : 'text-[#f6465d]/70'
+              }`}
+              title={`S1: ${formatPrice(pivots.S1)}`}
+            >
+              S1
+            </span>
+            <span
+              className={`font-bold transition-all text-[9px] ${
+                lowerName === 'P' || upperName === 'P' ? 'text-[#f0b90b] drop-shadow-xs scale-110' : 'text-[#f0b90b]'
+              }`}
+              title={`Center Pivot (P): ${formatPrice(pivots.P)}`}
+            >
+              P
+            </span>
+            <span
+              className={`transition-colors ${
+                lowerName === 'R1' || upperName === 'R1' ? 'text-[#0ecb81] font-bold scale-105' : 'text-[#0ecb81]/70'
+              }`}
+              title={`R1: ${formatPrice(pivots.R1)}`}
+            >
+              R1
+            </span>
+            <span
+              className={`transition-colors ${
+                upperName === 'R4' ? 'text-[#0ecb81] font-bold scale-105' : 'text-[#0ecb81] font-bold'
+              }`}
+              title={`R4: ${formatPrice(effectiveR4)}`}
+            >
+              R4
+            </span>
+          </div>
 
-      {/* Detail Subtitle: Active Zone + Exact Position (Tengah/Mepet/Dekat) + ΔP */}
-      <div className="flex items-center justify-between text-[9px] font-mono leading-none w-full px-0.5 mt-1">
-        <div className="flex items-center gap-1 min-w-0 overflow-hidden">
-          <span className="font-bold text-[#848e9c] shrink-0">{zoneCode}:</span>
-          <span className={`truncate ${statusColorClass}`} title={positionText}>
-            {positionText}
-          </span>
-        </div>
-        <span
-          className={`tabular-nums shrink-0 font-medium ${
-            deltaP > 0
-              ? 'text-[#0ecb81]'
-              : deltaP < 0
-              ? 'text-[#f6465d]'
-              : 'text-[#848e9c]'
-          }`}
-          title={`Jarak ke Pivot P: ${deltaP > 0 ? '+' : ''}${deltaP.toFixed(2)}%`}
-        >
-          {deltaP > 0 ? '+' : ''}{deltaP.toFixed(2)}%
-        </span>
-      </div>
+          {/* Subtitle Readout */}
+          <div className="flex items-center justify-between text-[9px] font-mono leading-none w-full px-0.5 mt-1">
+            <div className="flex items-center gap-1 min-w-0 overflow-hidden">
+              <span className="font-bold text-[#848e9c] shrink-0">{zoneCode}:</span>
+              <span className={`truncate ${statusColorClass}`} title={positionText}>
+                {positionText}
+              </span>
+            </div>
+            <span
+              className={`tabular-nums shrink-0 font-medium ${
+                deltaP > 0 ? 'text-[#0ecb81]' : deltaP < 0 ? 'text-[#f6465d]' : 'text-[#848e9c]'
+              }`}
+              title={`Jarak ke Pivot P: ${deltaP > 0 ? '+' : ''}${deltaP.toFixed(2)}%`}
+            >
+              {deltaP > 0 ? '+' : ''}{deltaP.toFixed(2)}%
+            </span>
+          </div>
+        </>
+      ) : (
+        /* ================= THEME 2: ZONE ZOOM (DUAL-LAYER PROXIMITY METER) ================= */
+        <>
+          {/* Top Macro Context Bar (4px) S4..P..R4 */}
+          <div className="flex items-center justify-between text-[8px] font-mono text-[#848e9c] px-0.5 leading-none">
+            <span className="text-[#f6465d]">S4</span>
+            <span className="text-[#f0b90b] font-bold">P</span>
+            <span className="text-[#0ecb81]">R4</span>
+          </div>
+          <div className="relative w-full h-[4px] bg-[#161a22] rounded-full border border-[#2b313a] overflow-hidden mt-0.5">
+            <div className="w-1/2 h-full bg-[#f6465d]/20 border-r border-[#2b313a]" />
+            <div className="w-1/2 h-full bg-[#0ecb81]/20" />
+            <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-[#f0b90b] -translate-x-1/2" />
+            <div
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[6px] h-[6px] rounded-full bg-white ring-1 ring-black transition-[left] duration-150 ease-out"
+              style={{ left: `${clampedPercent}%` }}
+            />
+          </div>
+
+          {/* Dedicated Active Zone Proximity Meter */}
+          <div className="flex items-center gap-1.5 w-full mt-1">
+            <span
+              className={`px-1.5 py-0.2 rounded-xs text-[9px] font-mono font-bold border shrink-0 min-w-[24px] text-center ${getPillBadgeStyle(
+                lowerName
+              )}`}
+              title={`${lowerName}: ${formatPrice(lowerVal)}`}
+            >
+              {lowerName}
+            </span>
+
+            <div className="relative flex-1 h-[8px] bg-[#161a22] rounded-full border border-[#2b313a] overflow-visible">
+              {/* 50% Center Notch */}
+              <div
+                className="absolute left-1/2 -top-[2.5px] -bottom-[2.5px] w-[1.5px] bg-[#f0b90b] -translate-x-1/2 z-10 pointer-events-none"
+                title="Titik Tengah (50%)"
+              />
+              {/* Progress Fill */}
+              <div
+                className="h-full rounded-full transition-all duration-150"
+                style={{
+                  width: `${intraPct}%`,
+                  backgroundColor: `${pinColorHex}40`,
+                }}
+              />
+              {/* Large Distinct Bead (8px) */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[8px] h-[8px] rounded-full border-2 border-white ring-1 ring-black z-20 shadow-sm pointer-events-none transition-[left] duration-150 ease-out"
+                style={{
+                  left: `${intraPct}%`,
+                  backgroundColor: pinColorHex,
+                }}
+              />
+            </div>
+
+            <span
+              className={`px-1.5 py-0.2 rounded-xs text-[9px] font-mono font-bold border shrink-0 min-w-[24px] text-center ${getPillBadgeStyle(
+                upperName
+              )}`}
+              title={`${upperName}: ${formatPrice(upperVal)}`}
+            >
+              {upperName}
+            </span>
+          </div>
+
+          {/* Subtitle */}
+          <div className="flex items-center justify-between text-[9px] font-mono leading-none w-full px-0.5 mt-1">
+            <span className={`font-semibold truncate max-w-[105px] ${statusColorClass}`} title={positionText}>
+              {positionText}
+            </span>
+            <span
+              className={`tabular-nums shrink-0 font-medium ${
+                deltaP > 0 ? 'text-[#0ecb81]' : deltaP < 0 ? 'text-[#f6465d]' : 'text-[#848e9c]'
+              }`}
+              title={`Jarak ke Pivot P: ${deltaP > 0 ? '+' : ''}${deltaP.toFixed(2)}%`}
+            >
+              ΔP {deltaP > 0 ? '+' : ''}{deltaP.toFixed(2)}%
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 };
