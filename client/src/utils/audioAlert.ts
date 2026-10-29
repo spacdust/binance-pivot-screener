@@ -16,7 +16,7 @@ export type SoundType =
 class SoundPlayer {
   private ctx: AudioContext | null = null;
 
-  private initCtx(): AudioContext | null {
+  public async ensureActive(): Promise<AudioContext | null> {
     if (typeof window === 'undefined') return null;
 
     if (!this.ctx) {
@@ -29,19 +29,23 @@ class SoundPlayer {
     }
 
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
+      try {
+        await this.ctx.resume();
+      } catch (err) {
+        console.warn('[SoundPlayer] Resume error:', err);
+      }
     }
 
     return this.ctx;
   }
 
   public unlockAudio(): void {
-    this.initCtx();
+    this.ensureActive().catch(() => {});
   }
 
-  public playAlert(type: SoundType = 'breakout', volume: number = 0.85): void {
+  public async playAlert(type: SoundType = 'breakout', volume: number = 0.85): Promise<void> {
     try {
-      const ctx = this.initCtx();
+      const ctx = await this.ensureActive();
       if (!ctx) return;
 
       const now = ctx.currentTime;

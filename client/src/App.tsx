@@ -49,23 +49,32 @@ export const App: React.FC = () => {
 
   const [toasts, setToasts] = useState<ToastAlert[]>([]);
 
-  // Track known 2TF confluence states to detect brand new entries
-  const knownConfluenceMapRef = useRef<Map<string, string>>(new Map());
-  const alertCooldownMapRef = useRef<Map<string, number>>(new Map());
+  // Robust per-coin state tracking to detect brand new entries & zone transitions without border-flicker bugs
+  const coinTrackingMapRef = useRef<
+    Map<
+      string,
+      {
+        activeZone: string | null;
+        exitedAt: number;
+        lastAlertedZone: string | null;
+        lastAlertTime: number;
+      }
+    >
+  >(new Map());
   const isInitialDataLoadedRef = useRef(false);
 
-  // Unlock browser AudioContext on first user interaction
+  // Proactively warm up and unlock AudioContext on user interaction for 0ms zero-latency alert playback
   useEffect(() => {
-    const unlock = () => {
-      soundPlayer.unlockAudio();
-      window.removeEventListener('click', unlock);
-      window.removeEventListener('keydown', unlock);
+    const warmUp = () => {
+      soundPlayer.ensureActive();
     };
-    window.addEventListener('click', unlock);
-    window.addEventListener('keydown', unlock);
+    window.addEventListener('click', warmUp, { passive: true });
+    window.addEventListener('keydown', warmUp, { passive: true });
+    window.addEventListener('pointerdown', warmUp, { passive: true });
     return () => {
-      window.removeEventListener('click', unlock);
-      window.removeEventListener('keydown', unlock);
+      window.removeEventListener('click', warmUp);
+      window.removeEventListener('keydown', warmUp);
+      window.removeEventListener('pointerdown', warmUp);
     };
   }, []);
 
@@ -95,59 +104,73 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (!coins || coins.length === 0) return;
 
+    const trackingMap = coinTrackingMapRef.current;
+    const now = Date.now();
+    const cooldownMs = (alertSettings.cooldownSeconds || 60) * 1000;
+    const newlyEntered: Array<{ coin: CoinData; res: ReturnType<typeof checkTwoTfZoneConfluence> }> = [];
+
     // Initial load: populate current state without sounding an alarm
     if (!isInitialDataLoadedRef.current) {
-      const initialMap = new Map<string, string>();
       coins.forEach((c) => {
         const res = checkTwoTfZoneConfluence(c);
         if (res.hasConfluence) {
-          initialMap.set(c.symbol, res.type);
+          trackingMap.set(c.symbol, {
+            activeZone: res.type,
+            exitedAt: 0,
+            lastAlertedZone: res.type,
+            lastAlertTime: now,
+          });
         }
       });
-      knownConfluenceMapRef.current = initialMap;
       isInitialDataLoadedRef.current = true;
       return;
     }
 
-    const currentMap = knownConfluenceMapRef.current;
-    const cooldownMap = alertCooldownMapRef.current;
-    const now = Date.now();
-    const nextMap = new Map<string, string>();
-    const newlyEntered: Array<{ coin: CoinData; res: ReturnType<typeof checkTwoTfZoneConfluence> }> = [];
-
     coins.forEach((coin) => {
       const res = checkTwoTfZoneConfluence(coin);
+      let tracked = trackingMap.get(coin.symbol);
+
       if (res.hasConfluence) {
-        nextMap.set(coin.symbol, res.type);
+        if (!tracked) {
+          tracked = {
+            activeZone: null,
+            exitedAt: now - 30000,
+            lastAlertedZone: null,
+            lastAlertTime: 0,
+          };
+          trackingMap.set(coin.symbol, tracked);
+        }
 
-        const wasIn = currentMap.has(coin.symbol);
-        const prevType = currentMap.get(coin.symbol);
+        const isNewZone = tracked.lastAlertedZone !== res.type;
+        const isReEntry = tracked.exitedAt > 0 && now - tracked.exitedAt >= 15000;
+        const cooldownElapsed = now - tracked.lastAlertTime >= cooldownMs;
 
-        // Newly entered into confluence or transitioned to higher/different zone
-        if (!wasIn || prevType !== res.type) {
-          const lastAlert = cooldownMap.get(coin.symbol) || 0;
-          const cooldownMs = (alertSettings.cooldownSeconds || 60) * 1000;
+        if ((isNewZone || isReEntry) && cooldownElapsed) {
+          const isBull = res.type.startsWith('R');
+          const isBear = res.type.startsWith('S');
+          const isAllowed =
+            (isBull && alertSettings.alertBullish) ||
+            (isBear && alertSettings.alertBearish);
 
-          if (now - lastAlert >= cooldownMs) {
-            const isBull = res.type.startsWith('R');
-            const isBear = res.type.startsWith('S');
-            const isAllowed =
-              (isBull && alertSettings.alertBullish) ||
-              (isBear && alertSettings.alertBearish);
-
-            if (isAllowed) {
-              newlyEntered.push({ coin, res });
-              cooldownMap.set(coin.symbol, now);
-            }
+          if (isAllowed) {
+            newlyEntered.push({ coin, res });
+            tracked.lastAlertedZone = res.type;
+            tracked.lastAlertTime = now;
           }
+        }
+
+        tracked.activeZone = res.type;
+        tracked.exitedAt = 0;
+      } else {
+        if (tracked && tracked.activeZone !== null) {
+          tracked.activeZone = null;
+          tracked.exitedAt = now;
         }
       }
     });
 
-    knownConfluenceMapRef.current = nextMap;
-
     if (newlyEntered.length > 0) {
-      // 1. Play audio tone
+      // 1. Play audio tone immediately
       if (alertSettings.soundEnabled) {
         soundPlayer.playAlert(alertSettings.soundType, alertSettings.volume);
       }

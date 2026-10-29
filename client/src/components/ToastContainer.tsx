@@ -9,6 +9,8 @@ interface ToastContainerProps {
   onSelectCoin?: (symbol: string) => void;
 }
 
+const TOAST_DURATION_MS = 6000; // 6 detik (minimal 5 detik sesuai permintaan user)
+
 const ToastItem: React.FC<{
   toast: ToastAlert;
   onDismiss: (id: string) => void;
@@ -17,11 +19,11 @@ const ToastItem: React.FC<{
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
 
-  // Stable timer that will NEVER be reset by parent re-renders
+  // Auto-dismiss pasti berjalan 6 detik tanpa reset oleh re-render
   useEffect(() => {
     const timer = setTimeout(() => {
       onDismissRef.current(toast.id);
-    }, 3500);
+    }, TOAST_DURATION_MS);
 
     return () => clearTimeout(timer);
   }, [toast.id]);
@@ -66,7 +68,7 @@ const ToastItem: React.FC<{
             onDismiss(toast.id);
           }}
           className="p-1 rounded-xs text-[#848e9c] hover:text-[#eaecef] hover:bg-[#22262e] transition-colors shrink-0 cursor-pointer"
-          title="Tutup"
+          title="Tutup Sekarang"
         >
           <X className="w-3 h-3" />
         </button>
@@ -81,12 +83,12 @@ const ToastItem: React.FC<{
         </span>
       </div>
 
-      {/* Auto-close Progress Indicator Bar (3.5s) */}
+      {/* Auto-close Progress Bar (6 Detik) */}
       <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 overflow-hidden pointer-events-none">
         <div
           className={`h-full ${progressBg}`}
           style={{
-            animation: 'toastProgress 3.5s linear forwards',
+            animation: `toastProgress ${TOAST_DURATION_MS}ms linear forwards`,
           }}
           onAnimationEnd={() => onDismiss(toast.id)}
         />
@@ -103,17 +105,17 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
 
-  // Passive cleanup sweep every 500ms
+  // Background sweeper to guarantee removal after 6.2s
   useEffect(() => {
     if (toasts.length === 0) return;
     const interval = setInterval(() => {
       const now = Date.now();
       toasts.forEach((t) => {
-        if (now - t.timestamp >= 3600) {
+        if (now - t.timestamp >= TOAST_DURATION_MS + 200) {
           onDismissRef.current(t.id);
         }
       });
-    }, 400);
+    }, 500);
 
     return () => clearInterval(interval);
   }, [toasts]);
