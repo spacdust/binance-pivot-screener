@@ -22,7 +22,10 @@ import {
   AlertOctagon,
   SlidersHorizontal,
   ChevronLeft,
-  RotateCcw
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  Settings
 } from 'lucide-react';
 
 interface FilterSidebarProps {
@@ -35,6 +38,9 @@ interface FilterSidebarProps {
   conditionCounts?: Record<string, number>;
   confluenceCount?: number;
   twoTfCounts?: TwoTfCounts;
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
+  onOpenSettings?: () => void;
 }
 
 const TOP_MOVER_CATEGORIES: {
@@ -119,6 +125,9 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   conditionCounts,
   confluenceCount,
   twoTfCounts,
+  soundEnabled = true,
+  onToggleSound,
+  onOpenSettings,
 }) => {
   const activeCount = useMemo(() => {
     let count = 0;
@@ -267,11 +276,42 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                   <div className="text-[10px] text-[#848e9c] leading-tight">Harga di area R / S serentak</div>
                 </div>
               </div>
-              {twoTfCounts && (
-                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-xs bg-[#22262e] text-[#0ecb81] border border-[#2b313a] tabular-nums">
-                  {twoTfCounts.all}
-                </span>
-              )}
+
+              <div className="flex items-center gap-1">
+                {/* Quick Audio Alert Toggle Button */}
+                {onToggleSound && (
+                  <button
+                    type="button"
+                    onClick={onToggleSound}
+                    title={soundEnabled ? 'Suara Alert 2TF: AKTIF (Klik untuk mematikan)' : 'Suara Alert 2TF: MATI (Klik untuk mengaktifkan)'}
+                    className={`p-1 rounded-xs border transition-colors cursor-pointer ${
+                      soundEnabled
+                        ? 'bg-[#0ecb81]/15 text-[#0ecb81] border-[#0ecb81]/40 hover:bg-[#0ecb81]/30'
+                        : 'bg-[#181a20] text-[#848e9c] border-[#2b313a] hover:text-[#eaecef]'
+                    }`}
+                  >
+                    {soundEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
+                  </button>
+                )}
+
+                {/* Quick Settings Cog */}
+                {onOpenSettings && (
+                  <button
+                    type="button"
+                    onClick={onOpenSettings}
+                    title="Buka Pengaturan Suara & Alert"
+                    className="p-1 rounded-xs bg-[#181a20] text-[#848e9c] hover:text-[#f0b90b] border border-[#2b313a] hover:bg-[#22262e] transition-colors cursor-pointer"
+                  >
+                    <Settings className="w-3 h-3" />
+                  </button>
+                )}
+
+                {twoTfCounts && (
+                  <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-xs bg-[#22262e] text-[#0ecb81] border border-[#2b313a] tabular-nums">
+                    {twoTfCounts.all}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Quick Macro Groups: Semua (R & S), Semua Bullish R, Semua Bearish S */}

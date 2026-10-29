@@ -1,10 +1,20 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useScreenerSocket } from './hooks/useScreenerSocket';
-import { FilterState, CoinData, TwoTfCounts } from './types';
+import {
+  FilterState,
+  CoinData,
+  TwoTfCounts,
+  ConfluenceAlertSettings,
+  DEFAULT_ALERT_SETTINGS,
+  ToastAlert
+} from './types';
 import { Header } from './components/Header';
 import { FilterSidebar } from './components/FilterSidebar';
 import { ScreenerTable } from './components/ScreenerTable';
 import { CoinDetailModal } from './components/CoinDetailModal';
+import { SettingsModal } from './components/SettingsModal';
+import { ToastContainer } from './components/ToastContainer';
+import { soundPlayer } from './utils/audioAlert';
 import { checkPivotConfluence, classifyPriceZone, checkTwoTfZoneConfluence } from './utils/pivotConfluence';
 import { Loader2 } from 'lucide-react';
 
@@ -26,6 +36,162 @@ export const App: React.FC = () => {
   const [filters, setFilters] = useState<FilterState>(initialFilters);
   const [selectedCoin, setSelectedCoin] = useState<CoinData | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Confluence Alert Settings (Sound, Toast, Desktop, Zones, Cooldown)
+  const [alertSettings, setAlertSettings] = useState<ConfluenceAlertSettings>(() => {
+    try {
+      const saved = localStorage.getItem('binance_screener_2tf_alerts');
+      if (saved) return { ...DEFAULT_ALERT_SETTINGS, ...JSON.parse(saved) };
+    } catch (e) {}
+    return DEFAULT_ALERT_SETTINGS;
+  });
+
+  const [toasts, setToasts] = useState<ToastAlert[]>([]);
+
+  // Track known 2TF confluence states to detect brand new entries
+  const knownConfluenceMapRef = useRef<Map<string, string>>(new Map());
+  const alertCooldownMapRef = useRef<Map<string, number>>(new Map());
+  const isInitialDataLoadedRef = useRef(false);
+
+  // Unlock browser AudioContext on first user interaction
+  useEffect(() => {
+    const unlock = () => {
+      soundPlayer.unlockAudio();
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+    window.addEventListener('click', unlock);
+    window.addEventListener('keydown', unlock);
+    return () => {
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
+
+  const handleSaveAlertSettings = (newSettings: ConfluenceAlertSettings) => {
+    setAlertSettings(newSettings);
+    localStorage.setItem('binance_screener_2tf_alerts', JSON.stringify(newSettings));
+  };
+
+  const handleToggleSound = () => {
+    const next = !alertSettings.soundEnabled;
+    handleSaveAlertSettings({ ...alertSettings, soundEnabled: next });
+    if (next) {
+      soundPlayer.playAlert(alertSettings.soundType, alertSettings.volume);
+    }
+  };
+
+  const handleDismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const handleSelectCoinFromToast = (symbol: string) => {
+    const found = coins.find((c) => c.symbol === symbol);
+    if (found) setSelectedCoin(found);
+  };
+
+  // Real-time detector: alert when a new coin enters 2TF confluence
+  useEffect(() => {
+    if (!coins || coins.length === 0) return;
+
+    // Initial load: populate current state without sounding an alarm
+    if (!isInitialDataLoadedRef.current) {
+      const initialMap = new Map<string, string>();
+      coins.forEach((c) => {
+        const res = checkTwoTfZoneConfluence(c);
+        if (res.hasConfluence) {
+          initialMap.set(c.symbol, res.type);
+        }
+      });
+      knownConfluenceMapRef.current = initialMap;
+      isInitialDataLoadedRef.current = true;
+      return;
+    }
+
+    const currentMap = knownConfluenceMapRef.current;
+    const cooldownMap = alertCooldownMapRef.current;
+    const now = Date.now();
+    const nextMap = new Map<string, string>();
+    const newlyEntered: Array<{ coin: CoinData; res: ReturnType<typeof checkTwoTfZoneConfluence> }> = [];
+
+    coins.forEach((coin) => {
+      const res = checkTwoTfZoneConfluence(coin);
+      if (res.hasConfluence) {
+        nextMap.set(coin.symbol, res.type);
+
+        const wasIn = currentMap.has(coin.symbol);
+        const prevType = currentMap.get(coin.symbol);
+
+        // Newly entered into confluence or transitioned to higher/different zone
+        if (!wasIn || prevType !== res.type) {
+          const lastAlert = cooldownMap.get(coin.symbol) || 0;
+          const cooldownMs = (alertSettings.cooldownSeconds || 60) * 1000;
+
+          if (now - lastAlert >= cooldownMs) {
+            const isBull = res.type.startsWith('R');
+            const isBear = res.type.startsWith('S');
+            const isAllowed =
+              (isBull && alertSettings.alertBullish) ||
+              (isBear && alertSettings.alertBearish);
+
+            if (isAllowed) {
+              newlyEntered.push({ coin, res });
+              cooldownMap.set(coin.symbol, now);
+            }
+          }
+        }
+      }
+    });
+
+    knownConfluenceMapRef.current = nextMap;
+
+    if (newlyEntered.length > 0) {
+      // 1. Play audio tone
+      if (alertSettings.soundEnabled) {
+        soundPlayer.playAlert(alertSettings.soundType, alertSettings.volume);
+      }
+
+      // 2. Add visual toast notification
+      if (alertSettings.toastEnabled) {
+        const newToasts: ToastAlert[] = newlyEntered.slice(0, 3).map(({ coin, res }) => ({
+          id: `${coin.symbol}-${res.type}-${now}-${Math.random().toString(36).substring(2, 7)}`,
+          symbol: coin.symbol,
+          baseAsset: coin.baseAsset || coin.symbol.replace(/USDT$/, ''),
+          logoUrl: coin.logoUrl,
+          type: res.type,
+          badgeText: res.badgeText,
+          badgeStyle: res.badgeStyle,
+          price: coin.price,
+          timestamp: now,
+        }));
+
+        setToasts((prev) => [...newToasts, ...prev].slice(0, 5));
+      }
+
+      // 3. Desktop Notification if allowed
+      if (
+        alertSettings.desktopNotification &&
+        typeof window !== 'undefined' &&
+        'Notification' in window &&
+        Notification.permission === 'granted'
+      ) {
+        const first = newlyEntered[0];
+        const count = newlyEntered.length;
+        const title =
+          count === 1
+            ? `🔥 ${first.coin.baseAsset || first.coin.symbol} Masuk 2TF Confluence!`
+            : `🔥 ${count} Koin Masuk 2TF Confluence!`;
+        const body =
+          count === 1
+            ? `${first.res.badgeText} pada harga $${first.coin.price.toLocaleString('en-US')}`
+            : newlyEntered.map((x) => x.coin.baseAsset || x.coin.symbol).join(', ');
+        try {
+          new Notification(title, { body, icon: first.coin.logoUrl || undefined });
+        } catch (e) {}
+      }
+    }
+  }, [coins, alertSettings]);
 
   const handleFilterChange = (updates: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...updates }));
@@ -172,6 +338,9 @@ export const App: React.FC = () => {
         isConnected={isConnected}
         onRefresh={refreshData}
         lastUpdated={lastMessageTime}
+        soundEnabled={alertSettings.soundEnabled}
+        onToggleSound={handleToggleSound}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       {/* Main Workspace: Collapsible Sidebar (Left) + Table Workspace (Right) */}
@@ -186,6 +355,9 @@ export const App: React.FC = () => {
           conditionCounts={conditionCounts}
           confluenceCount={confluenceCount}
           twoTfCounts={twoTfCounts}
+          soundEnabled={alertSettings.soundEnabled}
+          onToggleSound={handleToggleSound}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
 
         <main className="flex-1 min-w-0 flex flex-col h-full overflow-hidden p-1.5 sm:p-2">
@@ -224,6 +396,21 @@ export const App: React.FC = () => {
       <CoinDetailModal
         coin={liveSelectedCoin}
         onClose={() => setSelectedCoin(null)}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        settings={alertSettings}
+        onSaveSettings={handleSaveAlertSettings}
+      />
+
+      {/* Floating Real-time Toast Notifications */}
+      <ToastContainer
+        toasts={toasts}
+        onDismiss={handleDismissToast}
+        onSelectCoin={handleSelectCoinFromToast}
       />
     </div>
   );

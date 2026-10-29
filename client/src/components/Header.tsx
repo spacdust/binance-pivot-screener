@@ -1,11 +1,14 @@
 import React from 'react';
-import { Activity, RefreshCw } from 'lucide-react';
+import { Activity, RefreshCw, Volume2, VolumeX, Settings } from 'lucide-react';
 
 interface HeaderProps {
   totalCoins: number;
   isConnected: boolean;
   onRefresh: () => void;
   lastUpdated: number;
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -13,6 +16,9 @@ export const Header: React.FC<HeaderProps> = ({
   isConnected,
   onRefresh,
   lastUpdated,
+  soundEnabled = true,
+  onToggleSound,
+  onOpenSettings,
 }) => {
   const formattedTime = lastUpdated
     ? new Date(lastUpdated).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -84,6 +90,35 @@ export const Header: React.FC<HeaderProps> = ({
             <strong className="text-[#eaecef] font-mono tabular-nums">{totalCoins}</strong> Pasang USDT
           </span>
         </div>
+
+        {/* Quick Audio Alert Toggle Button */}
+        {onToggleSound && (
+          <button
+            type="button"
+            onClick={onToggleSound}
+            title={soundEnabled ? 'Suara Alert 2TF: AKTIF (Klik untuk mematikan)' : 'Suara Alert 2TF: MATI (Klik untuk mengaktifkan)'}
+            className={`p-1.5 rounded-xs border transition-colors cursor-pointer ${
+              soundEnabled
+                ? 'bg-[#0ecb81]/15 text-[#0ecb81] border-[#0ecb81]/40 hover:bg-[#0ecb81]/25'
+                : 'bg-[#12151a] text-[#848e9c] border-[#2b313a] hover:bg-[#22262e] hover:text-[#eaecef]'
+            }`}
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          </button>
+        )}
+
+        {/* Settings Button */}
+        {onOpenSettings && (
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            title="Buka Pengaturan Alert & Tampilan"
+            className="flex items-center gap-1 px-2 py-1 rounded-xs bg-[#12151a] hover:bg-[#22262e] border border-[#2b313a] text-[#848e9c] hover:text-[#f0b90b] transition-colors cursor-pointer text-xs"
+          >
+            <Settings className="w-3.5 h-3.5" />
+            <span className="hidden md:inline font-medium">Pengaturan</span>
+          </button>
+        )}
 
         {/* Snapshot Refresh Button */}
         <button

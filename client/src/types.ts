@@ -196,3 +196,39 @@ export interface FilterState {
   onlyConfluence?: boolean; // Filter only coins with 3TF Confluence (Daily, 1H, 5M in same area)
   twoTfZoneFilter?: TwoTfZoneFilterType; // Filter 2TF Confluence (M5 & H1 between R or S zones)
 }
+
+export type SoundType = 'chime' | 'radar' | 'ping' | 'bell';
+
+export interface ConfluenceAlertSettings {
+  soundEnabled: boolean; // Suara on/off saat koin baru masuk 2TF confluence
+  soundType: SoundType; // Jenis suara ('chime' | 'radar' | 'ping' | 'bell')
+  volume: number; // 0.1 to 1.0 (default 0.7)
+  toastEnabled: boolean; // Popup alert visual di layar
+  desktopNotification: boolean; // Notifikasi desktop browser
+  alertBullish: boolean; // Bunyi untuk zona Bullish (R1-R2, R2-R3, R3-R4)
+  alertBearish: boolean; // Bunyi untuk zona Bearish (S1-S2, S2-S3, S3-S4)
+  cooldownSeconds: number; // Cooldown per koin agar tidak spam (default 60s)
+}
+
+export const DEFAULT_ALERT_SETTINGS: ConfluenceAlertSettings = {
+  soundEnabled: true,
+  soundType: 'chime',
+  volume: 0.7,
+  toastEnabled: true,
+  desktopNotification: false,
+  alertBullish: true,
+  alertBearish: true,
+  cooldownSeconds: 60,
+};
+
+export interface ToastAlert {
+  id: string;
+  symbol: string;
+  baseAsset: string;
+  logoUrl?: string | null;
+  type: string;
+  badgeText: string;
+  badgeStyle: string;
+  price: number;
+  timestamp: number;
+}
