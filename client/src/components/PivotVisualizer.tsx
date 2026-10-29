@@ -179,14 +179,6 @@ export const PivotVisualizer: React.FC<PivotVisualizerProps> = ({
   // Clamp between 2% and 98% for needle visibility
   const clampedPercent = Math.max(2, Math.min(98, rangePercent));
 
-  // Determine active zone highlight style
-  const zoneHighlightClass =
-    zoneCode === 'S1-P' || zoneCode === 'P-R1'
-      ? 'bg-[#f0b90b]/18 border-x border-[#f0b90b]/40'
-      : currentPrice > P
-      ? 'bg-[#0ecb81]/18 border-x border-[#0ecb81]/40'
-      : 'bg-[#f6465d]/18 border-x border-[#f6465d]/40';
-
   const getPillBadgeStyle = (name: string) => {
     if (name === 'P') return 'bg-[#f0b90b]/15 text-[#f0b90b] border-[#f0b90b]/40';
     if (name.startsWith('R') || name === '>R4') return 'bg-[#0ecb81]/15 text-[#0ecb81] border-[#0ecb81]/40';
@@ -203,104 +195,164 @@ Posisi Rentang: ${intraPct}% (${positionText})
 Jarak ke P: ${deltaP > 0 ? '+' : ''}${deltaP.toFixed(2)}%`}
     >
       {visualStyle === 'hud' ? (
-        /* ================= THEME 1: CHUNKY HUD SLIDER (DEFAULT) ================= */
+        /* ================= THEME 1: FULL DETAILED 8-ZONE PRECISION INSTRUMENT (DEFAULT) ================= */
         <>
-          {/* Track 12px with Chunky 8px Thumb */}
-          <div className="relative h-[12px] bg-[#12151a] rounded-xs border border-[#2b313a] flex items-center overflow-visible shadow-xs mt-1">
-            {/* Left Support Half (0..50%) */}
-            <div className="h-full w-1/2 bg-[#f6465d]/08 border-r border-[#2b313a]/60" />
-            {/* Right Resistance Half (50..100%) */}
-            <div className="h-full w-1/2 bg-[#0ecb81]/08" />
-
-            {/* Active Zone Soft Glow Highlight */}
+          {/* 8-Zone Precision Segmented Track with Authentic Color Bands */}
+          <div className="relative h-[11px] bg-[#12151a] rounded-xs border border-[#2b313a] flex items-center overflow-visible shadow-xs mt-1">
+            {/* Support Half: S4..S3 (12.5%), S3..S2 (12.5%), S2..S1 (12.5%), S1..P (12.5%) */}
             <div
-              className={`absolute top-0 bottom-0 pointer-events-none transition-all duration-150 ${zoneHighlightClass}`}
+              className="h-full w-[12.5%] bg-[#f6465d]/35 border-r border-[#2b313a]"
+              title={`S4 - S3: ${formatPrice(effectiveS4)} - ${formatPrice(pivots.S3)}`}
+            />
+            <div
+              className="h-full w-[12.5%] bg-[#f6465d]/24 border-r border-[#2b313a]"
+              title={`S3 - S2: ${formatPrice(pivots.S3)} - ${formatPrice(pivots.S2)}`}
+            />
+            <div
+              className="h-full w-[12.5%] bg-[#f6465d]/16 border-r border-[#2b313a]"
+              title={`S2 - S1: ${formatPrice(pivots.S2)} - ${formatPrice(pivots.S1)}`}
+            />
+            <div
+              className="h-full w-[12.5%] bg-[#f6465d]/08 border-r border-[#2b313a]"
+              title={`S1 - P: ${formatPrice(pivots.S1)} - ${formatPrice(pivots.P)}`}
+            />
+
+            {/* Resistance Half: P..R1 (12.5%), R1..R2 (12.5%), R2..R3 (12.5%), R3..R4 (12.5%) */}
+            <div
+              className="h-full w-[12.5%] bg-[#0ecb81]/08 border-r border-[#2b313a]"
+              title={`P - R1: ${formatPrice(pivots.P)} - ${formatPrice(pivots.R1)}`}
+            />
+            <div
+              className="h-full w-[12.5%] bg-[#0ecb81]/16 border-r border-[#2b313a]"
+              title={`R1 - R2: ${formatPrice(pivots.R1)} - ${formatPrice(pivots.R2)}`}
+            />
+            <div
+              className="h-full w-[12.5%] bg-[#0ecb81]/24 border-r border-[#2b313a]"
+              title={`R2 - R3: ${formatPrice(pivots.R2)} - ${formatPrice(pivots.R3)}`}
+            />
+            <div
+              className="h-full w-[12.5%] bg-[#0ecb81]/35"
+              title={`R3 - R4: ${formatPrice(pivots.R3)} - ${formatPrice(effectiveR4)}`}
+            />
+
+            {/* Active Zone Highlight Box: cleanly highlights the current room */}
+            <div
+              className="absolute top-0 bottom-0 pointer-events-none ring-1 ring-inset ring-white/35 bg-white/10"
               style={{
                 left: `${activeZoneLeft}%`,
                 width: `${activeZoneWidth}%`,
               }}
             />
 
-            {/* Landmark Tick: S1 (37.5%) */}
+            {/* S1 Key Divider Tick (37.5%) */}
             <div
-              className="absolute left-[37.5%] top-0 bottom-0 w-[1.5px] bg-[#f6465d] pointer-events-none -translate-x-1/2"
-              title={`S1: ${formatPrice(pivots.S1)}`}
+              className="absolute left-[37.5%] -top-[1.5px] -bottom-[1.5px] w-[1px] bg-[#f6465d] z-10 -translate-x-1/2 pointer-events-none"
+              title={`Support 1 (S1): ${formatPrice(pivots.S1)}`}
             />
 
-            {/* S1 ↔ P Midpoint Dotted Guide (43.75%) */}
+            {/* S1 ↔ P Midpoint 50% Guideline (43.75%) */}
             <div
-              className="absolute left-[43.75%] top-[1px] bottom-[1px] w-[1px] border-r border-dotted border-white/20 pointer-events-none -translate-x-1/2"
-              title="Titik Tengah 50% S1 - P"
+              className="absolute left-[43.75%] top-[1px] bottom-[1px] w-[1px] border-r border-dotted border-white/30 z-10 -translate-x-1/2 pointer-events-none"
+              title="Titik Tengah S1 - P"
             />
 
-            {/* Center Pivot P Prominent Gold Notch (50%) */}
+            {/* Center Pivot P Distinct Notch (50%) in Binance Yellow */}
             <div
-              className="absolute left-1/2 -top-[2px] -bottom-[2px] w-[2.5px] bg-[#f0b90b] pointer-events-none -translate-x-1/2 z-10 shadow-[0_0_5px_rgba(240,185,11,0.8)]"
+              className="absolute left-1/2 -top-[3px] -bottom-[3px] w-[2px] bg-[#f0b90b] z-10 -translate-x-1/2 shadow-xs pointer-events-none"
               title={`Center Pivot (P): ${formatPrice(pivots.P)}`}
             />
 
-            {/* P ↔ R1 Midpoint Dotted Guide (56.25%) */}
+            {/* P ↔ R1 Midpoint 50% Guideline (56.25%) */}
             <div
-              className="absolute left-[56.25%] top-[1px] bottom-[1px] w-[1px] border-r border-dotted border-white/20 pointer-events-none -translate-x-1/2"
-              title="Titik Tengah 50% P - R1"
+              className="absolute left-[56.25%] top-[1px] bottom-[1px] w-[1px] border-r border-dotted border-white/30 z-10 -translate-x-1/2 pointer-events-none"
+              title="Titik Tengah P - R1"
             />
 
-            {/* Landmark Tick: R1 (62.5%) */}
+            {/* R1 Key Divider Tick (62.5%) */}
             <div
-              className="absolute left-[62.5%] top-0 bottom-0 w-[1.5px] bg-[#0ecb81] pointer-events-none -translate-x-1/2"
-              title={`R1: ${formatPrice(pivots.R1)}`}
+              className="absolute left-[62.5%] -top-[1.5px] -bottom-[1.5px] w-[1px] bg-[#0ecb81] z-10 -translate-x-1/2 pointer-events-none"
+              title={`Resistance 1 (R1): ${formatPrice(pivots.R1)}`}
             />
 
-            {/* Chunky Slider Thumb (8px wide x 16px high - Instantly spotted without squinting) */}
+            {/* Solid Precision Needle Marker (Clean, Solid, No Fuzzy Circles or Blocks) */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[8px] h-[16px] rounded-xs bg-white border border-black shadow-md z-20 flex items-center justify-center pointer-events-none transition-[left] duration-150 ease-out"
+              className="absolute -top-[2.5px] -bottom-[2.5px] w-[3px] rounded-xs bg-white ring-1 ring-black/90 shadow-sm pointer-events-none z-20 transition-[left] duration-150 ease-out -translate-x-1/2 flex items-center justify-center overflow-hidden"
               style={{ left: `${clampedPercent}%` }}
             >
+              {/* Inner 1px Color Core */}
               <div
-                className="w-[2px] h-[8px] rounded-2xs transition-colors duration-150"
+                className="w-[1px] h-full transition-colors duration-150"
                 style={{ backgroundColor: pinColorHex }}
               />
             </div>
           </div>
 
-          {/* Clean 5-Anchor Scale: S4 · S1 · P · R1 · R4 */}
-          <div className="flex justify-between text-[8px] font-mono leading-none mt-1 select-none px-0.5">
+          {/* Full Detailed 9-Point Reference Scale: S4 · S3 · S2 · S1 · P · R1 · R2 · R3 · R4 */}
+          <div className="relative w-full h-[11px] text-[8px] font-mono leading-none mt-1 select-none">
             <span
-              className={`transition-colors ${
-                lowerName === 'S4' ? 'text-[#f6465d] font-bold scale-105' : 'text-[#f6465d] font-bold'
-              }`}
+              className={`absolute left-0 ${lowerName === 'S4' ? 'text-[#f6465d] font-bold' : 'text-[#f6465d]/70'}`}
               title={`S4: ${formatPrice(effectiveS4)}`}
             >
               S4
             </span>
             <span
-              className={`transition-colors ${
-                lowerName === 'S1' || upperName === 'S1' ? 'text-[#f6465d] font-bold scale-105' : 'text-[#f6465d]/70'
+              className={`absolute left-[12.5%] -translate-x-1/2 ${
+                lowerName === 'S3' || upperName === 'S3' ? 'text-[#f6465d] font-bold' : 'text-[#f6465d]/50'
+              }`}
+              title={`S3: ${formatPrice(pivots.S3)}`}
+            >
+              S3
+            </span>
+            <span
+              className={`absolute left-[25%] -translate-x-1/2 ${
+                lowerName === 'S2' || upperName === 'S2' ? 'text-[#f6465d] font-bold' : 'text-[#f6465d]/60'
+              }`}
+              title={`S2: ${formatPrice(pivots.S2)}`}
+            >
+              S2
+            </span>
+            <span
+              className={`absolute left-[37.5%] -translate-x-1/2 ${
+                lowerName === 'S1' || upperName === 'S1' ? 'text-[#f6465d] font-bold scale-105' : 'text-[#f6465d]'
               }`}
               title={`S1: ${formatPrice(pivots.S1)}`}
             >
               S1
             </span>
             <span
-              className={`font-bold transition-all text-[9px] ${
-                lowerName === 'P' || upperName === 'P' ? 'text-[#f0b90b] drop-shadow-xs scale-110' : 'text-[#f0b90b]'
+              className={`absolute left-1/2 -translate-x-1/2 font-bold ${
+                lowerName === 'P' || upperName === 'P' ? 'text-[#f0b90b] scale-110' : 'text-[#f0b90b]'
               }`}
               title={`Center Pivot (P): ${formatPrice(pivots.P)}`}
             >
               P
             </span>
             <span
-              className={`transition-colors ${
-                lowerName === 'R1' || upperName === 'R1' ? 'text-[#0ecb81] font-bold scale-105' : 'text-[#0ecb81]/70'
+              className={`absolute left-[62.5%] -translate-x-1/2 ${
+                lowerName === 'R1' || upperName === 'R1' ? 'text-[#0ecb81] font-bold scale-105' : 'text-[#0ecb81]'
               }`}
               title={`R1: ${formatPrice(pivots.R1)}`}
             >
               R1
             </span>
             <span
-              className={`transition-colors ${
-                upperName === 'R4' ? 'text-[#0ecb81] font-bold scale-105' : 'text-[#0ecb81] font-bold'
+              className={`absolute left-[75%] -translate-x-1/2 ${
+                lowerName === 'R2' || upperName === 'R2' ? 'text-[#0ecb81] font-bold' : 'text-[#0ecb81]/60'
               }`}
+              title={`R2: ${formatPrice(pivots.R2)}`}
+            >
+              R2
+            </span>
+            <span
+              className={`absolute left-[87.5%] -translate-x-1/2 ${
+                lowerName === 'R3' || upperName === 'R3' ? 'text-[#0ecb81] font-bold' : 'text-[#0ecb81]/50'
+              }`}
+              title={`R3: ${formatPrice(pivots.R3)}`}
+            >
+              R3
+            </span>
+            <span
+              className={`absolute right-0 ${upperName === 'R4' ? 'text-[#0ecb81] font-bold' : 'text-[#0ecb81]/70'}`}
               title={`R4: ${formatPrice(effectiveR4)}`}
             >
               R4
