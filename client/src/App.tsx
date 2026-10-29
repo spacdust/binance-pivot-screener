@@ -5,7 +5,7 @@ import { Header } from './components/Header';
 import { FilterSidebar } from './components/FilterSidebar';
 import { ScreenerTable } from './components/ScreenerTable';
 import { CoinDetailModal } from './components/CoinDetailModal';
-import { checkPivotConfluence, classifyPriceZone } from './utils/pivotConfluence';
+import { checkPivotConfluence, classifyPriceZone, checkTwoTfZoneConfluence } from './utils/pivotConfluence';
 import { Loader2 } from 'lucide-react';
 
 const initialFilters: FilterState = {
@@ -18,6 +18,7 @@ const initialFilters: FilterState = {
   pivotCondition: 'ALL',
   minVolume: 0,
   onlyConfluence: false,
+  twoTfZoneFilter: 'OFF',
 };
 
 export const App: React.FC = () => {
@@ -84,6 +85,14 @@ export const App: React.FC = () => {
         if (!conf.hasConfluence) return false;
       }
 
+      // 6. 2TF (M5 & H1) Zone Confluence filter (R1..R2 and S1..S2)
+      if (filters.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF') {
+        const twoTf = checkTwoTfZoneConfluence(coin);
+        if (!twoTf.hasConfluence) return false;
+        if (filters.twoTfZoneFilter === 'R1_R2' && twoTf.type !== 'R1_TO_R2') return false;
+        if (filters.twoTfZoneFilter === 'S1_S2' && twoTf.type !== 'S1_TO_S2') return false;
+      }
+
       return true;
     });
   }, [coins, filters]);
@@ -110,6 +119,21 @@ export const App: React.FC = () => {
     return coins.filter((c) => checkPivotConfluence(c).hasConfluence).length;
   }, [coins]);
 
+  const twoTfCounts = useMemo(() => {
+    let all = 0;
+    let r1r2 = 0;
+    let s1s2 = 0;
+    coins.forEach((c) => {
+      const res = checkTwoTfZoneConfluence(c);
+      if (res.hasConfluence) {
+        all++;
+        if (res.type === 'R1_TO_R2') r1r2++;
+        if (res.type === 'S1_TO_S2') s1s2++;
+      }
+    });
+    return { all, r1r2, s1s2 };
+  }, [coins]);
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.searchQuery) count++;
@@ -117,6 +141,7 @@ export const App: React.FC = () => {
     if (filters.enablePercentFilter) count++;
     if (filters.pivotCondition !== 'ALL') count++;
     if (filters.onlyConfluence) count++;
+    if (filters.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF') count++;
     return count;
   }, [filters]);
 
@@ -141,6 +166,7 @@ export const App: React.FC = () => {
           resultCount={filteredCoins.length}
           conditionCounts={conditionCounts}
           confluenceCount={confluenceCount}
+          twoTfCounts={twoTfCounts}
         />
 
         <main className="flex-1 min-w-0 flex flex-col h-full overflow-hidden p-1.5 sm:p-2">
@@ -170,6 +196,7 @@ export const App: React.FC = () => {
             onFilterChange={handleFilterChange}
             onResetFilters={handleResetFilters}
             confluenceCount={confluenceCount}
+            twoTfCounts={twoTfCounts}
           />
         </main>
       </div>

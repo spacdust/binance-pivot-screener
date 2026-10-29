@@ -297,3 +297,61 @@ export function checkPivotConfluence(coin: CoinData, mode: 'tradingview' | 'micr
     visualizerRing: ''
   };
 }
+
+export interface TwoTfZoneResult {
+  hasConfluence: boolean;
+  type: 'R1_TO_R2' | 'S1_TO_S2' | 'NONE';
+  label: string;
+  badgeText: string;
+  badgeStyle: string;
+  rowHighlight: string;
+}
+
+/**
+ * Checks if price is simultaneously between R1 and R2 (or S1 and S2) on both M5 and H1 pivots.
+ */
+export function checkTwoTfZoneConfluence(
+  coin: CoinData,
+  mode: 'tradingview' | 'micro' = 'tradingview'
+): TwoTfZoneResult {
+  const p5m = mode === 'tradingview' ? coin.pivots : (coin.pivots5m || coin.pivots);
+  const p1h = mode === 'tradingview' ? (coin.pivotsWeekly || coin.pivots) : (coin.pivots1h || coin.pivots);
+
+  if (!p5m || !p1h || isNaN(coin.price)) {
+    return { hasConfluence: false, type: 'NONE', label: '', badgeText: '', badgeStyle: '', rowHighlight: '' };
+  }
+
+  const price = coin.price;
+
+  // Condition 1: Di pivot M5 harga berada di antara R1 dan R2, DAN di pivot H1 harga berada di antara R1 dan R2
+  const isM5_R1_R2 = price >= Math.min(p5m.R1, p5m.R2) && price <= Math.max(p5m.R1, p5m.R2);
+  const isH1_R1_R2 = price >= Math.min(p1h.R1, p1h.R2) && price <= Math.max(p1h.R1, p1h.R2);
+
+  if (isM5_R1_R2 && isH1_R1_R2) {
+    return {
+      hasConfluence: true,
+      type: 'R1_TO_R2',
+      label: '2TF Confluence (5M & 1H di antara R1 ➔ R2)',
+      badgeText: '2TF R1-R2',
+      badgeStyle: 'bg-[#0ecb81]/15 text-[#0ecb81] border border-[#0ecb81]/40',
+      rowHighlight: 'border-l-2 border-l-[#0ecb81] bg-[#0ecb81]/[0.03]',
+    };
+  }
+
+  // Condition 2: Berlaku juga untuk pivot S (M5 di antara S1 dan S2, DAN H1 di antara S1 dan S2)
+  const isM5_S1_S2 = price <= Math.max(p5m.S1, p5m.S2) && price >= Math.min(p5m.S1, p5m.S2);
+  const isH1_S1_S2 = price <= Math.max(p1h.S1, p1h.S2) && price >= Math.min(p1h.S1, p1h.S2);
+
+  if (isM5_S1_S2 && isH1_S1_S2) {
+    return {
+      hasConfluence: true,
+      type: 'S1_TO_S2',
+      label: '2TF Confluence (5M & 1H di antara S1 ➔ S2)',
+      badgeText: '2TF S1-S2',
+      badgeStyle: 'bg-[#f6465d]/15 text-[#f6465d] border border-[#f6465d]/40',
+      rowHighlight: 'border-l-2 border-l-[#f6465d] bg-[#f6465d]/[0.03]',
+    };
+  }
+
+  return { hasConfluence: false, type: 'NONE', label: '', badgeText: '', badgeStyle: '', rowHighlight: '' };
+}

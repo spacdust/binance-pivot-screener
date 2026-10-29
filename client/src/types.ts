@@ -170,4 +170,5 @@ export interface FilterState {
   pivotCondition: PivotConditionType;
   minVolume: number; // in USDT, e.g. 1000000
   onlyConfluence?: boolean; // Filter only coins with 3TF Confluence (Daily, 1H, 5M in same area)
+  twoTfZoneFilter?: 'OFF' | 'ALL' | 'R1_R2' | 'S1_S2'; // Filter 2TF Confluence (M5 & H1 between R1-R2 or S1-S2)
 }

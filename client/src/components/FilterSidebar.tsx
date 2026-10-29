@@ -34,6 +34,7 @@ interface FilterSidebarProps {
   resultCount: number;
   conditionCounts?: Record<string, number>;
   confluenceCount?: number;
+  twoTfCounts?: { all: number; r1r2: number; s1s2: number };
 }
 
 const TOP_MOVER_CATEGORIES: {
@@ -117,6 +118,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   resultCount,
   conditionCounts,
   confluenceCount,
+  twoTfCounts,
 }) => {
   const activeCount = useMemo(() => {
     let count = 0;
@@ -125,6 +127,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     if (filters.enablePercentFilter) count++;
     if (filters.pivotCondition !== 'ALL') count++;
     if (filters.onlyConfluence) count++;
+    if (filters.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF') count++;
     return count;
   }, [filters]);
 
@@ -248,6 +251,80 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               </span>
             )}
           </button>
+
+          {/* Section 2B: 2TF Confluence (M5 + H1 di R1-R2 atau S1-S2) */}
+          <div className="bg-[#12151a] border border-[#2b313a] rounded-xs p-2.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="p-1 rounded-xs bg-[#0ecb81]/15 text-[#0ecb81]">
+                  <Flame className="w-3.5 h-3.5 fill-current" />
+                </span>
+                <div>
+                  <div className="font-bold text-[#eaecef] text-[11px] leading-tight flex items-center gap-1">
+                    <span>2TF Confluence</span>
+                    <span className="text-[10px] font-mono text-[#848e9c]">(M5 + H1)</span>
+                  </div>
+                  <div className="text-[10px] text-[#848e9c] leading-tight">Harga di area R1-R2 / S1-S2 serentak</div>
+                </div>
+              </div>
+              {twoTfCounts && (
+                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-xs bg-[#22262e] text-[#0ecb81] border border-[#2b313a] tabular-nums">
+                  {twoTfCounts.all}
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 gap-1 pt-0.5">
+              <button
+                onClick={() =>
+                  onFilterChange({
+                    twoTfZoneFilter: filters.twoTfZoneFilter === 'ALL' ? 'OFF' : 'ALL',
+                  })
+                }
+                className={`px-1.5 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                  filters.twoTfZoneFilter === 'ALL'
+                    ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
+                    : 'bg-[#181a20] text-[#eaecef] border-[#2b313a] hover:bg-[#22262e]'
+                }`}
+                title="Filter koin di mana M5 & H1 sama-sama di R1-R2 ATAU sama-sama di S1-S2"
+              >
+                <span>Semua (R/S)</span>
+                <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.all ?? 0}</span>
+              </button>
+              <button
+                onClick={() =>
+                  onFilterChange({
+                    twoTfZoneFilter: filters.twoTfZoneFilter === 'R1_R2' ? 'OFF' : 'R1_R2',
+                  })
+                }
+                className={`px-1.5 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                  filters.twoTfZoneFilter === 'R1_R2'
+                    ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
+                    : 'bg-[#181a20] text-[#0ecb81] border-[#2b313a] hover:bg-[#0ecb81]/10'
+                }`}
+                title="Filter koin di mana M5 & H1 sama-sama di antara R1 dan R2 (Bullish)"
+              >
+                <span>R1 ➔ R2</span>
+                <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.r1r2 ?? 0}</span>
+              </button>
+              <button
+                onClick={() =>
+                  onFilterChange({
+                    twoTfZoneFilter: filters.twoTfZoneFilter === 'S1_S2' ? 'OFF' : 'S1_S2',
+                  })
+                }
+                className={`px-1.5 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                  filters.twoTfZoneFilter === 'S1_S2'
+                    ? 'bg-[#f6465d] text-[#181a20] border-[#f6465d]'
+                    : 'bg-[#181a20] text-[#f6465d] border-[#2b313a] hover:bg-[#f6465d]/10'
+                }`}
+                title="Filter koin di mana M5 & H1 sama-sama di antara S1 dan S2 (Bearish)"
+              >
+                <span>S1 ➔ S2</span>
+                <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.s1s2 ?? 0}</span>
+              </button>
+            </div>
+          </div>
 
           <div className="h-px bg-[#2b313a]" />
 

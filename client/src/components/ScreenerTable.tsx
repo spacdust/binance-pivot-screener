@@ -9,6 +9,7 @@ import {
   Eye,
   Info,
   Zap,
+  Flame,
   SlidersHorizontal,
   X,
   Layers,
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 import {
   checkPivotConfluence,
+  checkTwoTfZoneConfluence,
   calculateRangePercent,
   getConditionLabel,
 } from '../utils/pivotConfluence';
@@ -35,6 +37,7 @@ interface ScreenerTableProps {
   onFilterChange?: (updates: Partial<FilterState>) => void;
   onResetFilters?: () => void;
   confluenceCount?: number;
+  twoTfCounts?: { all: number; r1r2: number; s1s2: number };
 }
 
 type SortField =
@@ -74,6 +77,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   onFilterChange,
   onResetFilters,
   confluenceCount,
+  twoTfCounts,
 }) => {
   const [sortField, setSortField] = useState<SortField>('volume24h');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -421,6 +425,19 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       });
     }
 
+    if (filters.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF') {
+      const labelMap: Record<string, string> = {
+        ALL: '2TF: M5+H1 (R1-R2 / S1-S2)',
+        R1_R2: '2TF: M5+H1 (R1 ➔ R2)',
+        S1_S2: '2TF: M5+H1 (S1 ➔ S2)',
+      };
+      pills.push({
+        id: 'twoTfZone',
+        label: labelMap[filters.twoTfZoneFilter] || '2TF Confluence',
+        onRemove: () => onFilterChange({ twoTfZoneFilter: 'OFF' }),
+      });
+    }
+
     return pills;
   }, [filters, onFilterChange]);
 
@@ -503,14 +520,31 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
             {typeof confluenceCount === 'number' && confluenceCount > 0 && (
               <button
                 onClick={() => onFilterChange?.({ onlyConfluence: !filters?.onlyConfluence })}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-xs border text-[11px] font-bold transition-all ${
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-xs border text-[11px] font-bold transition-all cursor-pointer ${
                   filters?.onlyConfluence
                     ? 'bg-[#f0b90b] text-[#181a20] border-[#f0b90b]'
                     : 'bg-[#f0b90b]/10 text-[#f0b90b] border-[#f0b90b]/30 hover:bg-[#f0b90b]/20'
                 }`}
               >
                 <Zap className="w-3 h-3 fill-current" />
-                <span>3TF Confluence: {confluenceCount}</span>
+                <span>3TF: {confluenceCount}</span>
+              </button>
+            )}
+            {twoTfCounts && twoTfCounts.all > 0 && (
+              <button
+                onClick={() => {
+                  const nextFilter = filters?.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF' ? 'OFF' : 'ALL';
+                  onFilterChange?.({ twoTfZoneFilter: nextFilter });
+                }}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-xs border text-[11px] font-bold transition-all cursor-pointer ${
+                  filters?.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF'
+                    ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
+                    : 'bg-[#0ecb81]/10 text-[#0ecb81] border-[#0ecb81]/30 hover:bg-[#0ecb81]/20'
+                }`}
+                title="Filter 2TF Confluence: M5 & H1 serentak di R1-R2 / S1-S2"
+              >
+                <Flame className="w-3 h-3 fill-current" />
+                <span>2TF (M5+H1): {twoTfCounts.all}</span>
               </button>
             )}
           </div>
@@ -971,6 +1005,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 const rank = (page - 1) * pageSize + idx + 1;
                 const flash = priceFlashMap.get(coin.symbol);
                 const confluence = checkPivotConfluence(coin, pivotMode);
+                const twoTf = checkTwoTfZoneConfluence(coin, pivotMode);
 
                 // Real-time live condition & range evaluations directly tied to coin.price
                 const targetPivots5m = pivotMode === 'tradingview' ? coin.pivots : (coin.pivots5m || coin.pivots);
@@ -993,6 +1028,8 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     className={`cursor-pointer transition-colors group ${
                       confluence.hasConfluence
                         ? confluence.rowHighlight
+                        : twoTf.hasConfluence
+                        ? twoTf.rowHighlight
                         : 'hover:bg-[#1e2329] border-l-2 border-l-transparent'
                     }`}
                   >
@@ -1030,6 +1067,15 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                               >
                                 <Zap className="w-2.5 h-2.5 fill-current shrink-0" />
                                 <span>{confluence.badgeText}</span>
+                              </span>
+                            )}
+                            {twoTf.hasConfluence && (
+                              <span
+                                className={`inline-flex items-center gap-0.5 px-1 py-0.2 rounded-xs text-[9px] font-mono font-medium border tracking-tight shrink-0 ${twoTf.badgeStyle}`}
+                                title={twoTf.label}
+                              >
+                                <Flame className="w-2.5 h-2.5 fill-current shrink-0" />
+                                <span>{twoTf.badgeText}</span>
                               </span>
                             )}
                           </div>
