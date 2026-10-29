@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ToastAlert } from '../types';
 import { CoinIcon } from './CoinIcon';
 import { X, Flame } from 'lucide-react';
@@ -14,14 +14,17 @@ const ToastItem: React.FC<{
   onDismiss: (id: string) => void;
   onSelectCoin?: (symbol: string) => void;
 }> = ({ toast, onDismiss, onSelectCoin }) => {
-  // Guaranteed auto-dismiss after 3.5 seconds
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
+  // Stable timer that will NEVER be reset by parent re-renders
   useEffect(() => {
     const timer = setTimeout(() => {
-      onDismiss(toast.id);
+      onDismissRef.current(toast.id);
     }, 3500);
 
     return () => clearTimeout(timer);
-  }, [toast.id, onDismiss]);
+  }, [toast.id]);
 
   const formatPrice = (val: number) => {
     if (val >= 1000) return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -62,7 +65,7 @@ const ToastItem: React.FC<{
             e.stopPropagation();
             onDismiss(toast.id);
           }}
-          className="p-1 rounded-xs text-[#848e9c] hover:text-[#eaecef] hover:bg-[#22262e] transition-colors shrink-0"
+          className="p-1 rounded-xs text-[#848e9c] hover:text-[#eaecef] hover:bg-[#22262e] transition-colors shrink-0 cursor-pointer"
           title="Tutup"
         >
           <X className="w-3 h-3" />
@@ -79,12 +82,13 @@ const ToastItem: React.FC<{
       </div>
 
       {/* Auto-close Progress Indicator Bar (3.5s) */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 overflow-hidden">
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 overflow-hidden pointer-events-none">
         <div
-          className={`h-full ${progressBg} transition-all`}
+          className={`h-full ${progressBg}`}
           style={{
             animation: 'toastProgress 3.5s linear forwards',
           }}
+          onAnimationEnd={() => onDismiss(toast.id)}
         />
       </div>
     </div>
@@ -96,6 +100,24 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({
   onDismiss,
   onSelectCoin,
 }) => {
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
+  // Passive cleanup sweep every 500ms
+  useEffect(() => {
+    if (toasts.length === 0) return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      toasts.forEach((t) => {
+        if (now - t.timestamp >= 3600) {
+          onDismissRef.current(t.id);
+        }
+      });
+    }, 400);
+
+    return () => clearInterval(interval);
+  }, [toasts]);
+
   if (toasts.length === 0) return null;
 
   return (

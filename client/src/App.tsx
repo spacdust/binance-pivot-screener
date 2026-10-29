@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useScreenerSocket } from './hooks/useScreenerSocket';
 import {
   FilterState,
@@ -82,14 +82,14 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleDismissToast = (id: string) => {
+  const handleDismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, []);
 
-  const handleSelectCoinFromToast = (symbol: string) => {
+  const handleSelectCoinFromToast = useCallback((symbol: string) => {
     const found = coins.find((c) => c.symbol === symbol);
     if (found) setSelectedCoin(found);
-  };
+  }, [coins]);
 
   // Real-time detector: alert when a new coin enters 2TF confluence
   useEffect(() => {
