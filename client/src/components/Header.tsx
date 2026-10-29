@@ -29,25 +29,30 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Brand & Market Identity */}
       <div className="flex items-center gap-3">
         {/* Pro Market Screener Mark */}
-        <div className="flex items-center justify-center w-7 h-7 rounded-xs bg-[#181a20] border border-[#2b313a] shadow-xs">
-          <svg className="w-4.5 h-4.5" viewBox="0 0 128 128" fill="none">
-            {/* Scope Ring */}
-            <circle cx="64" cy="64" r="46" stroke="#2b313a" strokeWidth="6" />
-            <circle cx="64" cy="64" r="30" stroke="#f0b90b" strokeOpacity="0.3" strokeWidth="4" strokeDasharray="6 6" />
-            {/* Reticles */}
-            <path d="M64 8 L64 22 M64 106 L64 120 M8 64 L22 64 M106 64 L120 64" stroke="#f0b90b" strokeWidth="7" strokeLinecap="round" />
-            {/* Candlesticks */}
-            <line x1="42" y1="50" x2="42" y2="88" stroke="#f0b90b" strokeWidth="5" strokeLinecap="round" />
-            <rect x="35" y="58" width="14" height="22" rx="3" fill="#f0b90b" />
-            <line x1="64" y1="38" x2="64" y2="82" stroke="#0ecb81" strokeWidth="5" strokeLinecap="round" />
-            <rect x="57" y="46" width="14" height="26" rx="3" fill="#0ecb81" />
-            <line x1="86" y1="26" x2="86" y2="76" stroke="#0ecb81" strokeWidth="5" strokeLinecap="round" />
-            <rect x="79" y="34" width="14" height="30" rx="3" fill="#0ecb81" />
-            {/* Pivot Center Level */}
-            <line x1="22" y1="64" x2="106" y2="64" stroke="#f0b90b" strokeWidth="4" strokeDasharray="6 6" strokeOpacity="0.85" />
-            {/* Laser Trend Line */}
-            <line x1="30" y1="80" x2="94" y2="26" stroke="#0ecb81" strokeWidth="5" strokeLinecap="round" />
-            <circle cx="94" cy="26" r="8" fill="#0ecb81" stroke="#ffffff" strokeWidth="3" />
+        <div className="flex items-center justify-center w-7 h-7 rounded-xs bg-[#1e2329] border border-[#2b313a] shadow-xs">
+          <svg className="w-5 h-5 drop-shadow-[0_0_8px_rgba(240,185,11,0.2)]" viewBox="0 0 128 128" fill="none">
+            <defs>
+              <linearGradient id="hdrGold" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stopColor="#f0b90b" />
+                <stop offset="100%" stopColor="#fcd535" />
+              </linearGradient>
+              <linearGradient id="hdrGreen" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0%" stopColor="#0ecb81" />
+                <stop offset="100%" stopColor="#2ebd85" />
+              </linearGradient>
+            </defs>
+            {/* Center Pivot Level P */}
+            <line x1="18" y1="64" x2="110" y2="64" stroke="#2b313a" strokeWidth="4" strokeLinecap="round" />
+            <line x1="42" y1="64" x2="86" y2="64" stroke="#f0b90b" strokeWidth="4" strokeDasharray="5 4" strokeOpacity="0.8" />
+            {/* Binance Diamond Frame */}
+            <path d="M64 24 L96 56 L64 88 L32 56 Z" fill="none" stroke="url(#hdrGold)" strokeWidth="10" strokeLinejoin="round" />
+            {/* Focal Pivot Dot */}
+            <circle cx="64" cy="56" r="7" fill="#f0b90b" />
+            {/* Lower Anchor */}
+            <path d="M42 98 L64 78 L86 98" fill="none" stroke="#2b313a" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Breakout Surge Vector */}
+            <path d="M50 44 L80 14" stroke="url(#hdrGreen)" strokeWidth="10" strokeLinecap="round" />
+            <path d="M64 14 L80 14 L80 30" fill="none" stroke="url(#hdrGreen)" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
 

@@ -2,58 +2,41 @@
   <defs>
     <!-- Background Gradient -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#181a20"/>
-      <stop offset="100%" stop-color="#0e1114"/>
+      <stop offset="0%" stop-color="#1e2329"/>
+      <stop offset="100%" stop-color="#12151a"/>
     </linearGradient>
 
-    <!-- Candlestick Gradients -->
-    <linearGradient id="barGreen" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#2ebd85"/>
-      <stop offset="100%" stop-color="#0ecb81"/>
-    </linearGradient>
-    <linearGradient id="barYellow" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#fcd535"/>
-      <stop offset="100%" stop-color="#f0b90b"/>
-    </linearGradient>
-
-    <!-- Laser Beam Gradient -->
-    <linearGradient id="beamGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+    <!-- Binance Signature Gold Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="100%" x2="0%" y2="0%">
       <stop offset="0%" stop-color="#f0b90b"/>
-      <stop offset="100%" stop-color="#0ecb81"/>
+      <stop offset="100%" stop-color="#fcd535"/>
+    </linearGradient>
+
+    <!-- High-Momentum Emerald Breakout Gradient -->
+    <linearGradient id="greenGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0ecb81"/>
+      <stop offset="100%" stop-color="#2ebd85"/>
     </linearGradient>
   </defs>
 
-  <!-- Dark Rounded Container with Border -->
-  <rect width="128" height="128" rx="28" fill="url(#bgGrad)"/>
-  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="#2b313a" stroke-width="3"/>
+  <!-- Modern Obsidian Badge -->
+  <rect width="128" height="128" rx="30" fill="url(#bgGrad)"/>
+  <rect x="2.5" y="2.5" width="123" height="123" rx="27.5" fill="none" stroke="#2b313a" stroke-width="3"/>
 
-  <!-- Radar Scanner Ring (The Screener Field) -->
-  <circle cx="64" cy="64" r="46" fill="#12151a" stroke="#2b313a" stroke-width="3.5"/>
-  <circle cx="64" cy="64" r="30" fill="none" stroke="#f0b90b" stroke-opacity="0.25" stroke-width="2" stroke-dasharray="4 3"/>
+  <!-- Horizontal Center Pivot Level P (Screener Horizon) -->
+  <line x1="18" y1="64" x2="110" y2="64" stroke="#2b313a" stroke-width="4" stroke-linecap="round"/>
+  <line x1="42" y1="64" x2="86" y2="64" stroke="#f0b90b" stroke-width="3.5" stroke-dasharray="5 4" stroke-opacity="0.8"/>
 
-  <!-- Screener Scope Crosshair Reticles -->
-  <path d="M64 8 L64 22 M64 106 L64 120 M8 64 L22 64 M106 64 L120 64" stroke="#f0b90b" stroke-width="4" stroke-linecap="round"/>
+  <!-- Core Geometry: Binance Diamond Frame -->
+  <path d="M64 24 L96 56 L64 88 L32 56 Z" fill="none" stroke="url(#goldGrad)" stroke-width="9" stroke-linejoin="round"/>
 
-  <!-- Candlesticks (Financial Market Momentum) -->
-  <!-- Candle 1 (Left: Support) -->
-  <line x1="42" y1="50" x2="42" y2="88" stroke="#f0b90b" stroke-width="3.5" stroke-linecap="round"/>
-  <rect x="35" y="58" width="14" height="22" rx="3" fill="url(#barYellow)"/>
+  <!-- Central Pivot Focal Dot -->
+  <circle cx="64" cy="56" r="7" fill="#f0b90b"/>
 
-  <!-- Candle 2 (Center: Pivot Area) -->
-  <line x1="64" y1="38" x2="64" y2="82" stroke="#0ecb81" stroke-width="3.5" stroke-linecap="round"/>
-  <rect x="57" y="46" width="14" height="26" rx="3" fill="url(#barGreen)"/>
+  <!-- Lower Support Arch (S-Zone Anchor) -->
+  <path d="M42 98 L64 78 L86 98" fill="none" stroke="#2b313a" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Candle 3 (Right: Breakout Target) -->
-  <line x1="86" y1="26" x2="86" y2="76" stroke="#0ecb81" stroke-width="3.5" stroke-linecap="round"/>
-  <rect x="79" y="34" width="14" height="30" rx="3" fill="url(#barGreen)"/>
-
-  <!-- Glowing Pivot Center Level Line (P) -->
-  <line x1="22" y1="64" x2="106" y2="64" stroke="#f0b90b" stroke-width="2.5" stroke-dasharray="4 3" stroke-opacity="0.85"/>
-
-  <!-- Screener Laser Trend / Scanner Sweep -->
-  <line x1="30" y1="80" x2="94" y2="26" stroke="url(#beamGrad)" stroke-width="3" stroke-linecap="round"/>
-
-  <!-- Target Found Blip Indicator -->
-  <circle cx="94" cy="26" r="7" fill="#0ecb81" stroke="#ffffff" stroke-width="2.5"/>
-  <circle cx="94" cy="26" r="11" fill="none" stroke="#0ecb81" stroke-width="1.5" opacity="0.6"/>
+  <!-- Dynamic Breakout Arrow (Crossing P upwards into Resistance) -->
+  <path d="M50 44 L80 14" stroke="url(#greenGrad)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M64 14 L80 14 L80 30" fill="none" stroke="url(#greenGrad)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
