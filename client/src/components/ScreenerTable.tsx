@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { CoinData, FilterState, SelectedTimeframe, TopMoverCategory } from '../types';
+import { CoinData, FilterState, SelectedTimeframe, TopMoverCategory, TwoTfCounts } from '../types';
 import { PivotVisualizer, PivotVisualStyle } from './PivotVisualizer';
 import { CoinIcon } from './CoinIcon';
 import {
@@ -37,7 +37,7 @@ interface ScreenerTableProps {
   onFilterChange?: (updates: Partial<FilterState>) => void;
   onResetFilters?: () => void;
   confluenceCount?: number;
-  twoTfCounts?: { all: number; r1r2: number; s1s2: number };
+  twoTfCounts?: TwoTfCounts;
 }
 
 type SortField =
@@ -427,9 +427,15 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
     if (filters.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF') {
       const labelMap: Record<string, string> = {
-        ALL: '2TF: M5+H1 (R1-R2 / S1-S2)',
+        ALL: '2TF: M5+H1 (Semua R & S)',
+        ALL_R: '2TF: M5+H1 (Semua Bullish R)',
+        ALL_S: '2TF: M5+H1 (Semua Bearish S)',
         R1_R2: '2TF: M5+H1 (R1 ➔ R2)',
+        R2_R3: '2TF: M5+H1 (R2 ➔ R3)',
+        R3_R4: '2TF: M5+H1 (R3 ➔ R4)',
         S1_S2: '2TF: M5+H1 (S1 ➔ S2)',
+        S2_S3: '2TF: M5+H1 (S2 ➔ S3)',
+        S3_S4: '2TF: M5+H1 (S3 ➔ S4)',
       };
       pills.push({
         id: 'twoTfZone',

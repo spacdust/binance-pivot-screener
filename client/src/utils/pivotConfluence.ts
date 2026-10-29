@@ -298,9 +298,18 @@ export function checkPivotConfluence(coin: CoinData, mode: 'tradingview' | 'micr
   };
 }
 
+export type TwoTfConfluenceType =
+  | 'R1_TO_R2'
+  | 'R2_TO_R3'
+  | 'R3_TO_R4'
+  | 'S1_TO_S2'
+  | 'S2_TO_S3'
+  | 'S3_TO_S4'
+  | 'NONE';
+
 export interface TwoTfZoneResult {
   hasConfluence: boolean;
-  type: 'R1_TO_R2' | 'S1_TO_S2' | 'NONE';
+  type: TwoTfConfluenceType;
   label: string;
   badgeText: string;
   badgeStyle: string;
@@ -308,7 +317,8 @@ export interface TwoTfZoneResult {
 }
 
 /**
- * Checks if price is simultaneously between R1 and R2 (or S1 and S2) on both M5 and H1 pivots.
+ * Checks if price is simultaneously in matching R or S zones on both M5 and H1 pivots.
+ * Covers: R1-R2, R2-R3, R3-R4 (Bullish) and S1-S2, S2-S3, S3-S4 (Bearish).
  */
 export function checkTwoTfZoneConfluence(
   coin: CoinData,
@@ -322,11 +332,44 @@ export function checkTwoTfZoneConfluence(
   }
 
   const price = coin.price;
+  const r4_5m = p5m.R4 ?? (p5m.R3 + (p5m.R3 - p5m.R2));
+  const r4_1h = p1h.R4 ?? (p1h.R3 + (p1h.R3 - p1h.R2));
+  const s4_5m = p5m.S4 ?? (p5m.S3 - (p5m.S2 - p5m.S3));
+  const s4_1h = p1h.S4 ?? (p1h.S3 - (p1h.S2 - p1h.S3));
 
-  // Condition 1: Di pivot M5 harga berada di antara R1 dan R2, DAN di pivot H1 harga berada di antara R1 dan R2
+  // --- BULLISH ZONES ---
+
+  // 1. R3 ➔ R4: di M5 di antara R3 & R4, DAN di H1 di antara R3 & R4
+  const isM5_R3_R4 = price >= Math.min(p5m.R3, r4_5m) && price <= Math.max(p5m.R3, r4_5m);
+  const isH1_R3_R4 = price >= Math.min(p1h.R3, r4_1h) && price <= Math.max(p1h.R3, r4_1h);
+  if (isM5_R3_R4 && isH1_R3_R4) {
+    return {
+      hasConfluence: true,
+      type: 'R3_TO_R4',
+      label: '2TF Confluence (5M & 1H di antara R3 ➔ R4)',
+      badgeText: '2TF R3-R4',
+      badgeStyle: 'bg-[#0ecb81]/25 text-[#0ecb81] border border-[#0ecb81]/60 font-bold',
+      rowHighlight: 'border-l-2 border-l-[#0ecb81] bg-[#0ecb81]/[0.05]',
+    };
+  }
+
+  // 2. R2 ➔ R3: di M5 di antara R2 & R3, DAN di H1 di antara R2 & R3
+  const isM5_R2_R3 = price >= Math.min(p5m.R2, p5m.R3) && price <= Math.max(p5m.R2, p5m.R3);
+  const isH1_R2_R3 = price >= Math.min(p1h.R2, p1h.R3) && price <= Math.max(p1h.R2, p1h.R3);
+  if (isM5_R2_R3 && isH1_R2_R3) {
+    return {
+      hasConfluence: true,
+      type: 'R2_TO_R3',
+      label: '2TF Confluence (5M & 1H di antara R2 ➔ R3)',
+      badgeText: '2TF R2-R3',
+      badgeStyle: 'bg-[#0ecb81]/20 text-[#0ecb81] border border-[#0ecb81]/50 font-bold',
+      rowHighlight: 'border-l-2 border-l-[#0ecb81] bg-[#0ecb81]/[0.04]',
+    };
+  }
+
+  // 3. R1 ➔ R2: di M5 di antara R1 & R2, DAN di H1 di antara R1 & R2
   const isM5_R1_R2 = price >= Math.min(p5m.R1, p5m.R2) && price <= Math.max(p5m.R1, p5m.R2);
   const isH1_R1_R2 = price >= Math.min(p1h.R1, p1h.R2) && price <= Math.max(p1h.R1, p1h.R2);
-
   if (isM5_R1_R2 && isH1_R1_R2) {
     return {
       hasConfluence: true,
@@ -338,10 +381,39 @@ export function checkTwoTfZoneConfluence(
     };
   }
 
-  // Condition 2: Berlaku juga untuk pivot S (M5 di antara S1 dan S2, DAN H1 di antara S1 dan S2)
+  // --- BEARISH ZONES ---
+
+  // 4. S3 ➔ S4: di M5 di antara S3 & S4, DAN di H1 di antara S3 & S4
+  const isM5_S3_S4 = price <= Math.max(p5m.S3, s4_5m) && price >= Math.min(p5m.S3, s4_5m);
+  const isH1_S3_S4 = price <= Math.max(p1h.S3, s4_1h) && price >= Math.min(p1h.S3, s4_1h);
+  if (isM5_S3_S4 && isH1_S3_S4) {
+    return {
+      hasConfluence: true,
+      type: 'S3_TO_S4',
+      label: '2TF Confluence (5M & 1H di antara S3 ➔ S4)',
+      badgeText: '2TF S3-S4',
+      badgeStyle: 'bg-[#f6465d]/25 text-[#f6465d] border border-[#f6465d]/60 font-bold',
+      rowHighlight: 'border-l-2 border-l-[#f6465d] bg-[#f6465d]/[0.05]',
+    };
+  }
+
+  // 5. S2 ➔ S3: di M5 di antara S2 & S3, DAN di H1 di antara S2 & S3
+  const isM5_S2_S3 = price <= Math.max(p5m.S2, p5m.S3) && price >= Math.min(p5m.S2, p5m.S3);
+  const isH1_S2_S3 = price <= Math.max(p1h.S2, p1h.S3) && price >= Math.min(p1h.S2, p1h.S3);
+  if (isM5_S2_S3 && isH1_S2_S3) {
+    return {
+      hasConfluence: true,
+      type: 'S2_TO_S3',
+      label: '2TF Confluence (5M & 1H di antara S2 ➔ S3)',
+      badgeText: '2TF S2-S3',
+      badgeStyle: 'bg-[#f6465d]/20 text-[#f6465d] border border-[#f6465d]/50 font-bold',
+      rowHighlight: 'border-l-2 border-l-[#f6465d] bg-[#f6465d]/[0.04]',
+    };
+  }
+
+  // 6. S1 ➔ S2: di M5 di antara S1 & S2, DAN di H1 di antara S1 & S2
   const isM5_S1_S2 = price <= Math.max(p5m.S1, p5m.S2) && price >= Math.min(p5m.S1, p5m.S2);
   const isH1_S1_S2 = price <= Math.max(p1h.S1, p1h.S2) && price >= Math.min(p1h.S1, p1h.S2);
-
   if (isM5_S1_S2 && isH1_S1_S2) {
     return {
       hasConfluence: true,

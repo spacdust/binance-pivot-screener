@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useScreenerSocket } from './hooks/useScreenerSocket';
-import { FilterState, CoinData } from './types';
+import { FilterState, CoinData, TwoTfCounts } from './types';
 import { Header } from './components/Header';
 import { FilterSidebar } from './components/FilterSidebar';
 import { ScreenerTable } from './components/ScreenerTable';
@@ -85,12 +85,19 @@ export const App: React.FC = () => {
         if (!conf.hasConfluence) return false;
       }
 
-      // 6. 2TF (M5 & H1) Zone Confluence filter (R1..R2 and S1..S2)
+      // 6. 2TF (M5 & H1) Zone Confluence filter (R1..R4 and S1..S4)
       if (filters.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF') {
         const twoTf = checkTwoTfZoneConfluence(coin);
         if (!twoTf.hasConfluence) return false;
+        if (filters.twoTfZoneFilter === 'ALL') return true;
+        if (filters.twoTfZoneFilter === 'ALL_R' && !twoTf.type.startsWith('R')) return false;
+        if (filters.twoTfZoneFilter === 'ALL_S' && !twoTf.type.startsWith('S')) return false;
         if (filters.twoTfZoneFilter === 'R1_R2' && twoTf.type !== 'R1_TO_R2') return false;
+        if (filters.twoTfZoneFilter === 'R2_R3' && twoTf.type !== 'R2_TO_R3') return false;
+        if (filters.twoTfZoneFilter === 'R3_R4' && twoTf.type !== 'R3_TO_R4') return false;
         if (filters.twoTfZoneFilter === 'S1_S2' && twoTf.type !== 'S1_TO_S2') return false;
+        if (filters.twoTfZoneFilter === 'S2_S3' && twoTf.type !== 'S2_TO_S3') return false;
+        if (filters.twoTfZoneFilter === 'S3_S4' && twoTf.type !== 'S3_TO_S4') return false;
       }
 
       return true;
@@ -119,19 +126,31 @@ export const App: React.FC = () => {
     return coins.filter((c) => checkPivotConfluence(c).hasConfluence).length;
   }, [coins]);
 
-  const twoTfCounts = useMemo(() => {
+  const twoTfCounts: TwoTfCounts = useMemo(() => {
     let all = 0;
+    let allR = 0;
+    let allS = 0;
     let r1r2 = 0;
+    let r2r3 = 0;
+    let r3r4 = 0;
     let s1s2 = 0;
+    let s2s3 = 0;
+    let s3s4 = 0;
     coins.forEach((c) => {
       const res = checkTwoTfZoneConfluence(c);
       if (res.hasConfluence) {
         all++;
+        if (res.type.startsWith('R')) allR++;
+        if (res.type.startsWith('S')) allS++;
         if (res.type === 'R1_TO_R2') r1r2++;
+        if (res.type === 'R2_TO_R3') r2r3++;
+        if (res.type === 'R3_TO_R4') r3r4++;
         if (res.type === 'S1_TO_S2') s1s2++;
+        if (res.type === 'S2_TO_S3') s2s3++;
+        if (res.type === 'S3_TO_S4') s3s4++;
       }
     });
-    return { all, r1r2, s1s2 };
+    return { all, allR, allS, r1r2, r2r3, r3r4, s1s2, s2s3, s3s4 };
   }, [coins]);
 
   const activeFilterCount = useMemo(() => {

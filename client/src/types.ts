@@ -160,6 +160,30 @@ export type TopMoverCategory =
   | 'FLASH_MOVERS'
   | 'TOP_VOLUME';
 
+export type TwoTfZoneFilterType =
+  | 'OFF'
+  | 'ALL'
+  | 'ALL_R'
+  | 'ALL_S'
+  | 'R1_R2'
+  | 'R2_R3'
+  | 'R3_R4'
+  | 'S1_S2'
+  | 'S2_S3'
+  | 'S3_S4';
+
+export interface TwoTfCounts {
+  all: number;
+  allR: number;
+  allS: number;
+  r1r2: number;
+  r2r3: number;
+  r3r4: number;
+  s1s2: number;
+  s2s3: number;
+  s3s4: number;
+}
+
 export interface FilterState {
   searchQuery: string;
   selectedTimeframe: SelectedTimeframe;
@@ -170,5 +194,5 @@ export interface FilterState {
   pivotCondition: PivotConditionType;
   minVolume: number; // in USDT, e.g. 1000000
   onlyConfluence?: boolean; // Filter only coins with 3TF Confluence (Daily, 1H, 5M in same area)
-  twoTfZoneFilter?: 'OFF' | 'ALL' | 'R1_R2' | 'S1_S2'; // Filter 2TF Confluence (M5 & H1 between R1-R2 or S1-S2)
+  twoTfZoneFilter?: TwoTfZoneFilterType; // Filter 2TF Confluence (M5 & H1 between R or S zones)
 }

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { FilterState, PivotConditionType, SelectedTimeframe, TopMoverCategory } from '../types';
+import { FilterState, PivotConditionType, SelectedTimeframe, TopMoverCategory, TwoTfCounts } from '../types';
 import {
   Search,
   X,
@@ -34,7 +34,7 @@ interface FilterSidebarProps {
   resultCount: number;
   conditionCounts?: Record<string, number>;
   confluenceCount?: number;
-  twoTfCounts?: { all: number; r1r2: number; s1s2: number };
+  twoTfCounts?: TwoTfCounts;
 }
 
 const TOP_MOVER_CATEGORIES: {
@@ -252,7 +252,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             )}
           </button>
 
-          {/* Section 2B: 2TF Confluence (M5 + H1 di R1-R2 atau S1-S2) */}
+          {/* Section 2B: 2TF Confluence (M5 + H1 di R atau S) */}
           <div className="bg-[#12151a] border border-[#2b313a] rounded-xs p-2.5 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
@@ -264,7 +264,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     <span>2TF Confluence</span>
                     <span className="text-[10px] font-mono text-[#848e9c]">(M5 + H1)</span>
                   </div>
-                  <div className="text-[10px] text-[#848e9c] leading-tight">Harga di area R1-R2 / S1-S2 serentak</div>
+                  <div className="text-[10px] text-[#848e9c] leading-tight">Harga di area R / S serentak</div>
                 </div>
               </div>
               {twoTfCounts && (
@@ -274,6 +274,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               )}
             </div>
 
+            {/* Quick Macro Groups: Semua (R & S), Semua Bullish R, Semua Bearish S */}
             <div className="grid grid-cols-3 gap-1 pt-0.5">
               <button
                 onClick={() =>
@@ -281,48 +282,164 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     twoTfZoneFilter: filters.twoTfZoneFilter === 'ALL' ? 'OFF' : 'ALL',
                   })
                 }
-                className={`px-1.5 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
                   filters.twoTfZoneFilter === 'ALL'
                     ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
                     : 'bg-[#181a20] text-[#eaecef] border-[#2b313a] hover:bg-[#22262e]'
                 }`}
-                title="Filter koin di mana M5 & H1 sama-sama di R1-R2 ATAU sama-sama di S1-S2"
+                title="Filter koin di mana M5 & H1 sama-sama di zona R atau S"
               >
-                <span>Semua (R/S)</span>
+                <span>Semua (R&S)</span>
                 <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.all ?? 0}</span>
               </button>
               <button
                 onClick={() =>
                   onFilterChange({
-                    twoTfZoneFilter: filters.twoTfZoneFilter === 'R1_R2' ? 'OFF' : 'R1_R2',
+                    twoTfZoneFilter: filters.twoTfZoneFilter === 'ALL_R' ? 'OFF' : 'ALL_R',
                   })
                 }
-                className={`px-1.5 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
-                  filters.twoTfZoneFilter === 'R1_R2'
+                className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                  filters.twoTfZoneFilter === 'ALL_R'
                     ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
                     : 'bg-[#181a20] text-[#0ecb81] border-[#2b313a] hover:bg-[#0ecb81]/10'
                 }`}
-                title="Filter koin di mana M5 & H1 sama-sama di antara R1 dan R2 (Bullish)"
+                title="Filter semua koin bullish (R1-R2, R2-R3, R3-R4 serentak di M5 & H1)"
               >
-                <span>R1 ➔ R2</span>
-                <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.r1r2 ?? 0}</span>
+                <span>Semua R (Bull)</span>
+                <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.allR ?? 0}</span>
               </button>
               <button
                 onClick={() =>
                   onFilterChange({
-                    twoTfZoneFilter: filters.twoTfZoneFilter === 'S1_S2' ? 'OFF' : 'S1_S2',
+                    twoTfZoneFilter: filters.twoTfZoneFilter === 'ALL_S' ? 'OFF' : 'ALL_S',
                   })
                 }
-                className={`px-1.5 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
-                  filters.twoTfZoneFilter === 'S1_S2'
+                className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                  filters.twoTfZoneFilter === 'ALL_S'
                     ? 'bg-[#f6465d] text-[#181a20] border-[#f6465d]'
                     : 'bg-[#181a20] text-[#f6465d] border-[#2b313a] hover:bg-[#f6465d]/10'
                 }`}
-                title="Filter koin di mana M5 & H1 sama-sama di antara S1 dan S2 (Bearish)"
+                title="Filter semua koin bearish (S1-S2, S2-S3, S3-S4 serentak di M5 & H1)"
               >
-                <span>S1 ➔ S2</span>
-                <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.s1s2 ?? 0}</span>
+                <span>Semua S (Bear)</span>
+                <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.allS ?? 0}</span>
               </button>
+            </div>
+
+            {/* Bullish Specific Zones: R1-R2, R2-R3, R3-R4 */}
+            <div className="space-y-1 pt-1">
+              <span className="text-[9px] uppercase tracking-wider font-semibold text-[#0ecb81] flex items-center justify-between">
+                <span>Zona Bullish (Resistance)</span>
+                <span className="font-mono text-[9px] opacity-80">{twoTfCounts?.allR ?? 0} koin</span>
+              </span>
+              <div className="grid grid-cols-3 gap-1">
+                <button
+                  onClick={() =>
+                    onFilterChange({
+                      twoTfZoneFilter: filters.twoTfZoneFilter === 'R1_R2' ? 'OFF' : 'R1_R2',
+                    })
+                  }
+                  className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                    filters.twoTfZoneFilter === 'R1_R2'
+                      ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
+                      : 'bg-[#181a20] text-[#0ecb81] border-[#2b313a] hover:bg-[#0ecb81]/10'
+                  }`}
+                  title="Filter M5 & H1 serentak di antara R1 dan R2 (Breakout awal)"
+                >
+                  <span>R1 ➔ R2</span>
+                  <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.r1r2 ?? 0}</span>
+                </button>
+                <button
+                  onClick={() =>
+                    onFilterChange({
+                      twoTfZoneFilter: filters.twoTfZoneFilter === 'R2_R3' ? 'OFF' : 'R2_R3',
+                    })
+                  }
+                  className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                    filters.twoTfZoneFilter === 'R2_R3'
+                      ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
+                      : 'bg-[#181a20] text-[#0ecb81] border-[#2b313a] hover:bg-[#0ecb81]/10'
+                  }`}
+                  title="Filter M5 & H1 serentak di antara R2 dan R3 (Super Bullish)"
+                >
+                  <span>R2 ➔ R3</span>
+                  <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.r2r3 ?? 0}</span>
+                </button>
+                <button
+                  onClick={() =>
+                    onFilterChange({
+                      twoTfZoneFilter: filters.twoTfZoneFilter === 'R3_R4' ? 'OFF' : 'R3_R4',
+                    })
+                  }
+                  className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                    filters.twoTfZoneFilter === 'R3_R4'
+                      ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
+                      : 'bg-[#181a20] text-[#0ecb81] border-[#2b313a] hover:bg-[#0ecb81]/10'
+                  }`}
+                  title="Filter M5 & H1 serentak di antara R3 dan R4 (Hyper Pump)"
+                >
+                  <span>R3 ➔ R4</span>
+                  <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.r3r4 ?? 0}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Bearish Specific Zones: S1-S2, S2-S3, S3-S4 */}
+            <div className="space-y-1 pt-0.5">
+              <span className="text-[9px] uppercase tracking-wider font-semibold text-[#f6465d] flex items-center justify-between">
+                <span>Zona Bearish (Support)</span>
+                <span className="font-mono text-[9px] opacity-80">{twoTfCounts?.allS ?? 0} koin</span>
+              </span>
+              <div className="grid grid-cols-3 gap-1">
+                <button
+                  onClick={() =>
+                    onFilterChange({
+                      twoTfZoneFilter: filters.twoTfZoneFilter === 'S1_S2' ? 'OFF' : 'S1_S2',
+                    })
+                  }
+                  className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                    filters.twoTfZoneFilter === 'S1_S2'
+                      ? 'bg-[#f6465d] text-[#181a20] border-[#f6465d]'
+                      : 'bg-[#181a20] text-[#f6465d] border-[#2b313a] hover:bg-[#f6465d]/10'
+                  }`}
+                  title="Filter M5 & H1 serentak di antara S1 dan S2 (Breakdown awal)"
+                >
+                  <span>S1 ➔ S2</span>
+                  <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.s1s2 ?? 0}</span>
+                </button>
+                <button
+                  onClick={() =>
+                    onFilterChange({
+                      twoTfZoneFilter: filters.twoTfZoneFilter === 'S2_S3' ? 'OFF' : 'S2_S3',
+                    })
+                  }
+                  className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                    filters.twoTfZoneFilter === 'S2_S3'
+                      ? 'bg-[#f6465d] text-[#181a20] border-[#f6465d]'
+                      : 'bg-[#181a20] text-[#f6465d] border-[#2b313a] hover:bg-[#f6465d]/10'
+                  }`}
+                  title="Filter M5 & H1 serentak di antara S2 dan S3 (Diskon Ekstrem)"
+                >
+                  <span>S2 ➔ S3</span>
+                  <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.s2s3 ?? 0}</span>
+                </button>
+                <button
+                  onClick={() =>
+                    onFilterChange({
+                      twoTfZoneFilter: filters.twoTfZoneFilter === 'S3_S4' ? 'OFF' : 'S3_S4',
+                    })
+                  }
+                  className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                    filters.twoTfZoneFilter === 'S3_S4'
+                      ? 'bg-[#f6465d] text-[#181a20] border-[#f6465d]'
+                      : 'bg-[#181a20] text-[#f6465d] border-[#2b313a] hover:bg-[#f6465d]/10'
+                  }`}
+                  title="Filter M5 & H1 serentak di antara S3 dan S4 (Kapitulasi Berat)"
+                >
+                  <span>S3 ➔ S4</span>
+                  <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.s3s4 ?? 0}</span>
+                </button>
+              </div>
             </div>
           </div>
 
