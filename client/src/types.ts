@@ -184,6 +184,14 @@ export interface TwoTfCounts {
   s3s4: number;
 }
 
+export type BreakoutConfluenceFilterType = 'OFF' | 'ALL' | 'BULLISH' | 'BEARISH';
+
+export interface BreakoutCounts {
+  all: number;
+  bullish: number;
+  bearish: number;
+}
+
 export interface FilterState {
   searchQuery: string;
   selectedTimeframe: SelectedTimeframe;
@@ -195,6 +203,7 @@ export interface FilterState {
   minVolume: number; // in USDT, e.g. 1000000
   onlyConfluence?: boolean; // Filter only coins with 3TF Confluence (Daily, 1H, 5M in same area)
   twoTfZoneFilter?: TwoTfZoneFilterType; // Filter 2TF Confluence (M5 & H1 between R or S zones)
+  breakoutFilter?: BreakoutConfluenceFilterType; // Filter Cross-TF Breakout (M5 > R1 & 1H > P or reverse)
 }
 
 export type SoundType =
@@ -217,6 +226,8 @@ export interface ConfluenceAlertSettings {
   desktopNotification: boolean; // Notifikasi desktop browser
   alertBullish: boolean; // Bunyi untuk zona Bullish (R1-R2, R2-R3, R3-R4)
   alertBearish: boolean; // Bunyi untuk zona Bearish (S1-S2, S2-S3, S3-S4)
+  alertBreakoutBullish: boolean; // Bunyi untuk Breakout Bullish (M5 > R1 & 1H > P)
+  alertBreakoutBearish: boolean; // Bunyi untuk Breakdown Bearish (M5 < S1 & 1H < P)
   cooldownSeconds: number; // Cooldown per koin agar tidak spam (default 60s)
 }
 
@@ -228,6 +239,8 @@ export const DEFAULT_ALERT_SETTINGS: ConfluenceAlertSettings = {
   desktopNotification: false,
   alertBullish: true,
   alertBearish: true,
+  alertBreakoutBullish: true,
+  alertBreakoutBearish: true,
   cooldownSeconds: 60,
 };
 

@@ -427,3 +427,70 @@ export function checkTwoTfZoneConfluence(
 
   return { hasConfluence: false, type: 'NONE', label: '', badgeText: '', badgeStyle: '', rowHighlight: '' };
 }
+
+export type BreakoutConfluenceType = 'BULLISH' | 'BEARISH' | 'NONE';
+
+export interface BreakoutConfluenceResult {
+  hasConfluence: boolean;
+  type: BreakoutConfluenceType;
+  label: string;
+  badgeText: string;
+  badgeStyle: string;
+  rowHighlight: string;
+}
+
+/**
+ * Checks Cross-Timeframe Breakout/Breakdown Confluence:
+ * - Bullish: M5 harga menembus di atas R1 (price >= M5.R1) AND 1H harga menembus P dari S (1H.P <= price <= 1H.R1)
+ * - Bearish: M5 harga menembus di bawah S1 (price <= M5.S1) AND 1H harga menembus di bawah P dari R (1H.S1 <= price <= 1H.P)
+ */
+export function checkBreakoutConfluence(
+  coin: CoinData,
+  mode: 'tradingview' | 'micro' = 'tradingview'
+): BreakoutConfluenceResult {
+  const p5m = mode === 'tradingview' ? coin.pivots : (coin.pivots5m || coin.pivots);
+  const p1h = mode === 'tradingview' ? (coin.pivotsWeekly || coin.pivots) : (coin.pivots1h || coin.pivots);
+
+  if (!p5m || !p1h || isNaN(coin.price)) {
+    return { hasConfluence: false, type: 'NONE', label: '', badgeText: '', badgeStyle: '', rowHighlight: '' };
+  }
+
+  const price = coin.price;
+
+  // Bullish:
+  // 1. M5 menembus di atas R1 dari P atau S: price >= p5m.R1
+  // 2. 1H menembus P dari S: price >= p1h.P && price <= p1h.R1
+  const isM5Bullish = price >= p5m.R1;
+  const is1hBullish = price >= p1h.P && price <= p1h.R1;
+
+  if (isM5Bullish && is1hBullish) {
+    return {
+      hasConfluence: true,
+      type: 'BULLISH',
+      label: 'Breakout Confluence (M5 > R1 & 1H > P)',
+      badgeText: 'BO: M5>R1 • 1H>P',
+      badgeStyle: 'bg-[#0ecb81]/15 text-[#0ecb81] border border-[#0ecb81]/40',
+      rowHighlight: 'border-l-2 border-l-[#0ecb81] bg-[#0ecb81]/[0.03]',
+    };
+  }
+
+  // Bearish:
+  // 1. M5 menembus di bawah S1 dari P atau R: price <= p5m.S1
+  // 2. 1H menembus di bawah P dari R: price <= p1h.P && price >= p1h.S1
+  const isM5Bearish = price <= p5m.S1;
+  const is1hBearish = price <= p1h.P && price >= p1h.S1;
+
+  if (isM5Bearish && is1hBearish) {
+    return {
+      hasConfluence: true,
+      type: 'BEARISH',
+      label: 'Breakdown Confluence (M5 < S1 & 1H < P)',
+      badgeText: 'BD: M5<S1 • 1H<P',
+      badgeStyle: 'bg-[#f6465d]/15 text-[#f6465d] border border-[#f6465d]/40',
+      rowHighlight: 'border-l-2 border-l-[#f6465d] bg-[#f6465d]/[0.03]',
+    };
+  }
+
+  return { hasConfluence: false, type: 'NONE', label: '', badgeText: '', badgeStyle: '', rowHighlight: '' };
+}
+

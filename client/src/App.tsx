@@ -4,6 +4,7 @@ import {
   FilterState,
   CoinData,
   TwoTfCounts,
+  BreakoutCounts,
   ConfluenceAlertSettings,
   DEFAULT_ALERT_SETTINGS,
   ToastAlert
@@ -15,7 +16,12 @@ import { CoinDetailModal } from './components/CoinDetailModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ToastContainer } from './components/ToastContainer';
 import { soundPlayer } from './utils/audioAlert';
-import { checkPivotConfluence, classifyPriceZone, checkTwoTfZoneConfluence } from './utils/pivotConfluence';
+import {
+  checkPivotConfluence,
+  classifyPriceZone,
+  checkTwoTfZoneConfluence,
+  checkBreakoutConfluence
+} from './utils/pivotConfluence';
 import { Loader2 } from 'lucide-react';
 
 const initialFilters: FilterState = {
@@ -29,6 +35,7 @@ const initialFilters: FilterState = {
   minVolume: 0,
   onlyConfluence: false,
   twoTfZoneFilter: 'OFF',
+  breakoutFilter: 'OFF',
 };
 
 export const App: React.FC = () => {
@@ -51,6 +58,17 @@ export const App: React.FC = () => {
 
   // Robust per-coin state tracking to detect brand new entries & zone transitions without border-flicker bugs
   const coinTrackingMapRef = useRef<
+    Map<
+      string,
+      {
+        activeZone: string | null;
+        exitedAt: number;
+        lastAlertedZone: string | null;
+        lastAlertTime: number;
+      }
+    >
+  >(new Map());
+  const breakoutTrackingMapRef = useRef<
     Map<
       string,
       {
@@ -100,14 +118,21 @@ export const App: React.FC = () => {
     if (found) setSelectedCoin(found);
   }, [coins]);
 
-  // Real-time detector: alert when a new coin enters 2TF confluence
+  // Real-time detector: alert when a new coin enters 2TF confluence OR Breakout confluence
   useEffect(() => {
     if (!coins || coins.length === 0) return;
 
     const trackingMap = coinTrackingMapRef.current;
+    const boTrackingMap = breakoutTrackingMapRef.current;
     const now = Date.now();
     const cooldownMs = (alertSettings.cooldownSeconds || 60) * 1000;
-    const newlyEntered: Array<{ coin: CoinData; res: ReturnType<typeof checkTwoTfZoneConfluence> }> = [];
+    const newlyEntered: Array<{
+      coin: CoinData;
+      type: string;
+      badgeText: string;
+      badgeStyle: string;
+      alertTitle: string;
+    }> = [];
 
     // Initial load: populate current state without sounding an alarm
     if (!isInitialDataLoadedRef.current) {
@@ -121,12 +146,22 @@ export const App: React.FC = () => {
             lastAlertTime: now,
           });
         }
+        const bo = checkBreakoutConfluence(c);
+        if (bo.hasConfluence) {
+          boTrackingMap.set(c.symbol, {
+            activeZone: bo.type,
+            exitedAt: 0,
+            lastAlertedZone: bo.type,
+            lastAlertTime: now,
+          });
+        }
       });
       isInitialDataLoadedRef.current = true;
       return;
     }
 
     coins.forEach((coin) => {
+      // 1. Detect 2TF Zone Confluence
       const res = checkTwoTfZoneConfluence(coin);
       let tracked = trackingMap.get(coin.symbol);
 
@@ -153,7 +188,13 @@ export const App: React.FC = () => {
             (isBear && alertSettings.alertBearish);
 
           if (isAllowed) {
-            newlyEntered.push({ coin, res });
+            newlyEntered.push({
+              coin,
+              type: res.type,
+              badgeText: res.badgeText,
+              badgeStyle: res.badgeStyle,
+              alertTitle: '2TF Confluence',
+            });
             tracked.lastAlertedZone = res.type;
             tracked.lastAlertTime = now;
           }
@@ -167,6 +208,54 @@ export const App: React.FC = () => {
           tracked.exitedAt = now;
         }
       }
+
+      // 2. Detect Cross-TF Breakout Confluence (M5 > R1 & 1H > P or reverse)
+      const bo = checkBreakoutConfluence(coin);
+      let boTracked = boTrackingMap.get(coin.symbol);
+
+      if (bo.hasConfluence) {
+        if (!boTracked) {
+          boTracked = {
+            activeZone: null,
+            exitedAt: now - 30000,
+            lastAlertedZone: null,
+            lastAlertTime: 0,
+          };
+          boTrackingMap.set(coin.symbol, boTracked);
+        }
+
+        const isNewZone = boTracked.lastAlertedZone !== bo.type;
+        const isReEntry = boTracked.exitedAt > 0 && now - boTracked.exitedAt >= 15000;
+        const cooldownElapsed = now - boTracked.lastAlertTime >= cooldownMs;
+
+        if ((isNewZone || isReEntry) && cooldownElapsed) {
+          const isBull = bo.type === 'BULLISH';
+          const isBear = bo.type === 'BEARISH';
+          const isAllowed =
+            (isBull && (alertSettings.alertBreakoutBullish ?? true)) ||
+            (isBear && (alertSettings.alertBreakoutBearish ?? true));
+
+          if (isAllowed) {
+            newlyEntered.push({
+              coin,
+              type: bo.type,
+              badgeText: bo.badgeText,
+              badgeStyle: bo.badgeStyle,
+              alertTitle: 'Breakout Confluence',
+            });
+            boTracked.lastAlertedZone = bo.type;
+            boTracked.lastAlertTime = now;
+          }
+        }
+
+        boTracked.activeZone = bo.type;
+        boTracked.exitedAt = 0;
+      } else {
+        if (boTracked && boTracked.activeZone !== null) {
+          boTracked.activeZone = null;
+          boTracked.exitedAt = now;
+        }
+      }
     });
 
     if (newlyEntered.length > 0) {
@@ -177,15 +266,15 @@ export const App: React.FC = () => {
 
       // 2. Add visual toast notification
       if (alertSettings.toastEnabled) {
-        const newToasts: ToastAlert[] = newlyEntered.slice(0, 3).map(({ coin, res }) => ({
-          id: `${coin.symbol}-${res.type}-${now}-${Math.random().toString(36).substring(2, 7)}`,
-          symbol: coin.symbol,
-          baseAsset: coin.baseAsset || coin.symbol.replace(/USDT$/, ''),
-          logoUrl: coin.logoUrl,
-          type: res.type,
-          badgeText: res.badgeText,
-          badgeStyle: res.badgeStyle,
-          price: coin.price,
+        const newToasts: ToastAlert[] = newlyEntered.slice(0, 3).map((item) => ({
+          id: `${item.coin.symbol}-${item.type}-${now}-${Math.random().toString(36).substring(2, 7)}`,
+          symbol: item.coin.symbol,
+          baseAsset: item.coin.baseAsset || item.coin.symbol.replace(/USDT$/, ''),
+          logoUrl: item.coin.logoUrl,
+          type: item.type,
+          badgeText: item.badgeText,
+          badgeStyle: item.badgeStyle,
+          price: item.coin.price,
           timestamp: now,
         }));
 
@@ -203,11 +292,11 @@ export const App: React.FC = () => {
         const count = newlyEntered.length;
         const title =
           count === 1
-            ? `🔥 ${first.coin.baseAsset || first.coin.symbol} Masuk 2TF Confluence!`
-            : `🔥 ${count} Koin Masuk 2TF Confluence!`;
+            ? `🔥 ${first.coin.baseAsset || first.coin.symbol} (${first.alertTitle})!`
+            : `🔥 ${count} Koin Masuk Confluence!`;
         const body =
           count === 1
-            ? `${first.res.badgeText} pada harga $${first.coin.price.toLocaleString('en-US')}`
+            ? `${first.badgeText} pada harga $${first.coin.price.toLocaleString('en-US')}`
             : newlyEntered.map((x) => x.coin.baseAsset || x.coin.symbol).join(', ');
         try {
           new Notification(title, { body, icon: first.coin.logoUrl || undefined });
@@ -289,6 +378,14 @@ export const App: React.FC = () => {
         if (filters.twoTfZoneFilter === 'S3_S4' && twoTf.type !== 'S3_TO_S4') return false;
       }
 
+      // 7. Cross-TF Breakout Confluence filter (M5 > R1 & 1H > P or reverse)
+      if (filters.breakoutFilter && filters.breakoutFilter !== 'OFF') {
+        const bo = checkBreakoutConfluence(coin);
+        if (!bo.hasConfluence) return false;
+        if (filters.breakoutFilter === 'BULLISH' && bo.type !== 'BULLISH') return false;
+        if (filters.breakoutFilter === 'BEARISH' && bo.type !== 'BEARISH') return false;
+      }
+
       return true;
     });
   }, [coins, filters]);
@@ -342,6 +439,21 @@ export const App: React.FC = () => {
     return { all, allR, allS, r1r2, r2r3, r3r4, s1s2, s2s3, s3s4 };
   }, [coins]);
 
+  const breakoutCounts: BreakoutCounts = useMemo(() => {
+    let all = 0;
+    let bullish = 0;
+    let bearish = 0;
+    coins.forEach((c) => {
+      const bo = checkBreakoutConfluence(c);
+      if (bo.hasConfluence) {
+        all++;
+        if (bo.type === 'BULLISH') bullish++;
+        if (bo.type === 'BEARISH') bearish++;
+      }
+    });
+    return { all, bullish, bearish };
+  }, [coins]);
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.searchQuery) count++;
@@ -350,6 +462,7 @@ export const App: React.FC = () => {
     if (filters.pivotCondition !== 'ALL') count++;
     if (filters.onlyConfluence) count++;
     if (filters.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF') count++;
+    if (filters.breakoutFilter && filters.breakoutFilter !== 'OFF') count++;
     return count;
   }, [filters]);
 
@@ -378,6 +491,7 @@ export const App: React.FC = () => {
           conditionCounts={conditionCounts}
           confluenceCount={confluenceCount}
           twoTfCounts={twoTfCounts}
+          breakoutCounts={breakoutCounts}
           soundEnabled={alertSettings.soundEnabled}
           onToggleSound={handleToggleSound}
           onOpenSettings={() => setIsSettingsOpen(true)}
@@ -411,6 +525,7 @@ export const App: React.FC = () => {
             onResetFilters={handleResetFilters}
             confluenceCount={confluenceCount}
             twoTfCounts={twoTfCounts}
+            breakoutCounts={breakoutCounts}
           />
         </main>
       </div>

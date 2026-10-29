@@ -1,5 +1,12 @@
 import React, { useMemo } from 'react';
-import { FilterState, PivotConditionType, SelectedTimeframe, TopMoverCategory, TwoTfCounts } from '../types';
+import {
+  FilterState,
+  PivotConditionType,
+  SelectedTimeframe,
+  TopMoverCategory,
+  TwoTfCounts,
+  BreakoutCounts
+} from '../types';
 import {
   Search,
   X,
@@ -25,7 +32,8 @@ import {
   RotateCcw,
   Volume2,
   VolumeX,
-  Settings
+  Settings,
+  Crosshair
 } from 'lucide-react';
 
 interface FilterSidebarProps {
@@ -38,6 +46,7 @@ interface FilterSidebarProps {
   conditionCounts?: Record<string, number>;
   confluenceCount?: number;
   twoTfCounts?: TwoTfCounts;
+  breakoutCounts?: BreakoutCounts;
   soundEnabled?: boolean;
   onToggleSound?: () => void;
   onOpenSettings?: () => void;
@@ -125,6 +134,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   conditionCounts,
   confluenceCount,
   twoTfCounts,
+  breakoutCounts,
   soundEnabled = true,
   onToggleSound,
   onOpenSettings,
@@ -137,6 +147,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     if (filters.pivotCondition !== 'ALL') count++;
     if (filters.onlyConfluence) count++;
     if (filters.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF') count++;
+    if (filters.breakoutFilter && filters.breakoutFilter !== 'OFF') count++;
     return count;
   }, [filters]);
 
@@ -480,6 +491,86 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                   <span className="text-[9px] font-mono font-normal opacity-80">{twoTfCounts?.s3s4 ?? 0}</span>
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div className="h-px bg-[#2b313a]" />
+
+          {/* Section 2.5: Cross-TF Breakout Confluence (M5 > R1 & 1H > P or reverse) */}
+          <div className="bg-[#12151a] border border-[#2b313a] rounded-xs p-2.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-1 rounded-xs bg-[#0ecb81]/10 border border-[#0ecb81]/30 text-[#0ecb81]">
+                  <Crosshair className="w-3.5 h-3.5" />
+                </span>
+                <div>
+                  <div className="font-bold text-[#eaecef] text-[11px] leading-tight flex items-center gap-1">
+                    <span>Breakout Confluence</span>
+                    <span className="text-[10px] font-mono text-[#848e9c]">(M5 & 1H)</span>
+                  </div>
+                  <div className="text-[10px] text-[#848e9c] leading-tight">M5 &gt; R1 &amp; 1H &gt; P (Breakout)</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1">
+                {breakoutCounts && (
+                  <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-xs bg-[#22262e] text-[#0ecb81] border border-[#2b313a] tabular-nums">
+                    {breakoutCounts.all}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Macro Groups: Semua, Bullish (M5>R1 & 1H>P), Bearish (M5<S1 & 1H<P) */}
+            <div className="grid grid-cols-3 gap-1 pt-0.5">
+              <button
+                onClick={() =>
+                  onFilterChange({
+                    breakoutFilter: filters.breakoutFilter === 'ALL' ? 'OFF' : 'ALL',
+                  })
+                }
+                className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                  filters.breakoutFilter === 'ALL'
+                    ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
+                    : 'bg-[#181a20] text-[#eaecef] border-[#2b313a] hover:bg-[#22262e]'
+                }`}
+                title="Filter semua koin Breakout & Breakdown Confluence"
+              >
+                <span>Semua</span>
+                <span className="text-[9px] font-mono font-normal opacity-80">{breakoutCounts?.all ?? 0}</span>
+              </button>
+              <button
+                onClick={() =>
+                  onFilterChange({
+                    breakoutFilter: filters.breakoutFilter === 'BULLISH' ? 'OFF' : 'BULLISH',
+                  })
+                }
+                className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                  filters.breakoutFilter === 'BULLISH'
+                    ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
+                    : 'bg-[#181a20] text-[#0ecb81] border-[#2b313a] hover:bg-[#0ecb81]/10'
+                }`}
+                title="Filter Bullish Breakout: M5 > R1 DAN 1H > P (dari S)"
+              >
+                <span className="truncate w-full text-center">Bull (M5&gt;R1)</span>
+                <span className="text-[9px] font-mono font-normal opacity-80">{breakoutCounts?.bullish ?? 0}</span>
+              </button>
+              <button
+                onClick={() =>
+                  onFilterChange({
+                    breakoutFilter: filters.breakoutFilter === 'BEARISH' ? 'OFF' : 'BEARISH',
+                  })
+                }
+                className={`px-1 py-1 rounded-xs text-[10px] font-bold border transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                  filters.breakoutFilter === 'BEARISH'
+                    ? 'bg-[#f6465d] text-[#181a20] border-[#f6465d]'
+                    : 'bg-[#181a20] text-[#f6465d] border-[#2b313a] hover:bg-[#f6465d]/10'
+                }`}
+                title="Filter Bearish Breakdown: M5 < S1 DAN 1H < P (dari R)"
+              >
+                <span className="truncate w-full text-center">Bear (M5&lt;S1)</span>
+                <span className="text-[9px] font-mono font-normal opacity-80">{breakoutCounts?.bearish ?? 0}</span>
+              </button>
             </div>
           </div>
 

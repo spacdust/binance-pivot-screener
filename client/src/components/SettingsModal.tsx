@@ -225,7 +225,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Trigger Zones: Bullish & Bearish */}
           <div className="bg-[#12151a] border border-[#2b313a] rounded-xs p-2.5 space-y-2 text-[11px]">
             <span className="font-bold text-[#848e9c] uppercase tracking-wider block">
-              Pemicu Zona
+              Pemicu Alert
             </span>
 
             <div className="grid grid-cols-2 gap-2">
@@ -236,7 +236,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onChange={(e) => update({ alertBullish: e.target.checked })}
                   className="w-3.5 h-3.5 rounded-xs accent-[#0ecb81] cursor-pointer"
                 />
-                <span className="font-semibold text-[#0ecb81]">Bullish (R1 - R4)</span>
+                <span className="font-semibold text-[#0ecb81]">2TF Bull (R)</span>
               </label>
 
               <label className="flex items-center gap-2 p-1.5 rounded-xs bg-[#181a20] border border-[#2b313a] cursor-pointer hover:bg-[#22262e]">
@@ -246,7 +246,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onChange={(e) => update({ alertBearish: e.target.checked })}
                   className="w-3.5 h-3.5 rounded-xs accent-[#f6465d] cursor-pointer"
                 />
-                <span className="font-semibold text-[#f6465d]">Bearish (S1 - S4)</span>
+                <span className="font-semibold text-[#f6465d]">2TF Bear (S)</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-1.5 rounded-xs bg-[#181a20] border border-[#2b313a] cursor-pointer hover:bg-[#22262e]">
+                <input
+                  type="checkbox"
+                  checked={localSettings.alertBreakoutBullish ?? true}
+                  onChange={(e) => update({ alertBreakoutBullish: e.target.checked })}
+                  className="w-3.5 h-3.5 rounded-xs accent-[#0ecb81] cursor-pointer"
+                />
+                <span className="font-semibold text-[#0ecb81]">BO (M5&gt;R1 &amp; 1H&gt;P)</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-1.5 rounded-xs bg-[#181a20] border border-[#2b313a] cursor-pointer hover:bg-[#22262e]">
+                <input
+                  type="checkbox"
+                  checked={localSettings.alertBreakoutBearish ?? true}
+                  onChange={(e) => update({ alertBreakoutBearish: e.target.checked })}
+                  className="w-3.5 h-3.5 rounded-xs accent-[#f6465d] cursor-pointer"
+                />
+                <span className="font-semibold text-[#f6465d]">BD (M5&lt;S1 &amp; 1H&lt;P)</span>
               </label>
             </div>
 
@@ -314,6 +334,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 desktopNotification: false,
                 alertBullish: true,
                 alertBearish: true,
+                alertBreakoutBullish: true,
+                alertBreakoutBearish: true,
                 cooldownSeconds: 60,
               };
               setLocalSettings(def);

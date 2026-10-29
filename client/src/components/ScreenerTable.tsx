@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { CoinData, FilterState, SelectedTimeframe, TopMoverCategory, TwoTfCounts } from '../types';
+import { CoinData, FilterState, SelectedTimeframe, TopMoverCategory, TwoTfCounts, BreakoutCounts } from '../types';
 import { PivotVisualizer, PivotVisualStyle } from './PivotVisualizer';
 import { CoinIcon } from './CoinIcon';
 import {
@@ -16,11 +16,13 @@ import {
   ChevronLeft,
   Lock,
   Activity,
-  RotateCw
+  RotateCw,
+  Crosshair
 } from 'lucide-react';
 import {
   checkPivotConfluence,
   checkTwoTfZoneConfluence,
+  checkBreakoutConfluence,
   calculateRangePercent,
   getConditionLabel,
 } from '../utils/pivotConfluence';
@@ -38,6 +40,7 @@ interface ScreenerTableProps {
   onResetFilters?: () => void;
   confluenceCount?: number;
   twoTfCounts?: TwoTfCounts;
+  breakoutCounts?: BreakoutCounts;
 }
 
 type SortField =
@@ -78,6 +81,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   onResetFilters,
   confluenceCount,
   twoTfCounts,
+  breakoutCounts,
 }) => {
   const [sortField, setSortField] = useState<SortField>('volume24h');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -444,6 +448,19 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       });
     }
 
+    if (filters?.breakoutFilter && filters.breakoutFilter !== 'OFF') {
+      const labelMap: Record<string, string> = {
+        ALL: 'BO: M5>R1/S1 & 1H>P',
+        BULLISH: 'BO: M5 > R1 & 1H > P',
+        BEARISH: 'BD: M5 < S1 & 1H < P',
+      };
+      pills.push({
+        id: 'breakoutFilter',
+        label: labelMap[filters.breakoutFilter] || 'Breakout Confluence',
+        onRemove: () => onFilterChange({ breakoutFilter: 'OFF' }),
+      });
+    }
+
     return pills;
   }, [filters, onFilterChange]);
 
@@ -551,6 +568,23 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               >
                 <Flame className="w-3 h-3 fill-current" />
                 <span>2TF (M5+H1): {twoTfCounts.all}</span>
+              </button>
+            )}
+            {breakoutCounts && breakoutCounts.all > 0 && (
+              <button
+                onClick={() => {
+                  const nextFilter = filters?.breakoutFilter && filters.breakoutFilter !== 'OFF' ? 'OFF' : 'ALL';
+                  onFilterChange?.({ breakoutFilter: nextFilter });
+                }}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-xs border text-[11px] font-bold transition-all cursor-pointer ${
+                  filters?.breakoutFilter && filters.breakoutFilter !== 'OFF'
+                    ? 'bg-[#0ecb81] text-[#181a20] border-[#0ecb81]'
+                    : 'bg-[#0ecb81]/10 text-[#0ecb81] border-[#0ecb81]/30 hover:bg-[#0ecb81]/20'
+                }`}
+                title="Filter Breakout Confluence: M5 > R1/S1 & 1H > P"
+              >
+                <Crosshair className="w-3 h-3" />
+                <span>BO (M5&gt;R1 &amp; 1H&gt;P): {breakoutCounts.all}</span>
               </button>
             )}
           </div>
@@ -1012,6 +1046,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 const flash = priceFlashMap.get(coin.symbol);
                 const confluence = checkPivotConfluence(coin, pivotMode);
                 const twoTf = checkTwoTfZoneConfluence(coin, pivotMode);
+                const breakout = checkBreakoutConfluence(coin, pivotMode);
 
                 // Real-time live condition & range evaluations directly tied to coin.price
                 const targetPivots5m = pivotMode === 'tradingview' ? coin.pivots : (coin.pivots5m || coin.pivots);
@@ -1036,6 +1071,8 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         ? confluence.rowHighlight
                         : twoTf.hasConfluence
                         ? twoTf.rowHighlight
+                        : breakout.hasConfluence
+                        ? breakout.rowHighlight
                         : 'hover:bg-[#1e2329] border-l-2 border-l-transparent'
                     }`}
                   >
@@ -1082,6 +1119,15 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                               >
                                 <Flame className="w-2.5 h-2.5 fill-current shrink-0" />
                                 <span>{twoTf.badgeText}</span>
+                              </span>
+                            )}
+                            {breakout.hasConfluence && (
+                              <span
+                                className={`inline-flex items-center gap-0.5 px-1 py-0.2 rounded-xs text-[9px] font-mono font-medium border tracking-tight shrink-0 ${breakout.badgeStyle}`}
+                                title={breakout.label}
+                              >
+                                <Crosshair className="w-2.5 h-2.5 shrink-0" />
+                                <span>{breakout.badgeText}</span>
                               </span>
                             )}
                           </div>
