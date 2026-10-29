@@ -78,11 +78,55 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
-  const soundOptions: { key: SoundType; label: string; desc: string }[] = [
-    { key: 'chime', label: 'Chime Modern', desc: 'Dua nada harmonik lembut (D5 ➔ A5)' },
-    { key: 'radar', label: 'Radar Ping', desc: 'Sweep futuristik bernada tajam' },
-    { key: 'ping', label: 'Coin Crystal', desc: 'Ping koin jernih bernada tinggi' },
-    { key: 'bell', label: 'Bell Ding', desc: 'Lonceng klasik dengan resonansi' },
+  const soundOptions: {
+    key: SoundType;
+    label: string;
+    tag: string;
+    tagClass: string;
+    desc: string;
+  }[] = [
+    {
+      key: 'breakout',
+      label: 'TradingView Breakout',
+      tag: 'Direkomendasikan',
+      tagClass: 'bg-[#0ecb81]/20 text-[#0ecb81] border-[#0ecb81]/40',
+      desc: 'Arpeggio triad 4-nada cepat & punchy (G5 ➔ C6 ➔ E6 ➔ G6)',
+    },
+    {
+      key: 'alarm_urgent',
+      label: 'Radar Chirp (Urgent)',
+      tag: 'Super Alert 🔥',
+      tagClass: 'bg-[#f6465d]/20 text-[#f6465d] border-[#f6465d]/40',
+      desc: 'Double chirp tajam frekuensi tinggi — 100% menarik perhatian!',
+    },
+    {
+      key: 'jackpot',
+      label: 'Coin Rush / Jackpot',
+      tag: 'Koin Emas 💰',
+      tagClass: 'bg-[#f0b90b]/20 text-[#f0b90b] border-[#f0b90b]/40',
+      desc: '3 denting koin emas cepat berturut disusul lonceng resonansi',
+    },
+    {
+      key: 'laser_radar',
+      label: 'Cyberpunk Laser Sweep',
+      tag: 'Futuristik ⚡',
+      tagClass: 'bg-[#3b82f6]/20 text-[#3b82f6] border-[#3b82f6]/40',
+      desc: 'Laser FM sweep modern khas terminal trading institusional',
+    },
+    {
+      key: 'victory',
+      label: 'Trade Fill Fanfare',
+      tag: 'Level Up 🎯',
+      tagClass: 'bg-[#a855f7]/20 text-[#a855f7] border-[#a855f7]/40',
+      desc: 'Melodi kenaikan kemenangan 4-nada energik & memuaskan',
+    },
+    {
+      key: 'glass_chime',
+      label: 'Apple Crystal Glass',
+      tag: 'Kristal 💎',
+      tagClass: 'bg-[#14b8a6]/20 text-[#14b8a6] border-[#14b8a6]/40',
+      desc: 'Denting kaca kristal dengan 3 overtone harmonik beresonansi',
+    },
   ];
 
   return (
@@ -197,8 +241,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             </div>
 
-            {/* 4 Sound Radio Cards */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Sound Radio Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {soundOptions.map((opt) => {
                 const isSelected = localSettings.soundType === opt.key;
                 return (
@@ -208,19 +252,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       update({ soundType: opt.key });
                       soundPlayer.playAlert(opt.key, localSettings.volume);
                     }}
-                    className={`p-2 rounded-xs border cursor-pointer transition-all flex flex-col justify-between ${
+                    className={`p-2.5 rounded-xs border cursor-pointer transition-all flex flex-col justify-between ${
                       isSelected
-                        ? 'bg-[#f0b90b]/10 border-[#f0b90b] text-[#eaecef]'
+                        ? 'bg-[#f0b90b]/10 border-[#f0b90b] text-[#eaecef] shadow-xs'
                         : 'bg-[#181a20] border-[#2b313a] text-[#848e9c] hover:border-[#f0b90b]/40 hover:text-[#eaecef]'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`font-bold text-xs ${isSelected ? 'text-[#f0b90b]' : 'text-[#eaecef]'}`}>
-                        {opt.label}
-                      </span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-[#f0b90b]" />}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`font-bold text-xs ${isSelected ? 'text-[#f0b90b]' : 'text-[#eaecef]'}`}>
+                            {opt.label}
+                          </span>
+                          <span className={`text-[9px] font-mono px-1 py-0.2 rounded-xs border ${opt.tagClass}`}>
+                            {opt.tag}
+                          </span>
+                        </div>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#f0b90b] shrink-0" />}
+                      </div>
+                      <p className="text-[10.5px] text-[#848e9c] leading-snug">{opt.desc}</p>
                     </div>
-                    <p className="text-[10px] text-[#848e9c] leading-tight">{opt.desc}</p>
+
+                    <div className="mt-2 pt-1.5 border-t border-[#2b313a]/60 flex items-center justify-between text-[10px]">
+                      <span className="text-[#848e9c] font-mono">Klik untuk pilih & dengar</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          update({ soundType: opt.key });
+                          soundPlayer.playAlert(opt.key, localSettings.volume);
+                        }}
+                        className="px-1.5 py-0.5 rounded-xs bg-[#22262e] hover:bg-[#2b313a] text-[#f0b90b] font-bold flex items-center gap-1"
+                      >
+                        <Play className="w-2.5 h-2.5 fill-current" />
+                        <span>Play</span>
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -413,8 +480,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             onClick={() => {
               const def: ConfluenceAlertSettings = {
                 soundEnabled: true,
-                soundType: 'chime',
-                volume: 0.7,
+                soundType: 'breakout',
+                volume: 0.85,
                 toastEnabled: true,
                 desktopNotification: false,
                 alertBullish: true,

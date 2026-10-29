@@ -197,12 +197,22 @@ export interface FilterState {
   twoTfZoneFilter?: TwoTfZoneFilterType; // Filter 2TF Confluence (M5 & H1 between R or S zones)
 }
 
-export type SoundType = 'chime' | 'radar' | 'ping' | 'bell';
+export type SoundType =
+  | 'breakout'
+  | 'alarm_urgent'
+  | 'jackpot'
+  | 'laser_radar'
+  | 'glass_chime'
+  | 'victory'
+  | 'chime'
+  | 'radar'
+  | 'ping'
+  | 'bell';
 
 export interface ConfluenceAlertSettings {
   soundEnabled: boolean; // Suara on/off saat koin baru masuk 2TF confluence
-  soundType: SoundType; // Jenis suara ('chime' | 'radar' | 'ping' | 'bell')
-  volume: number; // 0.1 to 1.0 (default 0.7)
+  soundType: SoundType; // Jenis suara
+  volume: number; // 0.1 to 1.0 (default 0.85)
   toastEnabled: boolean; // Popup alert visual di layar
   desktopNotification: boolean; // Notifikasi desktop browser
   alertBullish: boolean; // Bunyi untuk zona Bullish (R1-R2, R2-R3, R3-R4)
@@ -212,8 +222,8 @@ export interface ConfluenceAlertSettings {
 
 export const DEFAULT_ALERT_SETTINGS: ConfluenceAlertSettings = {
   soundEnabled: true,
-  soundType: 'chime',
-  volume: 0.7,
+  soundType: 'breakout',
+  volume: 0.85,
   toastEnabled: true,
   desktopNotification: false,
   alertBullish: true,
