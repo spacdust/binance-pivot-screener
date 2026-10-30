@@ -202,7 +202,7 @@ export interface FilterState {
   enablePercentFilter: boolean;
   filterMode: 'below' | 'above' | 'absolute_below'; // absolute_below means |change| < 5%
   pivotCondition: PivotConditionType;
-  pivotConditionTimeframe?: PivotConditionTimeframe; // '5m' | '1h' | 'daily' (default: 'daily')
+  pivotConditionTimeframe?: PivotConditionTimeframe; // '5m' | '1h' | 'daily' (default: '5m')
   minVolume: number; // in USDT, e.g. 1000000
   onlyConfluence?: boolean; // Filter only coins with 3TF Confluence (Daily, 1H, 5M in same area)
   twoTfZoneFilter?: TwoTfZoneFilterType; // Filter 2TF Confluence (M5 & H1 between R or S zones)

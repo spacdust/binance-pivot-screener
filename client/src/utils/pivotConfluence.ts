@@ -500,7 +500,7 @@ export function checkBreakoutConfluence(
  */
 export function getCoinPivots(
   coin: CoinData,
-  timeframe: PivotConditionTimeframe = 'daily',
+  timeframe: PivotConditionTimeframe = '5m',
   mode: 'tradingview' | 'micro' = 'tradingview'
 ): Pivots | null | undefined {
   if (timeframe === '5m') {
@@ -518,7 +518,7 @@ export function getCoinPivots(
  */
 export function getCoinPivotCondition(
   coin: CoinData,
-  timeframe: PivotConditionTimeframe = 'daily',
+  timeframe: PivotConditionTimeframe = '5m',
   mode: 'tradingview' | 'micro' = 'tradingview'
 ): PivotConditionType | null {
   const targetPivots = getCoinPivots(coin, timeframe, mode);

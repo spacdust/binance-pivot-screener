@@ -728,7 +728,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 <span>
                   Kondisi Pivot{' '}
                   <strong className="text-[#f0b90b]">
-                    ({(filters.pivotConditionTimeframe || 'daily') === '5m' ? '5M' : (filters.pivotConditionTimeframe || 'daily') === '1h' ? '1H' : 'Daily'})
+                    ({(filters.pivotConditionTimeframe || '5m') === '5m' ? '5M' : (filters.pivotConditionTimeframe || '5m') === '1h' ? '1H' : 'Daily'})
                   </strong>
                 </span>
               </label>
@@ -752,10 +752,10 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 [
                   { key: '5m', label: 'Pivot 5M', sub: pivotMode === 'tradingview' ? '1D' : '5M' },
                   { key: '1h', label: 'Pivot 1H', sub: pivotMode === 'tradingview' ? '1W' : '1H' },
-                  { key: 'daily', label: 'Pivot Daily', sub: pivotMode === 'tradingview' ? '1M' : '1D' },
+                  { key: 'daily', label: 'Daily (1D)', sub: pivotMode === 'tradingview' ? '1M' : '1D' },
                 ] as const
               ).map((item) => {
-                const isSelected = (filters.pivotConditionTimeframe || 'daily') === item.key;
+                const isSelected = (filters.pivotConditionTimeframe || '5m') === item.key;
                 return (
                   <button
                     key={item.key}

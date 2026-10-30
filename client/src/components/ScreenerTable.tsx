@@ -421,7 +421,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
 
     if (filters.pivotCondition && filters.pivotCondition !== 'ALL') {
       const tfLabel =
-        filters.pivotConditionTimeframe === '5m'
+        (filters.pivotConditionTimeframe || '5m') === '5m'
           ? '5M'
           : filters.pivotConditionTimeframe === '1h'
           ? '1H'

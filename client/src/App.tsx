@@ -33,7 +33,7 @@ const initialFilters: FilterState = {
   enablePercentFilter: false,
   filterMode: 'absolute_below',
   pivotCondition: 'ALL',
-  pivotConditionTimeframe: 'daily',
+  pivotConditionTimeframe: '5m',
   minVolume: 0,
   onlyConfluence: false,
   twoTfZoneFilter: 'OFF',
@@ -365,7 +365,7 @@ export const App: React.FC = () => {
 
       // 4. Pivot Point condition filter (Live calculated from current price & selected timeframe: 5M, 1H, or Daily)
       if (filters.pivotCondition !== 'ALL') {
-        const tf = filters.pivotConditionTimeframe || 'daily';
+        const tf = filters.pivotConditionTimeframe || '5m';
         const liveCond = getCoinPivotCondition(coin, tf, pivotMode);
         if (liveCond !== filters.pivotCondition) {
           return false;
@@ -414,7 +414,7 @@ export const App: React.FC = () => {
   // Live count per pivot condition for interactive filters (Real-time live evaluations)
   const conditionCounts = useMemo(() => {
     const counts: Record<string, number> = { ALL: coins.length };
-    const tf = filters.pivotConditionTimeframe || 'daily';
+    const tf = filters.pivotConditionTimeframe || '5m';
     coins.forEach((c) => {
       const cond = getCoinPivotCondition(c, tf, pivotMode);
       if (cond) {
