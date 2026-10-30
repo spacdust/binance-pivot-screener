@@ -41,6 +41,8 @@ interface ScreenerTableProps {
   confluenceCount?: number;
   twoTfCounts?: TwoTfCounts;
   breakoutCounts?: BreakoutCounts;
+  pivotMode?: 'tradingview' | 'micro';
+  onPivotModeChange?: (mode: 'tradingview' | 'micro') => void;
 }
 
 type SortField =
@@ -82,13 +84,17 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   confluenceCount,
   twoTfCounts,
   breakoutCounts,
+  pivotMode: propsPivotMode,
+  onPivotModeChange,
 }) => {
   const [sortField, setSortField] = useState<SortField>('volume24h');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(25);
   const [density, setDensity] = useState<'compact' | 'normal'>('compact');
-  const [pivotMode, setPivotMode] = useState<'tradingview' | 'micro'>('tradingview');
+  const [localPivotMode, setLocalPivotMode] = useState<'tradingview' | 'micro'>('tradingview');
+  const pivotMode = propsPivotMode ?? localPivotMode;
+  const setPivotMode = onPivotModeChange ?? setLocalPivotMode;
   const [pivotStyle, setPivotStyle] = useState<PivotVisualStyle>(() => {
     const saved = localStorage.getItem('pivot_visual_style');
     return saved === 'zone_zoom' ? 'zone_zoom' : 'hud';
@@ -414,9 +420,15 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
     }
 
     if (filters.pivotCondition && filters.pivotCondition !== 'ALL') {
+      const tfLabel =
+        filters.pivotConditionTimeframe === '5m'
+          ? '5M'
+          : filters.pivotConditionTimeframe === '1h'
+          ? '1H'
+          : 'Daily';
       pills.push({
         id: 'pivot',
-        label: `Pivot: ${getConditionLabel(filters.pivotCondition)}`,
+        label: `Pivot ${tfLabel}: ${getConditionLabel(filters.pivotCondition)}`,
         onRemove: () => onFilterChange({ pivotCondition: 'ALL' }),
       });
     }

@@ -1,4 +1,4 @@
-import { CoinData, PivotConditionType, Pivots } from '../types';
+import { CoinData, PivotConditionType, Pivots, PivotConditionTimeframe } from '../types';
 
 export interface ConfluenceResult {
   hasConfluence: boolean;
@@ -493,4 +493,52 @@ export function checkBreakoutConfluence(
 
   return { hasConfluence: false, type: 'NONE', label: '', badgeText: '', badgeStyle: '', rowHighlight: '' };
 }
+
+/**
+ * Resolves the active Pivot levels for a given timeframe (5m, 1h, daily)
+ * honoring TradingView Auto vs Micro Candle resolution.
+ */
+export function getCoinPivots(
+  coin: CoinData,
+  timeframe: PivotConditionTimeframe = 'daily',
+  mode: 'tradingview' | 'micro' = 'tradingview'
+): Pivots | null | undefined {
+  if (timeframe === '5m') {
+    return mode === 'tradingview' ? coin.pivots : (coin.pivots5m || coin.pivots);
+  }
+  if (timeframe === '1h') {
+    return mode === 'tradingview' ? (coin.pivotsWeekly || coin.pivots) : (coin.pivots1h || coin.pivots);
+  }
+  return mode === 'tradingview' ? (coin.pivotsMonthly || coin.pivots) : coin.pivots;
+}
+
+/**
+ * Returns the live classified pivot condition (e.g. R1_TO_R2, AREA_P, S1_TO_S2)
+ * for a specific timeframe (5m, 1h, or daily).
+ */
+export function getCoinPivotCondition(
+  coin: CoinData,
+  timeframe: PivotConditionTimeframe = 'daily',
+  mode: 'tradingview' | 'micro' = 'tradingview'
+): PivotConditionType | null {
+  const targetPivots = getCoinPivots(coin, timeframe, mode);
+  const liveCond = classifyPriceZone(coin.price, targetPivots);
+  if (liveCond) return liveCond;
+
+  // Fallback to server status if price calculation is not available
+  if (timeframe === '5m') {
+    return mode === 'tradingview'
+      ? coin.pivotStatus?.condition
+      : (coin.pivotStatus5m?.condition || coin.pivotStatus?.condition);
+  }
+  if (timeframe === '1h') {
+    return mode === 'tradingview'
+      ? (coin.pivotStatusWeekly?.condition || coin.pivotStatus?.condition)
+      : (coin.pivotStatus1h?.condition || coin.pivotStatus?.condition);
+  }
+  return mode === 'tradingview'
+    ? (coin.pivotStatusMonthly?.condition || coin.pivotStatus?.condition)
+    : coin.pivotStatus?.condition;
+}
+
 

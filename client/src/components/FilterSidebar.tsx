@@ -47,6 +47,7 @@ interface FilterSidebarProps {
   confluenceCount?: number;
   twoTfCounts?: TwoTfCounts;
   breakoutCounts?: BreakoutCounts;
+  pivotMode?: 'tradingview' | 'micro';
   soundEnabled?: boolean;
   onToggleSound?: () => void;
   onOpenSettings?: () => void;
@@ -135,6 +136,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   confluenceCount,
   twoTfCounts,
   breakoutCounts,
+  pivotMode = 'tradingview',
   soundEnabled = true,
   onToggleSound,
   onOpenSettings,
@@ -723,13 +725,18 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-medium text-[#848e9c] uppercase tracking-wider flex items-center gap-1.5">
                 <Target className="w-3 h-3 text-[#f0b90b]" />
-                <span>Kondisi Pivot Daily</span>
+                <span>
+                  Kondisi Pivot{' '}
+                  <strong className="text-[#f0b90b]">
+                    ({(filters.pivotConditionTimeframe || 'daily') === '5m' ? '5M' : (filters.pivotConditionTimeframe || 'daily') === '1h' ? '1H' : 'Daily'})
+                  </strong>
+                </span>
               </label>
 
               {/* Reset to ALL condition */}
               <button
                 onClick={() => onFilterChange({ pivotCondition: 'ALL' })}
-                className={`px-2 py-0.5 rounded-xs text-[10px] font-mono font-bold border transition-colors ${
+                className={`px-2 py-0.5 rounded-xs text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
                   filters.pivotCondition === 'ALL'
                     ? 'bg-[#22262e] text-[#f0b90b] border-[#f0b90b]'
                     : 'bg-[#12151a] text-[#848e9c] border-[#2b313a] hover:text-[#eaecef]'
@@ -737,6 +744,34 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               >
                 Semua ({conditionCounts?.ALL ?? resultCount})
               </button>
+            </div>
+
+            {/* Timeframe Selector Segmented Bar: 5M | 1H | Daily */}
+            <div className="grid grid-cols-3 gap-1 bg-[#12151a] p-0.5 rounded-xs border border-[#2b313a]">
+              {(
+                [
+                  { key: '5m', label: 'Pivot 5M', sub: pivotMode === 'tradingview' ? '1D' : '5M' },
+                  { key: '1h', label: 'Pivot 1H', sub: pivotMode === 'tradingview' ? '1W' : '1H' },
+                  { key: 'daily', label: 'Pivot Daily', sub: pivotMode === 'tradingview' ? '1M' : '1D' },
+                ] as const
+              ).map((item) => {
+                const isSelected = (filters.pivotConditionTimeframe || 'daily') === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => onFilterChange({ pivotConditionTimeframe: item.key })}
+                    className={`py-1 px-1 rounded-xs text-[11px] font-mono font-bold transition-all text-center flex items-center justify-center cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#2b313a] text-[#f0b90b] border border-[#f0b90b] shadow-xs'
+                        : 'text-[#848e9c] hover:text-[#eaecef] border border-transparent hover:bg-[#181a20]'
+                    }`}
+                    title={`Pilih acuan pivot ${item.label} (${item.sub})`}
+                  >
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Sub-card 1: Zona Bullish */}

@@ -20,7 +20,8 @@ import {
   checkPivotConfluence,
   classifyPriceZone,
   checkTwoTfZoneConfluence,
-  checkBreakoutConfluence
+  checkBreakoutConfluence,
+  getCoinPivotCondition
 } from './utils/pivotConfluence';
 import { Loader2 } from 'lucide-react';
 
@@ -32,6 +33,7 @@ const initialFilters: FilterState = {
   enablePercentFilter: false,
   filterMode: 'absolute_below',
   pivotCondition: 'ALL',
+  pivotConditionTimeframe: 'daily',
   minVolume: 0,
   onlyConfluence: false,
   twoTfZoneFilter: 'OFF',
@@ -44,6 +46,18 @@ export const App: React.FC = () => {
   const [selectedCoin, setSelectedCoin] = useState<CoinData | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [pivotMode, setPivotMode] = useState<'tradingview' | 'micro'>(() => {
+    try {
+      const saved = localStorage.getItem('binance_pivot_mode');
+      if (saved === 'tradingview' || saved === 'micro') return saved;
+    } catch (e) {}
+    return 'tradingview';
+  });
+
+  const handlePivotModeChange = (mode: 'tradingview' | 'micro') => {
+    setPivotMode(mode);
+    localStorage.setItem('binance_pivot_mode', mode);
+  };
 
   // Confluence Alert Settings (Sound, Toast, Desktop, Zones, Cooldown)
   const [alertSettings, setAlertSettings] = useState<ConfluenceAlertSettings>(() => {
@@ -349,9 +363,10 @@ export const App: React.FC = () => {
         }
       }
 
-      // 4. Daily Pivot Point condition filter (Live calculated from current price)
+      // 4. Pivot Point condition filter (Live calculated from current price & selected timeframe: 5M, 1H, or Daily)
       if (filters.pivotCondition !== 'ALL') {
-        const liveCond = classifyPriceZone(coin.price, coin.pivots) ?? coin.pivotStatus?.condition;
+        const tf = filters.pivotConditionTimeframe || 'daily';
+        const liveCond = getCoinPivotCondition(coin, tf, pivotMode);
         if (liveCond !== filters.pivotCondition) {
           return false;
         }
@@ -359,13 +374,13 @@ export const App: React.FC = () => {
 
       // 5. Multi-Timeframe Confluence filter (Daily, 1H, 5M in same area)
       if (filters.onlyConfluence) {
-        const conf = checkPivotConfluence(coin);
+        const conf = checkPivotConfluence(coin, pivotMode);
         if (!conf.hasConfluence) return false;
       }
 
       // 6. 2TF (M5 & H1) Zone Confluence filter (R1..R4 and S1..S4)
       if (filters.twoTfZoneFilter && filters.twoTfZoneFilter !== 'OFF') {
-        const twoTf = checkTwoTfZoneConfluence(coin);
+        const twoTf = checkTwoTfZoneConfluence(coin, pivotMode);
         if (!twoTf.hasConfluence) return false;
         if (filters.twoTfZoneFilter === 'ALL') return true;
         if (filters.twoTfZoneFilter === 'ALL_R' && !twoTf.type.startsWith('R')) return false;
@@ -380,7 +395,7 @@ export const App: React.FC = () => {
 
       // 7. Cross-TF Breakout Confluence filter (M5 > R1 & 1H > P or reverse)
       if (filters.breakoutFilter && filters.breakoutFilter !== 'OFF') {
-        const bo = checkBreakoutConfluence(coin);
+        const bo = checkBreakoutConfluence(coin, pivotMode);
         if (!bo.hasConfluence) return false;
         if (filters.breakoutFilter === 'BULLISH' && bo.type !== 'BULLISH') return false;
         if (filters.breakoutFilter === 'BEARISH' && bo.type !== 'BEARISH') return false;
@@ -388,7 +403,7 @@ export const App: React.FC = () => {
 
       return true;
     });
-  }, [coins, filters]);
+  }, [coins, filters, pivotMode]);
 
   // Keep selectedCoin up-to-date with live websocket data
   const liveSelectedCoin = useMemo(() => {
@@ -399,18 +414,19 @@ export const App: React.FC = () => {
   // Live count per pivot condition for interactive filters (Real-time live evaluations)
   const conditionCounts = useMemo(() => {
     const counts: Record<string, number> = { ALL: coins.length };
+    const tf = filters.pivotConditionTimeframe || 'daily';
     coins.forEach((c) => {
-      const cond = classifyPriceZone(c.price, c.pivots) ?? c.pivotStatus?.condition;
+      const cond = getCoinPivotCondition(c, tf, pivotMode);
       if (cond) {
         counts[cond] = (counts[cond] || 0) + 1;
       }
     });
     return counts;
-  }, [coins]);
+  }, [coins, filters.pivotConditionTimeframe, pivotMode]);
 
   const confluenceCount = useMemo(() => {
-    return coins.filter((c) => checkPivotConfluence(c).hasConfluence).length;
-  }, [coins]);
+    return coins.filter((c) => checkPivotConfluence(c, pivotMode).hasConfluence).length;
+  }, [coins, pivotMode]);
 
   const twoTfCounts: TwoTfCounts = useMemo(() => {
     let all = 0;
@@ -423,7 +439,7 @@ export const App: React.FC = () => {
     let s2s3 = 0;
     let s3s4 = 0;
     coins.forEach((c) => {
-      const res = checkTwoTfZoneConfluence(c);
+      const res = checkTwoTfZoneConfluence(c, pivotMode);
       if (res.hasConfluence) {
         all++;
         if (res.type.startsWith('R')) allR++;
@@ -437,14 +453,14 @@ export const App: React.FC = () => {
       }
     });
     return { all, allR, allS, r1r2, r2r3, r3r4, s1s2, s2s3, s3s4 };
-  }, [coins]);
+  }, [coins, pivotMode]);
 
   const breakoutCounts: BreakoutCounts = useMemo(() => {
     let all = 0;
     let bullish = 0;
     let bearish = 0;
     coins.forEach((c) => {
-      const bo = checkBreakoutConfluence(c);
+      const bo = checkBreakoutConfluence(c, pivotMode);
       if (bo.hasConfluence) {
         all++;
         if (bo.type === 'BULLISH') bullish++;
@@ -452,7 +468,7 @@ export const App: React.FC = () => {
       }
     });
     return { all, bullish, bearish };
-  }, [coins]);
+  }, [coins, pivotMode]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -492,6 +508,7 @@ export const App: React.FC = () => {
           confluenceCount={confluenceCount}
           twoTfCounts={twoTfCounts}
           breakoutCounts={breakoutCounts}
+          pivotMode={pivotMode}
           soundEnabled={alertSettings.soundEnabled}
           onToggleSound={handleToggleSound}
           onOpenSettings={() => setIsSettingsOpen(true)}
@@ -526,6 +543,8 @@ export const App: React.FC = () => {
             confluenceCount={confluenceCount}
             twoTfCounts={twoTfCounts}
             breakoutCounts={breakoutCounts}
+            pivotMode={pivotMode}
+            onPivotModeChange={handlePivotModeChange}
           />
         </main>
       </div>
