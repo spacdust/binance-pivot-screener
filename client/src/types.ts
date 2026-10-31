@@ -231,6 +231,7 @@ export interface ConfluenceAlertSettings {
   alertBearish: boolean; // Bunyi untuk zona Bearish (S1-S2, S2-S3, S3-S4)
   alertBreakoutBullish: boolean; // Bunyi untuk Breakout Bullish (M5 > R1 & 1H > P)
   alertBreakoutBearish: boolean; // Bunyi untuk Breakdown Bearish (M5 < S1 & 1H < P)
+  alertPivotCondition: boolean; // Bunyi untuk Kondisi Pivot (5M / 1H / Daily)
   cooldownSeconds: number; // Cooldown per koin agar tidak spam (default 60s)
 }
 
@@ -244,6 +245,7 @@ export const DEFAULT_ALERT_SETTINGS: ConfluenceAlertSettings = {
   alertBearish: true,
   alertBreakoutBullish: true,
   alertBreakoutBearish: true,
+  alertPivotCondition: true,
   cooldownSeconds: 60,
 };
 

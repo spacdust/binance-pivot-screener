@@ -35,9 +35,21 @@ const ToastItem: React.FC<{
     return val.toFixed(8);
   };
 
-  const isBullish = toast.type.startsWith('R');
-  const borderColor = isBullish ? 'border-[#0ecb81]/60' : 'border-[#f6465d]/60';
-  const progressBg = isBullish ? 'bg-[#0ecb81]' : 'bg-[#f6465d]';
+  const isBullish =
+    toast.type === 'BULLISH' ||
+    toast.type.startsWith('R') ||
+    ['R1_TO_R2', 'R2_TO_R3', 'R3_TO_R4', 'ABOVE_R4', 'S1_TO_P'].some((t) => toast.type.includes(t));
+  const isNeutral = ['AREA_P', 'R1_TO_P'].some((t) => toast.type.includes(t));
+  const borderColor = isNeutral
+    ? 'border-[#f0b90b]/60'
+    : isBullish
+    ? 'border-[#0ecb81]/60'
+    : 'border-[#f6465d]/60';
+  const progressBg = isNeutral
+    ? 'bg-[#f0b90b]'
+    : isBullish
+    ? 'bg-[#0ecb81]'
+    : 'bg-[#f6465d]';
 
   return (
     <div

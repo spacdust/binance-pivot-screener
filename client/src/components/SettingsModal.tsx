@@ -88,7 +88,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <span className="p-1 rounded-xs bg-[#f0b90b]/10 text-[#f0b90b]">
               <SlidersHorizontal className="w-3.5 h-3.5" />
             </span>
-            <h2 className="text-xs font-bold text-[#eaecef]">Pengaturan Alert 2TF</h2>
+            <h2 className="text-xs font-bold text-[#eaecef]">Pengaturan Suara &amp; Alert Notifikasi</h2>
           </div>
           <button
             onClick={onClose}
@@ -268,6 +268,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 />
                 <span className="font-semibold text-[#f6465d]">BD (M5&lt;S1 &amp; 1H&lt;P)</span>
               </label>
+
+              <label className="flex items-center gap-2 p-1.5 rounded-xs bg-[#181a20] border border-[#2b313a] cursor-pointer hover:bg-[#22262e] col-span-2">
+                <input
+                  type="checkbox"
+                  checked={localSettings.alertPivotCondition ?? true}
+                  onChange={(e) => update({ alertPivotCondition: e.target.checked })}
+                  className="w-3.5 h-3.5 rounded-xs accent-[#f0b90b] cursor-pointer"
+                />
+                <span className="font-semibold text-[#f0b90b]">Kondisi Pivot Terpilih (5M / 1H / Daily)</span>
+              </label>
             </div>
 
             {/* Cooldown */}
@@ -336,6 +346,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 alertBearish: true,
                 alertBreakoutBullish: true,
                 alertBreakoutBearish: true,
+                alertPivotCondition: true,
                 cooldownSeconds: 60,
               };
               setLocalSettings(def);

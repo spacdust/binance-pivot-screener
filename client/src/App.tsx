@@ -21,7 +21,9 @@ import {
   classifyPriceZone,
   checkTwoTfZoneConfluence,
   checkBreakoutConfluence,
-  getCoinPivotCondition
+  getCoinPivotCondition,
+  getPivotCode,
+  getConditionBadgeStyle
 } from './utils/pivotConfluence';
 import { Loader2 } from 'lucide-react';
 
@@ -93,6 +95,24 @@ export const App: React.FC = () => {
       }
     >
   >(new Map());
+  const pivotTrackingMapRef = useRef<
+    Map<
+      string,
+      {
+        activeZone: string | null;
+        exitedAt: number;
+        lastAlertedZone: string | null;
+        lastAlertTime: number;
+      }
+    >
+  >(new Map());
+  const prevPivotFilterRef = useRef<{
+    cond: string;
+    tf: string;
+  }>({
+    cond: initialFilters.pivotCondition,
+    tf: initialFilters.pivotConditionTimeframe || '5m',
+  });
   const isInitialDataLoadedRef = useRef(false);
 
   // Proactively warm up and unlock AudioContext on user interaction for 0ms zero-latency alert playback
@@ -132,12 +152,13 @@ export const App: React.FC = () => {
     if (found) setSelectedCoin(found);
   }, [coins]);
 
-  // Real-time detector: alert when a new coin enters 2TF confluence OR Breakout confluence
+  // Real-time detector: alert when a new coin enters 2TF confluence, Breakout confluence, OR selected Pivot Condition
   useEffect(() => {
     if (!coins || coins.length === 0) return;
 
     const trackingMap = coinTrackingMapRef.current;
     const boTrackingMap = breakoutTrackingMapRef.current;
+    const pMap = pivotTrackingMapRef.current;
     const now = Date.now();
     const cooldownMs = (alertSettings.cooldownSeconds || 60) * 1000;
     const newlyEntered: Array<{
@@ -148,10 +169,13 @@ export const App: React.FC = () => {
       alertTitle: string;
     }> = [];
 
+    const currentPivotCond = filters.pivotCondition;
+    const currentPivotTf = filters.pivotConditionTimeframe || '5m';
+
     // Initial load: populate current state without sounding an alarm
     if (!isInitialDataLoadedRef.current) {
       coins.forEach((c) => {
-        const res = checkTwoTfZoneConfluence(c);
+        const res = checkTwoTfZoneConfluence(c, pivotMode);
         if (res.hasConfluence) {
           trackingMap.set(c.symbol, {
             activeZone: res.type,
@@ -160,7 +184,7 @@ export const App: React.FC = () => {
             lastAlertTime: now,
           });
         }
-        const bo = checkBreakoutConfluence(c);
+        const bo = checkBreakoutConfluence(c, pivotMode);
         if (bo.hasConfluence) {
           boTrackingMap.set(c.symbol, {
             activeZone: bo.type,
@@ -169,14 +193,50 @@ export const App: React.FC = () => {
             lastAlertTime: now,
           });
         }
+        if (currentPivotCond !== 'ALL') {
+          const pCond = getCoinPivotCondition(c, currentPivotTf, pivotMode);
+          if (pCond === currentPivotCond) {
+            pMap.set(c.symbol, {
+              activeZone: pCond,
+              exitedAt: 0,
+              lastAlertedZone: pCond,
+              lastAlertTime: now,
+            });
+          }
+        }
       });
       isInitialDataLoadedRef.current = true;
+      prevPivotFilterRef.current = { cond: currentPivotCond, tf: currentPivotTf };
       return;
+    }
+
+    // Handle user switching pivot condition or timeframe: pre-populate matches to avoid instant false alarm
+    const pivotFilterChanged =
+      prevPivotFilterRef.current.cond !== currentPivotCond ||
+      prevPivotFilterRef.current.tf !== currentPivotTf;
+
+    if (pivotFilterChanged) {
+      prevPivotFilterRef.current = { cond: currentPivotCond, tf: currentPivotTf };
+      pMap.clear();
+
+      if (currentPivotCond !== 'ALL') {
+        coins.forEach((c) => {
+          const pCond = getCoinPivotCondition(c, currentPivotTf, pivotMode);
+          if (pCond === currentPivotCond) {
+            pMap.set(c.symbol, {
+              activeZone: pCond,
+              exitedAt: 0,
+              lastAlertedZone: pCond,
+              lastAlertTime: now,
+            });
+          }
+        });
+      }
     }
 
     coins.forEach((coin) => {
       // 1. Detect 2TF Zone Confluence
-      const res = checkTwoTfZoneConfluence(coin);
+      const res = checkTwoTfZoneConfluence(coin, pivotMode);
       let tracked = trackingMap.get(coin.symbol);
 
       if (res.hasConfluence) {
@@ -224,7 +284,7 @@ export const App: React.FC = () => {
       }
 
       // 2. Detect Cross-TF Breakout Confluence (M5 > R1 & 1H > P or reverse)
-      const bo = checkBreakoutConfluence(coin);
+      const bo = checkBreakoutConfluence(coin, pivotMode);
       let boTracked = boTrackingMap.get(coin.symbol);
 
       if (bo.hasConfluence) {
@@ -268,6 +328,53 @@ export const App: React.FC = () => {
         if (boTracked && boTracked.activeZone !== null) {
           boTracked.activeZone = null;
           boTracked.exitedAt = now;
+        }
+      }
+
+      // 3. Detect Pivot Condition (when a specific condition is selected, e.g. R1_TO_R2, S1_TO_S2, etc.)
+      if (
+        currentPivotCond !== 'ALL' &&
+        (alertSettings.alertPivotCondition ?? true)
+      ) {
+        const pCond = getCoinPivotCondition(coin, currentPivotTf, pivotMode);
+        let pTracked = pMap.get(coin.symbol);
+
+        if (pCond === currentPivotCond) {
+          if (!pTracked) {
+            pTracked = {
+              activeZone: null,
+              exitedAt: now - 30000,
+              lastAlertedZone: null,
+              lastAlertTime: 0,
+            };
+            pMap.set(coin.symbol, pTracked);
+          }
+
+          const isNewZone = pTracked.lastAlertedZone !== pCond;
+          const isReEntry = pTracked.exitedAt > 0 && now - pTracked.exitedAt >= 15000;
+          const cooldownElapsed = now - pTracked.lastAlertTime >= cooldownMs;
+
+          if ((isNewZone || isReEntry) && cooldownElapsed) {
+            const tfLabel =
+              currentPivotTf === '5m' ? '5M' : currentPivotTf === '1h' ? '1H' : 'Daily';
+            newlyEntered.push({
+              coin,
+              type: `PIVOT_${pCond}`,
+              badgeText: `${tfLabel}: ${getPivotCode(pCond)}`,
+              badgeStyle: getConditionBadgeStyle(pCond),
+              alertTitle: `Pivot ${tfLabel}`,
+            });
+            pTracked.lastAlertedZone = pCond;
+            pTracked.lastAlertTime = now;
+          }
+
+          pTracked.activeZone = pCond;
+          pTracked.exitedAt = 0;
+        } else {
+          if (pTracked && pTracked.activeZone !== null) {
+            pTracked.activeZone = null;
+            pTracked.exitedAt = now;
+          }
         }
       }
     });
@@ -317,7 +424,7 @@ export const App: React.FC = () => {
         } catch (e) {}
       }
     }
-  }, [coins, alertSettings]);
+  }, [coins, alertSettings, filters.pivotCondition, filters.pivotConditionTimeframe, pivotMode]);
 
   const handleFilterChange = (updates: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...updates }));

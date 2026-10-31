@@ -138,6 +138,17 @@ export function getConditionTagColor(cond?: PivotConditionType | null): string {
   }
 }
 
+export function getConditionBadgeStyle(cond?: PivotConditionType | null): string {
+  if (!cond) return 'bg-[#2b313a] text-[#848e9c] border border-[#2b313a]';
+  if (['R1_TO_R2', 'R2_TO_R3', 'R3_TO_R4', 'ABOVE_R4'].includes(cond)) {
+    return 'bg-[#0ecb81]/15 text-[#0ecb81] border border-[#0ecb81]/40 font-bold';
+  }
+  if (['S1_TO_S2', 'S2_TO_S3', 'S3_TO_S4', 'BELOW_S4'].includes(cond)) {
+    return 'bg-[#f6465d]/15 text-[#f6465d] border border-[#f6465d]/40 font-bold';
+  }
+  return 'bg-[#f0b90b]/15 text-[#f0b90b] border border-[#f0b90b]/40 font-bold';
+}
+
 /**
  * Checks if 3 pivot timeframes are aligned in the same market zone live.
  * In 'tradingview' mode: aligns Daily (1D), Weekly (1W), and Monthly (1M) pivots (TradingView Auto).

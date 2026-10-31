@@ -33,8 +33,10 @@ import {
   Volume2,
   VolumeX,
   Settings,
-  Crosshair
+  Crosshair,
+  Bell
 } from 'lucide-react';
+import { getPivotCode } from '../utils/pivotConfluence';
 
 interface FilterSidebarProps {
   isOpen: boolean;
@@ -733,17 +735,46 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 </span>
               </label>
 
-              {/* Reset to ALL condition */}
-              <button
-                onClick={() => onFilterChange({ pivotCondition: 'ALL' })}
-                className={`px-2 py-0.5 rounded-xs text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
-                  filters.pivotCondition === 'ALL'
-                    ? 'bg-[#22262e] text-[#f0b90b] border-[#f0b90b]'
-                    : 'bg-[#12151a] text-[#848e9c] border-[#2b313a] hover:text-[#eaecef]'
-                }`}
-              >
-                Semua ({conditionCounts?.ALL ?? resultCount})
-              </button>
+              <div className="flex items-center gap-1">
+                {/* Quick Audio Alert Toggle Button */}
+                {onToggleSound && (
+                  <button
+                    type="button"
+                    onClick={onToggleSound}
+                    title={soundEnabled ? 'Suara Alert Pivot: AKTIF (Klik untuk mematikan)' : 'Suara Alert Pivot: MATI (Klik untuk mengaktifkan)'}
+                    className={`p-1 rounded-xs border transition-colors cursor-pointer ${
+                      soundEnabled
+                        ? 'bg-[#f0b90b]/15 text-[#f0b90b] border-[#f0b90b]/40 hover:bg-[#f0b90b]/30'
+                        : 'bg-[#181a20] text-[#848e9c] border-[#2b313a] hover:text-[#eaecef]'
+                    }`}
+                  >
+                    {soundEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
+                  </button>
+                )}
+
+                {onOpenSettings && (
+                  <button
+                    type="button"
+                    onClick={onOpenSettings}
+                    title="Buka Pengaturan Suara & Alert"
+                    className="p-1 rounded-xs bg-[#181a20] text-[#848e9c] hover:text-[#f0b90b] border border-[#2b313a] hover:bg-[#22262e] transition-colors cursor-pointer"
+                  >
+                    <Settings className="w-3 h-3" />
+                  </button>
+                )}
+
+                {/* Reset to ALL condition */}
+                <button
+                  onClick={() => onFilterChange({ pivotCondition: 'ALL' })}
+                  className={`px-2 py-0.5 rounded-xs text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
+                    filters.pivotCondition === 'ALL'
+                      ? 'bg-[#22262e] text-[#f0b90b] border-[#f0b90b]'
+                      : 'bg-[#12151a] text-[#848e9c] border-[#2b313a] hover:text-[#eaecef]'
+                  }`}
+                >
+                  Semua ({conditionCounts?.ALL ?? resultCount})
+                </button>
+              </div>
             </div>
 
             {/* Timeframe Selector Segmented Bar: 5M | 1H | Daily */}
@@ -773,6 +804,24 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 );
               })}
             </div>
+
+            {/* Active Alert Indicator Status */}
+            {filters.pivotCondition !== 'ALL' && (
+              <div className="flex items-center justify-between px-2 py-1 bg-[#f0b90b]/10 border border-[#f0b90b]/30 rounded-xs text-[10px]">
+                <div className="flex items-center gap-1.5 text-[#f0b90b] font-medium truncate">
+                  <Bell className="w-3 h-3 shrink-0 animate-pulse text-[#f0b90b]" />
+                  <span className="truncate">
+                    Alert Aktif:{' '}
+                    <strong className="text-[#eaecef]">
+                      {(filters.pivotConditionTimeframe || '5m').toUpperCase()} {getPivotCode(filters.pivotCondition)}
+                    </strong>
+                  </span>
+                </div>
+                <span className="text-[9px] font-mono text-[#848e9c] shrink-0">
+                  {soundEnabled ? '🔔 Sound ON' : '🔕 Mute'}
+                </span>
+              </div>
+            )}
 
             {/* Sub-card 1: Zona Bullish */}
             <div className="bg-[#12151a] border border-[#2b313a] rounded-xs p-2.5 space-y-1.5">
