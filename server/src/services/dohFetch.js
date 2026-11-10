@@ -1,6 +1,15 @@
 import https from 'https';
 
-// Cache for resolved IPs: hostname -> { ip: string, expiry: number }
+// High-performance shared HTTPS agent with connection pooling & HTTP keep-alive
+const sharedAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 40,
+  maxFreeSockets: 20,
+  timeout: 15000,
+  keepAliveMsecs: 60000,
+});
+
+// Cache for resolved IPs: hostname -> { ips: string[], index: number, expiry: number }
 const dnsCache = new Map();
 
 /**
@@ -17,10 +26,12 @@ export async function resolveHostViaDoH(hostname) {
   const now = Date.now();
   if (dnsCache.has(hostname)) {
     const entry = dnsCache.get(hostname);
-    if (entry.expiry > now) {
-      return entry.ip;
+    if (entry.expiry > now && entry.ips.length > 0) {
+      return entry.ips[entry.index % entry.ips.length];
     }
   }
+
+  const collectedIps = [];
 
   // 1. Try Cloudflare DoH directly by IP (https://1.1.1.1/dns-query)
   try {
@@ -30,10 +41,11 @@ export async function resolveHostViaDoH(hostname) {
     });
     if (res.ok) {
       const json = await res.json();
-      const ip = json.Answer?.find((a) => a.type === 1)?.data;
-      if (ip) {
-        dnsCache.set(hostname, { ip, expiry: now + 5 * 60 * 1000 });
-        return ip;
+      const ips = json.Answer
+        ?.filter((a) => a.type === 1 && a.data && /^(\d{1,3}\.){3}\d{1,3}$/.test(a.data))
+        .map((a) => a.data);
+      if (ips && ips.length > 0) {
+        collectedIps.push(...ips);
       }
     }
   } catch (e) {
@@ -41,23 +53,44 @@ export async function resolveHostViaDoH(hostname) {
   }
 
   // 2. Fallback to Google DoH directly by IP (https://8.8.8.8/resolve)
-  try {
-    const res = await fetch(`https://8.8.8.8/resolve?name=${hostname}&type=A`, {
-      signal: AbortSignal.timeout(3000),
-    });
-    if (res.ok) {
-      const json = await res.json();
-      const ip = json.Answer?.find((a) => a.type === 1)?.data;
-      if (ip) {
-        dnsCache.set(hostname, { ip, expiry: now + 5 * 60 * 1000 });
-        return ip;
+  if (collectedIps.length === 0) {
+    try {
+      const res = await fetch(`https://8.8.8.8/resolve?name=${hostname}&type=A`, {
+        signal: AbortSignal.timeout(3000),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const ips = json.Answer
+          ?.filter((a) => a.type === 1 && a.data && /^(\d{1,3}\.){3}\d{1,3}$/.test(a.data))
+          .map((a) => a.data);
+        if (ips && ips.length > 0) {
+          collectedIps.push(...ips);
+        }
       }
+    } catch (e) {
+      // Fallback handled
     }
-  } catch (e) {
-    // Fallback handled
+  }
+
+  if (collectedIps.length > 0) {
+    const uniqueIps = Array.from(new Set(collectedIps));
+    dnsCache.set(hostname, { ips: uniqueIps, index: 0, expiry: now + 5 * 60 * 1000 });
+    return uniqueIps[0];
   }
 
   return null;
+}
+
+/**
+ * Rotates the cached IP address for a hostname to failover across CloudFront CDN edges.
+ */
+export function rotateHostIp(hostname) {
+  if (dnsCache.has(hostname)) {
+    const entry = dnsCache.get(hostname);
+    if (entry.ips.length > 1) {
+      entry.index = (entry.index + 1) % entry.ips.length;
+    }
+  }
 }
 
 /**
@@ -79,6 +112,7 @@ export async function dohFetch(urlStr, options = {}, redirectCount = 0) {
 
   return new Promise((resolve, reject) => {
     const reqOptions = {
+      agent: sharedAgent,
       host: connectHost,
       servername: hostname, // Required for CloudFront/Cloudflare SSL SNI validation
       port: url.port || 443,
@@ -86,7 +120,7 @@ export async function dohFetch(urlStr, options = {}, redirectCount = 0) {
       method: options.method || 'GET',
       headers: {
         'Host': hostname,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json, text/plain, */*',
         ...(options.headers || {}),
       },
@@ -105,8 +139,12 @@ export async function dohFetch(urlStr, options = {}, redirectCount = 0) {
       res.on('data', (chunk) => chunks.push(chunk));
       res.on('end', () => {
         const bodyBuffer = Buffer.concat(chunks);
+        const text = bodyBuffer.toString('utf8');
+        // Valid successful API response: HTTP 200 with non-empty body
+        const isOk = res.statusCode === 200 && text.trim().length > 0;
+
         resolve({
-          ok: res.statusCode >= 200 && res.statusCode < 300,
+          ok: isOk,
           status: res.statusCode,
           statusText: res.statusMessage,
           headers: {
@@ -116,10 +154,13 @@ export async function dohFetch(urlStr, options = {}, redirectCount = 0) {
             },
           },
           async json() {
-            return JSON.parse(bodyBuffer.toString('utf8'));
+            if (!text || text.trim() === '') {
+              throw new Error(`Empty response from server (HTTP ${res.statusCode}: ${res.statusMessage || 'No content'})`);
+            }
+            return JSON.parse(text);
           },
           async text() {
-            return bodyBuffer.toString('utf8');
+            return text;
           },
           async arrayBuffer() {
             return bodyBuffer.buffer.slice(
@@ -135,10 +176,12 @@ export async function dohFetch(urlStr, options = {}, redirectCount = 0) {
     });
 
     req.on('timeout', () => {
+      rotateHostIp(hostname);
       req.destroy(new Error(`Request to ${urlStr} timed out after ${timeoutMs}ms`));
     });
 
     req.on('error', (err) => {
+      rotateHostIp(hostname);
       reject(err);
     });
 

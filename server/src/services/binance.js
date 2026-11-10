@@ -9,13 +9,8 @@ import { dohFetch, resolveHostViaDoH } from './dohFetch.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const REST_MIRRORS = [
-  'https://fapi.binance.com/fapi/v1',
-  'https://fapi1.binance.com/fapi/v1',
-  'https://fapi2.binance.com/fapi/v1',
-  'https://fapi3.binance.com/fapi/v1',
-  'https://fapi4.binance.com/fapi/v1',
-];
+// Real Binance USD-M Futures REST endpoint (fake fapi1..fapi4 removed to prevent 202 empty body & 418 bans)
+const REST_BASE_URL = 'https://fapi.binance.com/fapi/v1';
 
 const WS_MIRRORS = [
   'wss://fstream.binance.com/market/ws/!miniTicker@arr',
@@ -24,6 +19,27 @@ const WS_MIRRORS = [
   'wss://fstream1.binance.com/market/ws/!miniTicker@arr',
   'wss://fstream2.binance.com/market/ws/!miniTicker@arr',
   'wss://fstream3.binance.com/market/ws/!miniTicker@arr',
+];
+
+// Fallback list of top 150 USDT Perpetual contracts by volume for 100% reliability
+const DEFAULT_TOP_PERPS = [
+  "BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT",
+  "SUIUSDT","NEARUSDT","APTUSDT","PEPEUSDT","1000PEPEUSDT","SHIBUSDT","1000SHIBUSDT","LTCUSDT",
+  "BCHUSDT","DOTUSDT","UNIUSDT","TRXUSDT","ATOMUSDT","ETCUSDT","FILUSDT","XLMUSDT","INJUSDT",
+  "ARBUSDT","OPUSDT","TIAUSDT","FETUSDT","RENDERUSDT","KASUSDT","STXUSDT","ICPUSDT","SEIUSDT",
+  "WIFUSDT","BONKUSDT","FLOKIUSDT","ORDIUSDT","RUNEUSDT","AAVEUSDT","MKRUSDT","CRVUSDT","SANDUSDT",
+  "TAOUSDT","WLDUSDT","ENAUSDT","JUPUSDT","ONDOUSDT","STRKUSDT","PENDLEUSDT","GALAUSDT","FTMUSDT",
+  "MANAUSDT","DYDXUSDT","BLURUSDT","AXSUSDT","CHZUSDT","APEUSDT","SNXUSDT","NEOUSDT","EOSUSDT",
+  "IOTAUSDT","FLOWUSDT","KLAYUSDT","KAVAUSDT","GMXUSDT","CFXUSDT","ALGOUSDT","EGLDUSDT","THETAUSDT",
+  "ZECUSDT","XMRUSDT","DASHUSDT","ZILUSDT","ENJUSDT","1INCHUSDT","BATUSDT","COMPUSDT","WOOUSDT",
+  "MASKUSDT","LDOUSDT","QNTUSDT","HBARUSDT","VETUSDT","HOTUSDT","IOSTUSDT","QTUMUSDT","OMGUSDT",
+  "ONTUSDT","ANKRUSDT","RVNUSDT","OCEANUSDT","AGIXUSDT","ARKMUSDT","MEMEUSDT","BEAMXUSDT","PYTHUSDT",
+  "BLZUSDT","TRBUSDT","LOOMUSDT","FRONTUSDT","GASUSDT","BIGTIMEUSDT","ORBSUSDT","CYBERUSDT","NTRNUSDT",
+  "ACEUSDT","NFPUSDT","AIUSDT","XAIUSDT","MANTAUSDT","ALTUSDT","DYMUSDT","PIXELUSDT","PORTALUSDT",
+  "PDAUSDT","AXLUSDT","METISUSDT","AEVOUSDT","BOMEUSDT","ETHFIUSDT","TNSRUSDT","SAGAUSDT",
+  "OMNIUSDT","REZUSDT","BBUSDT","NOTUSDT","IOUSDT","ZKUSDT","ZROUSDT","BLASTUSDT","BANANAUSDT",
+  "TONUSDT","DOGSUSDT","CATIUSDT","HMSTRUSDT","EIGENUSDT","SCRUSDT","GRASSUSDT","COWUSDT","CETUSUSDT",
+  "PNUTUSDT","ACTUSDT","USUALUSDT","THEUSDT","MOVEUSDT","MEUSDT","PENGUUSDT","VIRTUALUSDT","BIOUSDT"
 ];
 
 export class BinanceService {
@@ -37,7 +53,6 @@ export class BinanceService {
     this.lastDailySync = 0;
     this.lastHourlySync = 0;
     this.isSyncing = false;
-    this.activeRestMirrorIndex = 0;
     this.activeWsMirrorIndex = 0;
 
     // Load pre-bundled asset logos baseline for 100% offline & instant availability
@@ -53,6 +68,45 @@ export class BinanceService {
       }
     } catch (e) {
       console.warn('[BinanceService] Could not load pre-bundled asset logos:', e.message);
+    }
+  }
+
+  // Load cache from disk for 0ms instant startup with 100% data availability
+  loadLocalCache() {
+    try {
+      const cachePath = path.resolve(__dirname, '../data/screener-cache.json');
+      if (fs.existsSync(cachePath)) {
+        const raw = fs.readFileSync(cachePath, 'utf8');
+        if (raw && raw.trim().length > 0) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            for (const coin of parsed) {
+              if (coin && coin.symbol && coin.pivots) {
+                this.symbolsData.set(coin.symbol, coin);
+                this.trackedSymbols.add(coin.symbol);
+              }
+            }
+            console.log(`[BinanceService] Loaded ${this.symbolsData.size} symbols from instant local cache.`);
+            return this.symbolsData.size > 0;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[BinanceService] Could not read local screener cache:', e.message);
+    }
+    return false;
+  }
+
+  // Persist current symbols data to disk cache asynchronously
+  async saveLocalCache() {
+    if (this.symbolsData.size === 0) return;
+    try {
+      const cachePath = path.resolve(__dirname, '../data/screener-cache.json');
+      const data = JSON.stringify(Array.from(this.symbolsData.values()), null, 2);
+      await fs.promises.writeFile(cachePath, data, 'utf8');
+      console.log(`[BinanceService] Saved ${this.symbolsData.size} symbols to local cache.`);
+    } catch (e) {
+      console.warn('[BinanceService] Could not save local cache:', e.message);
     }
   }
 
@@ -93,65 +147,59 @@ export class BinanceService {
     }
   }
 
-  // Resilient fetch with automatic multi-mirror failover and built-in DoH bypass
-  async safeFetch(path) {
+  // Resilient fetch with DoH direct routing and rate limit auto-backoff
+  async safeFetch(path, retries = 2) {
     const cleanPath = path.startsWith('http')
       ? path.replace(/^https?:\/\/[^/]+(\/api\/v3|\/fapi\/v1)?/, '')
       : (path.startsWith('/') ? path : `/${path}`);
 
+    const url = `${REST_BASE_URL}${cleanPath}`;
     let lastError = null;
-    const startIndex = this.activeRestMirrorIndex;
 
-    for (let i = 0; i < REST_MIRRORS.length; i++) {
-      const mirrorIndex = (startIndex + i) % REST_MIRRORS.length;
-      const base = REST_MIRRORS[mirrorIndex];
-      const url = `${base}${cleanPath}`;
-
+    for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const res = await dohFetch(url, { timeout: 6000 });
         if (res.ok) {
-          if (mirrorIndex !== this.activeRestMirrorIndex) {
-            console.log(`[BinanceService] Switched active REST mirror to: ${base}`);
-            this.activeRestMirrorIndex = mirrorIndex;
-          }
           return await res.json();
         }
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+
+        // Handle Binance rate limiting (429 or 418 IP auto-ban)
+        if (res.status === 418 || res.status === 429) {
+          console.warn(`[BinanceService] Rate limit warning (HTTP ${res.status}) on ${cleanPath}, backing off 3s...`);
+          await new Promise(r => setTimeout(r, 3000));
+        }
+
+        throw new Error(`HTTP ${res.status}: ${res.statusText || 'Unknown'}`);
       } catch (err) {
         lastError = err;
+        if (attempt < retries) {
+          await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
+        }
       }
     }
 
-    throw new Error(`All Binance mirrors failed for ${cleanPath}: ${lastError?.message}`);
+    throw lastError;
   }
 
   // Step 1: Discover top USDT Perpetual Futures pairs by 24h quote volume
   async fetchTopUsdtSymbols(limit = 150) {
     try {
       console.log(`[BinanceService] Discovering top USDT Perpetual Futures contracts...`);
-      const validPerps = new Set();
-      try {
-        const exchangeInfo = await this.safeFetch('/exchangeInfo');
-        if (exchangeInfo && Array.isArray(exchangeInfo.symbols)) {
-          exchangeInfo.symbols
-            .filter(s => s.contractType === 'PERPETUAL' && s.status === 'TRADING' && s.quoteAsset === 'USDT')
-            .forEach(s => validPerps.add(s.symbol));
-        }
-      } catch (e) {
-        console.warn('[BinanceService] Futures exchangeInfo fetch failed, using fallback filter:', e.message);
+      
+      const tickers = await this.safeFetch('/ticker/24hr');
+      if (!Array.isArray(tickers) || tickers.length === 0) {
+        throw new Error('No tickers returned from Binance API');
       }
 
-      const tickers = await this.safeFetch('/ticker/24hr');
-      
+      // Filter for active USDT perpetual contracts (exclude quarterly contracts with '_')
       const filtered = tickers.filter(t => {
-        if (!t.symbol.endsWith('USDT')) return false;
-        if (t.symbol.includes('_')) return false; // Exclude delivery quarterly contracts
-        if (validPerps.size > 0 && !validPerps.has(t.symbol)) return false;
-        return parseFloat(t.quoteVolume) > 300000;
+        if (!t.symbol || !t.symbol.endsWith('USDT')) return false;
+        if (t.symbol.includes('_')) return false; // Exclude delivery/quarterly
+        return parseFloat(t.quoteVolume || 0) > 300000;
       });
 
       // Sort by quote volume descending
-      filtered.sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume));
+      filtered.sort((a, b) => parseFloat(b.quoteVolume || 0) - parseFloat(a.quoteVolume || 0));
       const topSymbols = filtered.slice(0, limit);
 
       console.log(`[BinanceService] Selected top ${topSymbols.length} USDT Perpetual Futures contracts.`);
@@ -165,13 +213,21 @@ export class BinanceService {
   // Step 2: Fetch 1d kline for Pivot, 1w for Weekly Pivot, 1M for Monthly Pivot, 1h klines for 1h-24h, 5m, 1m
   async fetchSymbolKlines(symbol) {
     try {
+      const safeKlineFetch = async (query) => {
+        try {
+          return await this.safeFetch(query);
+        } catch (e) {
+          return null;
+        }
+      };
+
       const [dailyKlines, weeklyKlines, monthlyKlines, hourlyKlines, fiveMinKlines, minuteKlines] = await Promise.all([
         this.safeFetch(`/klines?symbol=${symbol}&interval=1d&limit=2`),
-        this.safeFetch(`/klines?symbol=${symbol}&interval=1w&limit=2`),
-        this.safeFetch(`/klines?symbol=${symbol}&interval=1M&limit=2`),
-        this.safeFetch(`/klines?symbol=${symbol}&interval=1h&limit=25`),
-        this.safeFetch(`/klines?symbol=${symbol}&interval=5m&limit=2`),
-        this.safeFetch(`/klines?symbol=${symbol}&interval=1m&limit=65`)
+        safeKlineFetch(`/klines?symbol=${symbol}&interval=1w&limit=2`),
+        safeKlineFetch(`/klines?symbol=${symbol}&interval=1M&limit=2`),
+        safeKlineFetch(`/klines?symbol=${symbol}&interval=1h&limit=25`),
+        safeKlineFetch(`/klines?symbol=${symbol}&interval=5m&limit=2`),
+        safeKlineFetch(`/klines?symbol=${symbol}&interval=1m&limit=65`)
       ]);
 
       if (!dailyKlines || dailyKlines.length < 2) {
@@ -322,7 +378,7 @@ export class BinanceService {
     this.isSyncing = true;
     console.log(`[BinanceService] Syncing klines & daily pivots for ${symbolsList.length} symbols...`);
 
-    const batchSize = 10;
+    const batchSize = 5;
     let completed = 0;
 
     for (let i = 0; i < symbolsList.length; i += batchSize) {
@@ -333,15 +389,15 @@ export class BinanceService {
           const klineData = await this.fetchSymbolKlines(symbol);
           if (klineData) {
             const existing = this.symbolsData.get(symbol) || {};
-            const initialPrice = typeof item === 'object' ? parseFloat(item.lastPrice) : (existing.price || 0);
-            const quoteVolume = typeof item === 'object' ? parseFloat(item.quoteVolume) : (existing.volume24h || 0);
+            const initialPrice = typeof item === 'object' && item.lastPrice ? parseFloat(item.lastPrice) : (existing.price || 0);
+            const quoteVolume = typeof item === 'object' && item.quoteVolume ? parseFloat(item.quoteVolume) : (existing.volume24h || 0);
 
             const momentum1h = klineData.baselines.open1h && initialPrice
               ? ((initialPrice - klineData.baselines.open1h) / klineData.baselines.open1h) * 100
-              : 0;
+              : (existing.changes?.h1 || 0);
             const momentum5m = klineData.baselines.open5m && initialPrice
               ? ((initialPrice - klineData.baselines.open5m) / klineData.baselines.open5m) * 100
-              : 0;
+              : (existing.changes?.m5 || 0);
 
             const pivotClassification = classifyPivotCondition(
               initialPrice,
@@ -366,7 +422,7 @@ export class BinanceService {
               : null;
 
             const calcPct = (openVal, def = 0) => {
-              if (!openVal) return def;
+              if (!openVal || isNaN(openVal)) return def;
               return Number((((initialPrice - openVal) / openVal) * 100).toFixed(2));
             };
 
@@ -394,23 +450,23 @@ export class BinanceService {
               pivotStatus1h: pivotClassification1h,
               pivotStatus5m: pivotClassification5m,
               changes: {
-                m1: calcPct(klineData.baselines.open1m),
-                m5: calcPct(klineData.baselines.open5m),
-                m10: calcPct(klineData.baselines.open10m),
-                m15: calcPct(klineData.baselines.open15m),
-                m20: calcPct(klineData.baselines.open20m),
-                m25: calcPct(klineData.baselines.open25m),
-                m30: calcPct(klineData.baselines.open30m),
-                m35: calcPct(klineData.baselines.open35m),
-                m40: calcPct(klineData.baselines.open40m),
-                m45: calcPct(klineData.baselines.open45m),
-                m50: calcPct(klineData.baselines.open50m),
-                m55: calcPct(klineData.baselines.open55m),
+                m1: calcPct(klineData.baselines.open1m, existing.changes?.m1 || 0),
+                m5: calcPct(klineData.baselines.open5m, existing.changes?.m5 || 0),
+                m10: calcPct(klineData.baselines.open10m, existing.changes?.m10 || 0),
+                m15: calcPct(klineData.baselines.open15m, existing.changes?.m15 || 0),
+                m20: calcPct(klineData.baselines.open20m, existing.changes?.m20 || 0),
+                m25: calcPct(klineData.baselines.open25m, existing.changes?.m25 || 0),
+                m30: calcPct(klineData.baselines.open30m, existing.changes?.m30 || 0),
+                m35: calcPct(klineData.baselines.open35m, existing.changes?.m35 || 0),
+                m40: calcPct(klineData.baselines.open40m, existing.changes?.m40 || 0),
+                m45: calcPct(klineData.baselines.open45m, existing.changes?.m45 || 0),
+                m50: calcPct(klineData.baselines.open50m, existing.changes?.m50 || 0),
+                m55: calcPct(klineData.baselines.open55m, existing.changes?.m55 || 0),
                 h1: Number(momentum1h.toFixed(2)),
-                h3: calcPct(klineData.baselines.open3h),
-                h6: calcPct(klineData.baselines.open6h),
-                h12: calcPct(klineData.baselines.open12h),
-                h24: calcPct(klineData.baselines.open24h),
+                h3: calcPct(klineData.baselines.open3h, existing.changes?.h3 || 0),
+                h6: calcPct(klineData.baselines.open6h, existing.changes?.h6 || 0),
+                h12: calcPct(klineData.baselines.open12h, existing.changes?.h12 || 0),
+                h24: calcPct(klineData.baselines.open24h, existing.changes?.h24 || 0),
               },
               lastUpdated: Date.now()
             });
@@ -432,8 +488,8 @@ export class BinanceService {
         });
       }
 
-      // Small pause to be gentle with Binance API
-      await new Promise(r => setTimeout(r, 60));
+      // Gentle pause to stay well within Binance API rate limits
+      await new Promise(r => setTimeout(r, 80));
     }
 
     this.lastDailySync = Date.now();
@@ -441,7 +497,10 @@ export class BinanceService {
     this.isSyncing = false;
     console.log(`[BinanceService] Successfully synced klines for ${this.symbolsData.size} symbols.`);
     
-    // Notify clients of initial data ready
+    // Persist to local cache so next startup is 0ms instant!
+    await this.saveLocalCache();
+
+    // Final snapshot broadcast
     this.notifyListeners({
       type: 'FULL_SNAPSHOT',
       data: Array.from(this.symbolsData.values()),
@@ -644,32 +703,52 @@ export class BinanceService {
       console.log('[BinanceService] Initializing Binance Screener service...');
       await this.fetchAssetLogos();
 
+      // 1. Instant Cache Warm-up: Load previous dataset so app is 100% ready immediately
+      const hasCachedData = this.loadLocalCache();
+      if (hasCachedData) {
+        console.log(`[BinanceService] Instant startup: ${this.symbolsData.size} symbols ready for clients!`);
+        // Immediately connect WebSocket so live prices start streaming right away
+        this.connectWebSocket();
+        // Notify any early connected client
+        this.notifyListeners({
+          type: 'FULL_SNAPSHOT',
+          data: Array.from(this.symbolsData.values()),
+          isPartial: false,
+          completed: this.symbolsData.size,
+          total: this.symbolsData.size
+        });
+      }
+
+      // 2. Discover top 150 USDT Perpetual contracts
       let topSymbols = [];
       let attempts = 0;
-      while (topSymbols.length === 0 && attempts < 5) {
+      while (topSymbols.length === 0 && attempts < 3) {
         attempts++;
         topSymbols = await this.fetchTopUsdtSymbols(150);
-        if (topSymbols.length === 0 && attempts < 5) {
-          console.warn(`[BinanceService] Retrying symbol discovery in 2s (attempt ${attempts}/5)...`);
+        if (topSymbols.length === 0 && attempts < 3) {
+          console.warn(`[BinanceService] Retrying symbol discovery in 2s (attempt ${attempts}/3)...`);
           await new Promise(r => setTimeout(r, 2000));
         }
       }
 
       if (topSymbols.length === 0) {
-        const DEFAULT_TOP_PERPS = [
-          'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT', 'ADAUSDT',
-          'AVAXUSDT', 'LINKUSDT', 'SUIUSDT', 'NEARUSDT', 'APTUSDT', 'PEPEUSDT', 'SHIBUSDT',
-          'LTCUSDT', 'BCHUSDT', 'DOTUSDT', 'UNIUSDT', 'TRXUSDT', 'ATOMUSDT', 'ETCUSDT',
-          'FILUSDT', 'XLMUSDT', 'INJUSDT', 'ARBUSDT', 'OPUSDT', 'TIAUSDT', 'FETUSDT',
-          'RENDERUSDT', 'KASUSDT', 'STXUSDT', 'ICPUSDT', 'SEIUSDT', 'WIFUSDT', 'BONKUSDT',
-          'FLOKIUSDT', 'ORDIUSDT', 'RUNEUSDT', 'AAVEUSDT', 'MKRUSDT', 'CRVUSDT', 'SANDUSDT'
-        ];
-        console.warn(`[BinanceService] Using fallback list of ${DEFAULT_TOP_PERPS.length} top USDT Perps.`);
-        topSymbols = DEFAULT_TOP_PERPS;
+        if (hasCachedData) {
+          console.warn('[BinanceService] Discovery temporarily unavailable, continuing with cached symbols.');
+          topSymbols = Array.from(this.trackedSymbols);
+        } else {
+          console.warn(`[BinanceService] Using fallback list of ${DEFAULT_TOP_PERPS.length} top USDT Perps.`);
+          topSymbols = DEFAULT_TOP_PERPS;
+        }
       }
 
+      // 3. Sync klines & pivots
       await this.syncAllKlines(topSymbols);
-      this.connectWebSocket();
+
+      // Connect WebSocket if not already connected
+      if (!this.isWsConnected) {
+        this.connectWebSocket();
+      }
+
       this.startPeriodicSync();
       console.log('[BinanceService] Binance Screener ready!');
     } catch (err) {
