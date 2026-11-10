@@ -43,6 +43,8 @@ interface ScreenerTableProps {
   breakoutCounts?: BreakoutCounts;
   pivotMode?: 'tradingview' | 'micro';
   onPivotModeChange?: (mode: 'tradingview' | 'micro') => void;
+  showPivotVisualizers?: boolean;
+  onTogglePivotVisualizers?: (show: boolean) => void;
 }
 
 type SortField =
@@ -86,6 +88,8 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   breakoutCounts,
   pivotMode: propsPivotMode,
   onPivotModeChange,
+  showPivotVisualizers = false,
+  onTogglePivotVisualizers,
 }) => {
   const [sortField, setSortField] = useState<SortField>('volume24h');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -705,31 +709,51 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
             </button>
           </div>
 
-          {/* Pivot Style Selector (HUD Slider vs Zone Zoom) */}
-          <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
+          {/* Toggle 3 Kolom Visualizer Pivot (5M, 1H, Daily) */}
+          {onTogglePivotVisualizers && (
             <button
-              onClick={() => handlePivotStyleChange('hud')}
-              title="Tema 1 (Default): Chunky HUD Slider dengan spektrum S4..P..R4 dan slider thumb 8px jelas"
-              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
-                pivotStyle === 'hud'
-                  ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
-                  : 'text-[#848e9c] hover:text-[#eaecef]'
+              onClick={() => onTogglePivotVisualizers(!showPivotVisualizers)}
+              title={showPivotVisualizers ? 'Sembunyikan 3 Kolom Pivot (5M/1H/Daily)' : 'Tampilkan 3 Kolom Pivot (5M/1H/Daily)'}
+              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold border transition-colors flex items-center gap-1 cursor-pointer ${
+                showPivotVisualizers
+                  ? 'bg-[#f0b90b]/15 text-[#f0b90b] border-[#f0b90b]/40 font-bold'
+                  : 'bg-[#12151a] text-[#848e9c] border-[#2b313a] hover:text-[#eaecef]'
               }`}
             >
-              HUD Slider
+              <span>Pivot Bar</span>
+              <span className={`text-[9px] px-1 rounded-xs font-mono font-bold ${showPivotVisualizers ? 'bg-[#f0b90b] text-[#181a20]' : 'bg-[#22262e] text-[#848e9c]'}`}>
+                {showPivotVisualizers ? 'ON' : 'OFF'}
+              </span>
             </button>
-            <button
-              onClick={() => handlePivotStyleChange('zone_zoom')}
-              title="Tema 2: Dedicated Zone Meter (S1 ↔ P) zoom presisi bebas lelah mata"
-              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
-                pivotStyle === 'zone_zoom'
-                  ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
-                  : 'text-[#848e9c] hover:text-[#eaecef]'
-              }`}
-            >
-              Zone Zoom
-            </button>
-          </div>
+          )}
+
+          {/* Pivot Style Selector (HUD Slider vs Zone Zoom) - hanya tampil jika visualizer aktif */}
+          {showPivotVisualizers && (
+            <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
+              <button
+                onClick={() => handlePivotStyleChange('hud')}
+                title="Tema 1 (Default): Chunky HUD Slider dengan spektrum S4..P..R4 dan slider thumb 8px jelas"
+                className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                  pivotStyle === 'hud'
+                    ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                    : 'text-[#848e9c] hover:text-[#eaecef]'
+                }`}
+              >
+                HUD Slider
+              </button>
+              <button
+                onClick={() => handlePivotStyleChange('zone_zoom')}
+                title="Tema 2: Dedicated Zone Meter (S1 ↔ P) zoom presisi bebas lelah mata"
+                className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+                  pivotStyle === 'zone_zoom'
+                    ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                    : 'text-[#848e9c] hover:text-[#eaecef]'
+                }`}
+              >
+                Zone Zoom
+              </button>
+            </div>
+          )}
 
           {/* Density Toggle (Rapat / Normal) */}
           <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
@@ -811,7 +835,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       <div className="flex-1 overflow-auto custom-scrollbar relative">
         <table
           className="w-full table-fixed text-left border-collapse text-xs select-none"
-          style={{ minWidth: timeMode === 'standard' ? '1513px' : '1621px' }}
+          style={{ minWidth: showPivotVisualizers ? (timeMode === 'standard' ? '1513px' : '1621px') : (timeMode === 'standard' ? '973px' : '1081px') }}
         >
           {/* Rigid colgroup definitions to lock column widths in concrete */}
           <colgroup>
@@ -847,9 +871,13 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 <col className="w-[54px]" />
               </>
             )}
-            <col className="w-[180px]" />
-            <col className="w-[180px]" />
-            <col className="w-[180px]" />
+            {showPivotVisualizers && (
+              <>
+                <col className="w-[180px]" />
+                <col className="w-[180px]" />
+                <col className="w-[180px]" />
+              </>
+            )}
             <col className="w-[52px]" />
           </colgroup>
 
@@ -1016,27 +1044,31 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   </th>
                 </>
               )}
-              <th
-                onClick={() => handleSort('distP5m')}
-                className="py-2 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
-                title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart 5m menggunakan Pivot Daily (1D)' : 'Pivot dari candle 5m sebelumnya'}
-              >
-                {pivotMode === 'tradingview' ? 'Pivot 5M (1D)' : 'Pivot 5M'} {renderSortIcon('distP5m')}
-              </th>
-              <th
-                onClick={() => handleSort('distP1h')}
-                className="py-2 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
-                title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart 1H menggunakan Pivot Weekly (1W)' : 'Pivot dari candle 1h sebelumnya'}
-              >
-                {pivotMode === 'tradingview' ? 'Pivot 1H (1W)' : 'Pivot 1H'} {renderSortIcon('distP1h')}
-              </th>
-              <th
-                onClick={() => handleSort('distP')}
-                className="py-2 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
-                title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart Daily menggunakan Pivot Monthly (1M)' : 'Pivot Daily (1D)'}
-              >
-                {pivotMode === 'tradingview' ? 'Pivot Daily (1M)' : 'Pivot Daily'} {renderSortIcon('distP')}
-              </th>
+              {showPivotVisualizers && (
+                <>
+                  <th
+                    onClick={() => handleSort('distP5m')}
+                    className="py-2 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
+                    title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart 5m menggunakan Pivot Daily (1D)' : 'Pivot dari candle 5m sebelumnya'}
+                  >
+                    {pivotMode === 'tradingview' ? 'Pivot 5M (1D)' : 'Pivot 5M'} {renderSortIcon('distP5m')}
+                  </th>
+                  <th
+                    onClick={() => handleSort('distP1h')}
+                    className="py-2 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
+                    title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart 1H menggunakan Pivot Weekly (1W)' : 'Pivot dari candle 1h sebelumnya'}
+                  >
+                    {pivotMode === 'tradingview' ? 'Pivot 1H (1W)' : 'Pivot 1H'} {renderSortIcon('distP1h')}
+                  </th>
+                  <th
+                    onClick={() => handleSort('distP')}
+                    className="py-2 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
+                    title={pivotMode === 'tradingview' ? 'TradingView Auto: Chart Daily menggunakan Pivot Monthly (1M)' : 'Pivot Daily (1D)'}
+                  >
+                    {pivotMode === 'tradingview' ? 'Pivot Daily (1M)' : 'Pivot Daily'} {renderSortIcon('distP')}
+                  </th>
+                </>
+              )}
               <th className="py-2 px-1 w-[52px] min-w-[52px] max-w-[52px] text-center">Aksi</th>
             </tr>
           </thead>
@@ -1044,7 +1076,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           <tbody className="divide-y divide-[#22262e]">
             {paginatedCoins.length === 0 ? (
               <tr>
-                <td colSpan={timeMode === 'standard' ? 16 : 20} className="py-12 text-center text-[#848e9c]">
+                <td colSpan={(timeMode === 'standard' ? 13 : 17) + (showPivotVisualizers ? 3 : 0)} className="py-12 text-center text-[#848e9c]">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Info className="w-8 h-8 text-[#474d57]" />
                     <p className="text-sm font-medium">Tidak ada koin yang sesuai kriteria filter.</p>
@@ -1195,41 +1227,46 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                       </>
                     )}
 
-                    {/* Pivot 5M Visualizer */}
-                    <td className="py-1 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center overflow-hidden">
-                      <PivotVisualizer
-                        pivots={targetPivots5m}
-                        currentPrice={coin.price}
-                        rangePercent={range5m}
-                        distP={distP5m}
-                        timeframeLabel={pivotMode === 'tradingview' ? '5M (1D)' : '5M'}
-                        visualStyle={pivotStyle}
-                      />
-                    </td>
+                    {/* Pivot Visualizers (5M, 1H, Daily) */}
+                    {showPivotVisualizers && (
+                      <>
+                        {/* Pivot 5M Visualizer */}
+                        <td className="py-1 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center overflow-hidden">
+                          <PivotVisualizer
+                            pivots={targetPivots5m}
+                            currentPrice={coin.price}
+                            rangePercent={range5m}
+                            distP={distP5m}
+                            timeframeLabel={pivotMode === 'tradingview' ? '5M (1D)' : '5M'}
+                            visualStyle={pivotStyle}
+                          />
+                        </td>
 
-                    {/* Pivot 1H Visualizer */}
-                    <td className="py-1 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center overflow-hidden">
-                      <PivotVisualizer
-                        pivots={targetPivots1h}
-                        currentPrice={coin.price}
-                        rangePercent={range1h}
-                        distP={distP1h}
-                        timeframeLabel={pivotMode === 'tradingview' ? '1H (1W)' : '1H'}
-                        visualStyle={pivotStyle}
-                      />
-                    </td>
+                        {/* Pivot 1H Visualizer */}
+                        <td className="py-1 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center overflow-hidden">
+                          <PivotVisualizer
+                            pivots={targetPivots1h}
+                            currentPrice={coin.price}
+                            rangePercent={range1h}
+                            distP={distP1h}
+                            timeframeLabel={pivotMode === 'tradingview' ? '1H (1W)' : '1H'}
+                            visualStyle={pivotStyle}
+                          />
+                        </td>
 
-                    {/* Pivot Daily Visualizer */}
-                    <td className="py-1 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center overflow-hidden">
-                      <PivotVisualizer
-                        pivots={targetPivotsDaily}
-                        currentPrice={coin.price}
-                        rangePercent={rangeDaily}
-                        distP={distPDaily}
-                        timeframeLabel={pivotMode === 'tradingview' ? 'Daily (1M)' : 'Daily'}
-                        visualStyle={pivotStyle}
-                      />
-                    </td>
+                        {/* Pivot Daily Visualizer */}
+                        <td className="py-1 px-1 w-[180px] min-w-[180px] max-w-[180px] text-center overflow-hidden">
+                          <PivotVisualizer
+                            pivots={targetPivotsDaily}
+                            currentPrice={coin.price}
+                            rangePercent={rangeDaily}
+                            distP={distPDaily}
+                            timeframeLabel={pivotMode === 'tradingview' ? 'Daily (1M)' : 'Daily'}
+                            visualStyle={pivotStyle}
+                          />
+                        </td>
+                      </>
+                    )}
 
                     {/* Action */}
                     <td className={`${pyRow} px-1 w-[52px] min-w-[52px] max-w-[52px] text-center`} onClick={(e) => e.stopPropagation()}>

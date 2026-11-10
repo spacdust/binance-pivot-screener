@@ -17,6 +17,8 @@ interface SettingsModalProps {
   onClose: () => void;
   settings: ConfluenceAlertSettings;
   onSaveSettings: (newSettings: ConfluenceAlertSettings) => void;
+  showPivotVisualizers?: boolean;
+  onTogglePivotVisualizers?: (show: boolean) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -24,6 +26,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   settings,
   onSaveSettings,
+  showPivotVisualizers = false,
+  onTogglePivotVisualizers,
 }) => {
   const [localSettings, setLocalSettings] = useState<ConfluenceAlertSettings>(settings);
   const [hasNotificationPermission, setHasNotificationPermission] = useState(() => {
@@ -252,7 +256,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <label className="flex items-center gap-2 p-1.5 rounded-xs bg-[#181a20] border border-[#2b313a] cursor-pointer hover:bg-[#22262e]">
                 <input
                   type="checkbox"
-                  checked={localSettings.alertBreakoutBullish ?? true}
+                  checked={localSettings.alertBreakoutBullish ?? false}
                   onChange={(e) => update({ alertBreakoutBullish: e.target.checked })}
                   className="w-3.5 h-3.5 rounded-xs accent-[#0ecb81] cursor-pointer"
                 />
@@ -262,7 +266,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <label className="flex items-center gap-2 p-1.5 rounded-xs bg-[#181a20] border border-[#2b313a] cursor-pointer hover:bg-[#22262e]">
                 <input
                   type="checkbox"
-                  checked={localSettings.alertBreakoutBearish ?? true}
+                  checked={localSettings.alertBreakoutBearish ?? false}
                   onChange={(e) => update({ alertBreakoutBearish: e.target.checked })}
                   className="w-3.5 h-3.5 rounded-xs accent-[#f6465d] cursor-pointer"
                 />
@@ -272,7 +276,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <label className="flex items-center gap-2 p-1.5 rounded-xs bg-[#181a20] border border-[#2b313a] cursor-pointer hover:bg-[#22262e] col-span-2">
                 <input
                   type="checkbox"
-                  checked={localSettings.alertPivotCondition ?? true}
+                  checked={localSettings.alertPivotCondition ?? false}
                   onChange={(e) => update({ alertPivotCondition: e.target.checked })}
                   className="w-3.5 h-3.5 rounded-xs accent-[#f0b90b] cursor-pointer"
                 />
@@ -294,6 +298,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <option value={300}>5 Menit</option>
               </select>
             </div>
+          </div>
+
+          {/* Tampilan Tabel: Kolom Visualizer Pivot */}
+          <div className="bg-[#12151a] border border-[#2b313a] rounded-xs p-2.5 space-y-2 text-[11px]">
+            <div className="flex items-center justify-between font-bold text-[#eaecef] pb-1 border-b border-[#2b313a]">
+              <span>Tampilan Tabel</span>
+              <span className="text-[10px] font-mono text-[#848e9c]">Kolom Tambahan</span>
+            </div>
+            <label className="flex items-center justify-between cursor-pointer py-1">
+              <div className="space-y-0.5 pr-2">
+                <div className="font-semibold text-[#eaecef] flex items-center gap-1.5">
+                  <span>Kolom Pivot Visualizer (5M / 1H / Daily)</span>
+                </div>
+                <div className="text-[10px] text-[#848e9c]">
+                  Tampilkan 3 kolom grafik visual spektrum level S4..P..R4 di tabel utama (Default: Nonaktif)
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={showPivotVisualizers ?? false}
+                onChange={(e) => onTogglePivotVisualizers?.(e.target.checked)}
+                className="w-4 h-4 rounded-xs accent-[#f0b90b] cursor-pointer shrink-0"
+              />
+            </label>
           </div>
 
           {/* Visual Toast & Desktop Notifications */}
@@ -337,25 +365,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             type="button"
             onClick={() => {
               const def: ConfluenceAlertSettings = {
-                soundEnabled: true,
+                soundEnabled: false,
                 soundType: 'breakout',
                 volume: 0.85,
-                toastEnabled: true,
+                toastEnabled: false,
                 desktopNotification: false,
-                alertBullish: true,
-                alertBearish: true,
-                alertBreakoutBullish: true,
-                alertBreakoutBearish: true,
-                alertPivotCondition: true,
+                alertBullish: false,
+                alertBearish: false,
+                alertBreakoutBullish: false,
+                alertBreakoutBearish: false,
+                alertPivotCondition: false,
                 cooldownSeconds: 60,
               };
               setLocalSettings(def);
               onSaveSettings(def);
+              if (onTogglePivotVisualizers) {
+                onTogglePivotVisualizers(false);
+              }
             }}
             className="flex items-center gap-1 text-[11px] text-[#848e9c] hover:text-[#eaecef] transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3 h-3" />
-            <span>Reset</span>
+            <span>Reset (Semua OFF)</span>
           </button>
 
           <button

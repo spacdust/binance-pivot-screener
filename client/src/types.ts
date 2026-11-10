@@ -236,16 +236,16 @@ export interface ConfluenceAlertSettings {
 }
 
 export const DEFAULT_ALERT_SETTINGS: ConfluenceAlertSettings = {
-  soundEnabled: true,
+  soundEnabled: false,
   soundType: 'breakout',
   volume: 0.85,
-  toastEnabled: true,
+  toastEnabled: false,
   desktopNotification: false,
-  alertBullish: true,
-  alertBearish: true,
-  alertBreakoutBullish: true,
-  alertBreakoutBearish: true,
-  alertPivotCondition: true,
+  alertBullish: false,
+  alertBearish: false,
+  alertBreakoutBullish: false,
+  alertBreakoutBearish: false,
+  alertPivotCondition: false,
   cooldownSeconds: 60,
 };
 

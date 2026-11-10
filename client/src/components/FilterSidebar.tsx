@@ -139,7 +139,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   twoTfCounts,
   breakoutCounts,
   pivotMode = 'tradingview',
-  soundEnabled = true,
+  soundEnabled = false,
   onToggleSound,
   onOpenSettings,
 }) => {

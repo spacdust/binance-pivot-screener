@@ -61,11 +61,33 @@ export const App: React.FC = () => {
     localStorage.setItem('binance_pivot_mode', mode);
   };
 
-  // Confluence Alert Settings (Sound, Toast, Desktop, Zones, Cooldown)
+  // Toggle for the 3 Pivot Visualizer columns (5M, 1H, Daily) - OFF by default
+  const [showPivotVisualizers, setShowPivotVisualizers] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('binance_show_pivot_visualizers') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const handleTogglePivotVisualizers = (show: boolean) => {
+    setShowPivotVisualizers(show);
+    try {
+      localStorage.setItem('binance_show_pivot_visualizers', String(show));
+    } catch (e) {}
+  };
+
+  // Confluence Alert Settings (Sound, Toast, Desktop, Zones, Cooldown) - ALL OFF by default
   const [alertSettings, setAlertSettings] = useState<ConfluenceAlertSettings>(() => {
     try {
       const saved = localStorage.getItem('binance_screener_2tf_alerts');
-      if (saved) return { ...DEFAULT_ALERT_SETTINGS, ...JSON.parse(saved) };
+      const initialized = localStorage.getItem('binance_screener_alerts_v3_default_off');
+      if (saved && initialized) {
+        return { ...DEFAULT_ALERT_SETTINGS, ...JSON.parse(saved) };
+      }
+      // First run or version update: initialize all notification features to OFF by default
+      localStorage.setItem('binance_screener_alerts_v3_default_off', 'true');
+      localStorage.setItem('binance_screener_2tf_alerts', JSON.stringify(DEFAULT_ALERT_SETTINGS));
     } catch (e) {}
     return DEFAULT_ALERT_SETTINGS;
   });
@@ -306,8 +328,8 @@ export const App: React.FC = () => {
           const isBull = bo.type === 'BULLISH';
           const isBear = bo.type === 'BEARISH';
           const isAllowed =
-            (isBull && (alertSettings.alertBreakoutBullish ?? true)) ||
-            (isBear && (alertSettings.alertBreakoutBearish ?? true));
+            (isBull && Boolean(alertSettings.alertBreakoutBullish)) ||
+            (isBear && Boolean(alertSettings.alertBreakoutBearish));
 
           if (isAllowed) {
             newlyEntered.push({
@@ -334,7 +356,7 @@ export const App: React.FC = () => {
       // 3. Detect Pivot Condition (when a specific condition is selected, e.g. R1_TO_R2, S1_TO_S2, etc.)
       if (
         currentPivotCond !== 'ALL' &&
-        (alertSettings.alertPivotCondition ?? true)
+        Boolean(alertSettings.alertPivotCondition)
       ) {
         const pCond = getCoinPivotCondition(coin, currentPivotTf, pivotMode);
         let pTracked = pMap.get(coin.symbol);
@@ -652,6 +674,8 @@ export const App: React.FC = () => {
             breakoutCounts={breakoutCounts}
             pivotMode={pivotMode}
             onPivotModeChange={handlePivotModeChange}
+            showPivotVisualizers={showPivotVisualizers}
+            onTogglePivotVisualizers={handleTogglePivotVisualizers}
           />
         </main>
       </div>
@@ -668,6 +692,8 @@ export const App: React.FC = () => {
         onClose={() => setIsSettingsOpen(false)}
         settings={alertSettings}
         onSaveSettings={handleSaveAlertSettings}
+        showPivotVisualizers={showPivotVisualizers}
+        onTogglePivotVisualizers={handleTogglePivotVisualizers}
       />
 
       {/* Floating Real-time Toast Notifications */}
