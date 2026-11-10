@@ -52,8 +52,19 @@ export interface PivotStatus {
 
 export interface TimeframeChanges {
   m1: number;
+  m2?: number;
+  m3?: number;
+  m4?: number;
   m5: number;
+  m6?: number;
+  m7?: number;
+  m8?: number;
+  m9?: number;
   m10?: number;
+  m11?: number;
+  m12?: number;
+  m13?: number;
+  m14?: number;
   m15: number;
   m20?: number;
   m25?: number;
@@ -149,8 +160,19 @@ export type SelectedTimeframe =
   | 'm25'
   | 'm20'
   | 'm15'
+  | 'm14'
+  | 'm13'
+  | 'm12'
+  | 'm11'
   | 'm10'
+  | 'm9'
+  | 'm8'
+  | 'm7'
+  | 'm6'
   | 'm5'
+  | 'm4'
+  | 'm3'
+  | 'm2'
   | 'm1';
 
 export type TopMoverCategory =

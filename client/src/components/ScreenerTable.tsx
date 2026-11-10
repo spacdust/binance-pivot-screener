@@ -52,8 +52,19 @@ type SortField =
   | 'price'
   | 'volume24h'
   | 'm1'
+  | 'm2'
+  | 'm3'
+  | 'm4'
   | 'm5'
+  | 'm6'
+  | 'm7'
+  | 'm8'
+  | 'm9'
   | 'm10'
+  | 'm11'
+  | 'm12'
+  | 'm13'
+  | 'm14'
   | 'm15'
   | 'm20'
   | 'm25'
@@ -71,6 +82,8 @@ type SortField =
   | 'distP'
   | 'distP1h'
   | 'distP5m';
+
+export type TimeMode = 'standard' | 'minutes15' | 'detailed';
 
 export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   coins,
@@ -108,7 +121,22 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
     setPivotStyle(style);
     localStorage.setItem('pivot_visual_style', style);
   };
-  const [timeMode, setTimeMode] = useState<'standard' | 'detailed'>('standard');
+  const [timeMode, setTimeMode] = useState<TimeMode>(() => {
+    try {
+      const saved = localStorage.getItem('binance_time_mode');
+      if (saved === 'standard' || saved === 'minutes15' || saved === 'detailed') {
+        return saved;
+      }
+    } catch (e) {}
+    return 'standard';
+  });
+
+  const handleTimeModeChange = (mode: TimeMode) => {
+    setTimeMode(mode);
+    try {
+      localStorage.setItem('binance_time_mode', mode);
+    } catch (e) {}
+  };
   const [autoResort, setAutoResort] = useState<boolean>(false);
   const [orderedSymbols, setOrderedSymbols] = useState<string[]>([]);
 
@@ -142,6 +170,20 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
         case 'm1':
           aVal = a.changes.m1;
           bVal = b.changes.m1;
+          break;
+        case 'm2':
+        case 'm3':
+        case 'm4':
+        case 'm6':
+        case 'm7':
+        case 'm8':
+        case 'm9':
+        case 'm11':
+        case 'm12':
+        case 'm13':
+        case 'm14':
+          aVal = (a.changes as any)[field] ?? 0;
+          bVal = (b.changes as any)[field] ?? 0;
           break;
         case 'm5':
           aVal = a.changes.m5;
@@ -651,12 +693,12 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
             </button>
           )}
 
-          {/* Time Mode Selector (Standar vs Detail) */}
+          {/* Time Mode Selector (Standar vs Detail 1m-15m vs Detail 1m-1H) */}
           <div className="flex items-center bg-[#12151a] rounded-xs border border-[#2b313a] p-0.5 text-xs">
             <button
-              onClick={() => setTimeMode('standard')}
+              onClick={() => handleTimeModeChange('standard')}
               title="Mode Standar: 1m, 5m, 15m, 30m, 1j, 3j, 6j, 12j, 24j"
-              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors cursor-pointer ${
                 timeMode === 'standard'
                   ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
                   : 'text-[#848e9c] hover:text-[#eaecef]'
@@ -665,9 +707,20 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
               Standar
             </button>
             <button
-              onClick={() => setTimeMode('detailed')}
-              title="Mode Detail: 1m, 5m, 10m, 15m, 20m, 25m, 30m, 35m, 40m, 45m, 50m, 55m, 1H"
-              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors ${
+              onClick={() => handleTimeModeChange('minutes15')}
+              title="Mode Detail 1m-15m: 1m, 2m, 3m, 4m, 5m, 6m, 7m, 8m, 9m, 10m, 11m, 12m, 13m, 14m, 15m"
+              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors cursor-pointer ${
+                timeMode === 'minutes15'
+                  ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
+                  : 'text-[#848e9c] hover:text-[#eaecef]'
+              }`}
+            >
+              Detail (1m-15m)
+            </button>
+            <button
+              onClick={() => handleTimeModeChange('detailed')}
+              title="Mode Detail 1m-1H: 1m, 5m, 10m, 15m, 20m, 25m, 30m, 35m, 40m, 45m, 50m, 55m, 1H"
+              className={`px-2 py-0.5 rounded-xs text-[11px] font-semibold transition-colors cursor-pointer ${
                 timeMode === 'detailed'
                   ? 'bg-[#2b313a] text-[#f0b90b] font-bold'
                   : 'text-[#848e9c] hover:text-[#eaecef]'
@@ -835,7 +888,19 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
       <div className="flex-1 overflow-auto custom-scrollbar relative">
         <table
           className="w-full table-fixed text-left border-collapse text-xs select-none"
-          style={{ minWidth: showPivotVisualizers ? (timeMode === 'standard' ? '1513px' : '1621px') : (timeMode === 'standard' ? '973px' : '1081px') }}
+          style={{
+            minWidth: showPivotVisualizers
+              ? timeMode === 'standard'
+                ? '1513px'
+                : timeMode === 'minutes15'
+                ? '1669px'
+                : '1621px'
+              : timeMode === 'standard'
+              ? '973px'
+              : timeMode === 'minutes15'
+              ? '1129px'
+              : '1081px',
+          }}
         >
           {/* Rigid colgroup definitions to lock column widths in concrete */}
           <colgroup>
@@ -853,6 +918,24 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 <col className="w-[66px]" />
                 <col className="w-[66px]" />
                 <col className="w-[66px]" />
+              </>
+            ) : timeMode === 'minutes15' ? (
+              <>
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
+                <col className="w-[50px]" />
               </>
             ) : (
               <>
@@ -961,6 +1044,20 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                   >
                     24j {renderSortIcon('h24')}
                   </th>
+                </>
+              ) : timeMode === 'minutes15' ? (
+                <>
+                  {(['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11', 'm12', 'm13', 'm14', 'm15'] as const).map((mKey, idx) => (
+                    <th
+                      key={mKey}
+                      onClick={() => handleSort(mKey)}
+                      className={`py-2 px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden ${
+                        mKey === 'm5' || mKey === 'm15' ? 'text-[#f0b90b] font-bold' : ''
+                      }`}
+                    >
+                      {idx + 1}m {renderSortIcon(mKey)}
+                    </th>
+                  ))}
                 </>
               ) : (
                 <>
@@ -1076,7 +1173,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           <tbody className="divide-y divide-[#22262e]">
             {paginatedCoins.length === 0 ? (
               <tr>
-                <td colSpan={(timeMode === 'standard' ? 13 : 17) + (showPivotVisualizers ? 3 : 0)} className="py-12 text-center text-[#848e9c]">
+                <td colSpan={(timeMode === 'standard' ? 13 : timeMode === 'minutes15' ? 19 : 17) + (showPivotVisualizers ? 3 : 0)} className="py-12 text-center text-[#848e9c]">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Info className="w-8 h-8 text-[#474d57]" />
                     <p className="text-sm font-medium">Tidak ada koin yang sesuai kriteria filter.</p>
@@ -1208,6 +1305,24 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                         <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.h6, false)}</td>
                         <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.h12, false)}</td>
                         <td className={`${pyRow} px-0.5 w-[66px] min-w-[66px] max-w-[66px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.h24, false)}</td>
+                      </>
+                    ) : timeMode === 'minutes15' ? (
+                      <>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m1, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m2 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m3 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m4 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden font-medium`}>{renderChangeCell(coin.changes.m5, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m6 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m7 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m8 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m9 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m10 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m11 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m12 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m13 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden`}>{renderChangeCell(coin.changes.m14 ?? 0, true)}</td>
+                        <td className={`${pyRow} px-0.5 w-[50px] min-w-[50px] max-w-[50px] text-center overflow-hidden font-medium`}>{renderChangeCell(coin.changes.m15, true)}</td>
                       </>
                     ) : (
                       <>
