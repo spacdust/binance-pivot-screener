@@ -9,8 +9,8 @@ interface TradingViewChartProps {
 
 const TIMEFRAMES = [
   { label: '1m', value: '1', desc: '1 Menit' },
-  { label: '5m', value: '5', desc: '5 Menit' },
-  { label: '15m', value: '15', desc: '15 Menit (Rekomendasi)' },
+  { label: '5m', value: '5', desc: '5 Menit (Rekomendasi / Default)' },
+  { label: '15m', value: '15', desc: '15 Menit' },
   { label: '30m', value: '30', desc: '30 Menit' },
   { label: '1H', value: '60', desc: '1 Jam' },
   { label: '4H', value: '240', desc: '4 Jam' },
@@ -20,8 +20,8 @@ const TIMEFRAMES = [
 
 export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   symbol,
-  initialInterval = '15',
-  height = '620px',
+  initialInterval = '5',
+  height = '640px',
 }) => {
   const [activeInterval, setActiveInterval] = useState<string>(initialInterval);
   const [reloadKey, setReloadKey] = useState<number>(0);
@@ -95,7 +95,9 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       save_image: false,
       calendar: false,
       studies: [
-        'PivotPointsStandard@tv-basicstudies'
+        'PivotPointsStandard@tv-basicstudies',
+        'MACD@tv-basicstudies',
+        'RSI@tv-basicstudies'
       ],
       support_host: 'https://www.tradingview.com'
     });
@@ -150,7 +152,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
           {/* Active Indicator Badge */}
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-xs text-[10px] font-mono bg-[#22262e] border border-[#2b313a] text-[#f0b90b]">
             <Layers className="w-3 h-3 text-[#f0b90b]" />
-            <span className="font-semibold">Pivot Points Standard (Traditional)</span>
+            <span className="font-semibold">Pivot + MACD + RSI</span>
           </div>
 
           {/* Refresh Chart Button */}

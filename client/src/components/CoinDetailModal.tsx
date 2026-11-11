@@ -188,7 +188,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
               {/* TradingView Interactive Chart */}
               <TradingViewChart
                 symbol={symbol}
-                initialInterval="15"
+                initialInterval="5"
                 height={isMaximized ? "calc(100vh - 240px)" : "calc(96vh - 270px)"}
               />
 
