@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ExternalLink, RefreshCw, Layers, Maximize2, Minimize2 } from 'lucide-react';
+import { ExternalLink, RefreshCw, Layers, Maximize2, Minimize2, Sparkles } from 'lucide-react';
 
 interface TradingViewChartProps {
   symbol: string;
@@ -7,23 +7,11 @@ interface TradingViewChartProps {
   height?: string;
 }
 
-const TIMEFRAMES = [
-  { label: '1m', value: '1', desc: '1 Menit' },
-  { label: '5m', value: '5', desc: '5 Menit (Rekomendasi / Default)' },
-  { label: '15m', value: '15', desc: '15 Menit' },
-  { label: '30m', value: '30', desc: '30 Menit' },
-  { label: '1H', value: '60', desc: '1 Jam' },
-  { label: '4H', value: '240', desc: '4 Jam' },
-  { label: '1D', value: 'D', desc: '1 Hari' },
-  { label: '1W', value: 'W', desc: '1 Minggu' },
-];
-
 export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   symbol,
   initialInterval = '5',
   height = '640px',
 }) => {
-  const [activeInterval, setActiveInterval] = useState<string>(initialInterval);
   const [reloadKey, setReloadKey] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isChartFullscreen, setIsChartFullscreen] = useState<boolean>(false);
@@ -46,6 +34,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   }, [isChartFullscreen]);
 
   // Inject official TradingView Advanced Chart widget with Pivot Points Standard study
+  // Dependencies are strictly tvSymbol and reloadKey so user drawings are NEVER erased when changing timeframes
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -82,7 +71,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     script.innerHTML = JSON.stringify({
       autosize: true,
       symbol: tvSymbol,
-      interval: activeInterval,
+      interval: initialInterval,
       timezone: 'Asia/Jakarta',
       theme: 'dark',
       style: '1',
@@ -109,7 +98,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       clearTimeout(fallbackTimer);
       container.innerHTML = '';
     };
-  }, [tvSymbol, activeInterval, reloadKey]);
+  }, [tvSymbol, reloadKey, initialInterval]);
 
   return (
     <div
@@ -119,32 +108,25 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
           : 'w-full'
       }`}
     >
-      {/* Top Toolbar: Timeframe Selector + Indicator Tag + External Links */}
+      {/* Top Toolbar: Timeframe Selector Guide + Indicator Tag + External Links */}
       <div className="p-2 sm:px-3 sm:py-2 border-b border-[#2b313a] bg-[#181a20] flex items-center justify-between flex-wrap gap-2 text-xs shrink-0">
-        {/* Timeframe Buttons */}
-        <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[11px] text-[#848e9c] font-medium mr-1 hidden sm:inline">Timeframe:</span>
-          {TIMEFRAMES.map((tf) => {
-            const isActive = activeInterval === tf.value;
-            return (
-              <button
-                key={tf.value}
-                onClick={() => {
-                  if (activeInterval !== tf.value) {
-                    setActiveInterval(tf.value);
-                  }
-                }}
-                title={tf.desc}
-                className={`px-2 py-0.5 rounded-xs text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
-                  isActive
-                    ? 'bg-[#f0b90b] text-[#181a20] font-bold shadow-xs'
-                    : 'bg-[#22262e] text-[#848e9c] hover:text-[#eaecef] hover:bg-[#2b313a]'
-                }`}
-              >
-                {tf.label}
-              </button>
-            );
-          })}
+        {/* Left: Timeframe Guide to preserve drawings */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-xs text-[11px] font-mono bg-[#22262e] border border-[#2b313a] text-[#eaecef]">
+            <span className="text-[#848e9c]">TF Default:</span>
+            <span className="font-bold text-[#f0b90b]">5m</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-xs text-[11px] bg-[#f0b90b]/10 border border-[#f0b90b]/30 text-[#eaecef]">
+            <Sparkles className="w-3.5 h-3.5 text-[#f0b90b] shrink-0" />
+            <span>
+              Ganti TF langsung di toolbar atas chart{' '}
+              <span className="font-mono font-bold text-[#f0b90b] bg-[#12151a] px-1 py-0.2 rounded border border-[#f0b90b]/40">
+                (5m ▾)
+              </span>{' '}
+              agar garis analisa tetap tersimpan!
+            </span>
+          </div>
         </div>
 
         {/* Right Info & Actions */}
@@ -160,7 +142,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
             onClick={() => {
               setReloadKey((k) => k + 1);
             }}
-            title="Muat ulang chart"
+            title="Muat ulang chart (Gunakan hanya jika chart error)"
             className="p-1 rounded-xs bg-[#22262e] hover:bg-[#2b313a] text-[#848e9c] hover:text-[#eaecef] transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />

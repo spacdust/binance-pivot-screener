@@ -182,114 +182,113 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
 
         {/* Body Modal */}
         <div className="p-3 sm:p-4 overflow-y-auto flex-1 custom-scrollbar">
-          {activeTab === 'chart' ? (
-            /* TAB 1: LIVE TRADINGVIEW CHART WITH PIVOT POINTS */
-            <div className="space-y-3">
-              {/* TradingView Interactive Chart */}
-              <TradingViewChart
-                symbol={symbol}
-                initialInterval="5"
-                height={isMaximized ? "calc(100vh - 240px)" : "calc(96vh - 270px)"}
-              />
+          {/* TAB 1: LIVE TRADINGVIEW CHART WITH PIVOT POINTS */}
+          <div className={activeTab === 'chart' ? 'space-y-3' : 'hidden'}>
+            {/* TradingView Interactive Chart */}
+            <TradingViewChart
+              symbol={symbol}
+              initialInterval="5"
+              height={isMaximized ? "calc(100vh - 240px)" : "calc(96vh - 270px)"}
+            />
 
-              {/* Pivot Levels Quick Reference Strip */}
-              <div className="bg-[#12151a] border border-[#2b313a] rounded-xs p-3">
-                <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-[#f0b90b]" />
-                    <span className="text-xs font-bold text-[#eaecef] uppercase tracking-wider">
-                      Level Pivot Kunci ({activePivotTf.toUpperCase()} Traditional)
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab('table')}
-                    className="text-[11px] text-[#f0b90b] hover:underline flex items-center gap-1 cursor-pointer font-medium"
-                  >
-                    <span>Lihat Tangga Lengkap (S4 - R4) & Multi-Timeframe</span>
-                    <span>→</span>
-                  </button>
+            {/* Pivot Levels Quick Reference Strip */}
+            <div className="bg-[#12151a] border border-[#2b313a] rounded-xs p-3">
+              <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4 text-[#f0b90b]" />
+                  <span className="text-xs font-bold text-[#eaecef] uppercase tracking-wider">
+                    Level Pivot Kunci ({activePivotTf.toUpperCase()} Traditional)
+                  </span>
                 </div>
+                <button
+                  onClick={() => setActiveTab('table')}
+                  className="text-[11px] text-[#f0b90b] hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                >
+                  <span>Lihat Tangga Lengkap (S4 - R4) & Multi-Timeframe</span>
+                  <span>→</span>
+                </button>
+              </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-mono">
-                  {/* S2 */}
-                  <div className="bg-[#181a20] border border-[#2b313a] rounded-xs p-2">
-                    <div className="flex items-center justify-between text-[10px] text-[#f6465d] font-bold">
-                      <span>Support 2 (S2)</span>
-                    </div>
-                    <div className="text-sm font-bold text-[#eaecef] mt-0.5">${formatPrice(currentPivots.S2)}</div>
-                    <div className="text-[10px] text-[#848e9c]">
-                      {((currentPivots.S2 - price) / price * 100).toFixed(2)}%
-                    </div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-mono">
+                {/* S2 */}
+                <div className="bg-[#181a20] border border-[#2b313a] rounded-xs p-2">
+                  <div className="flex items-center justify-between text-[10px] text-[#f6465d] font-bold">
+                    <span>Support 2 (S2)</span>
                   </div>
-
-                  {/* S1 */}
-                  <div className="bg-[#181a20] border border-[#f6465d]/20 rounded-xs p-2">
-                    <div className="flex items-center justify-between text-[10px] text-[#f6465d] font-bold">
-                      <span>Support 1 (S1)</span>
-                      {Math.abs((currentPivots.S1 - price) / price * 100) < 0.8 && (
-                        <span className="text-[9px] px-1 bg-[#f6465d]/20 rounded-xs">DEKAT</span>
-                      )}
-                    </div>
-                    <div className="text-sm font-bold text-[#eaecef] mt-0.5">${formatPrice(currentPivots.S1)}</div>
-                    <div className="text-[10px] text-[#848e9c]">
-                      {((currentPivots.S1 - price) / price * 100).toFixed(2)}%
-                    </div>
-                  </div>
-
-                  {/* Pivot Center P */}
-                  <div className="bg-[#181a20] border border-[#f0b90b]/40 rounded-xs p-2 bg-[#f0b90b]/[0.03]">
-                    <div className="flex items-center justify-between text-[10px] text-[#f0b90b] font-bold">
-                      <span>Pivot Center (P)</span>
-                      {Math.abs(liveDistP) < 0.8 && (
-                        <span className="text-[9px] px-1 bg-[#f0b90b]/20 rounded-xs">DEKAT</span>
-                      )}
-                    </div>
-                    <div className="text-sm font-bold text-[#f0b90b] mt-0.5">${formatPrice(currentPivots.P)}</div>
-                    <div className="text-[10px] font-bold text-[#f0b90b]">
-                      {liveDistP > 0 ? `+${liveDistP}%` : `${liveDistP}%`}
-                    </div>
-                  </div>
-
-                  {/* R1 */}
-                  <div className="bg-[#181a20] border border-[#0ecb81]/20 rounded-xs p-2">
-                    <div className="flex items-center justify-between text-[10px] text-[#0ecb81] font-bold">
-                      <span>Resistance 1 (R1)</span>
-                      {Math.abs((currentPivots.R1 - price) / price * 100) < 0.8 && (
-                        <span className="text-[9px] px-1 bg-[#0ecb81]/20 rounded-xs">DEKAT</span>
-                      )}
-                    </div>
-                    <div className="text-sm font-bold text-[#eaecef] mt-0.5">${formatPrice(currentPivots.R1)}</div>
-                    <div className="text-[10px] text-[#848e9c]">
-                      +{((currentPivots.R1 - price) / price * 100).toFixed(2)}%
-                    </div>
-                  </div>
-
-                  {/* R2 */}
-                  <div className="bg-[#181a20] border border-[#2b313a] rounded-xs p-2 col-span-2 sm:col-span-1">
-                    <div className="flex items-center justify-between text-[10px] text-[#0ecb81] font-bold">
-                      <span>Resistance 2 (R2)</span>
-                    </div>
-                    <div className="text-sm font-bold text-[#eaecef] mt-0.5">${formatPrice(currentPivots.R2)}</div>
-                    <div className="text-[10px] text-[#848e9c]">
-                      +{((currentPivots.R2 - price) / price * 100).toFixed(2)}%
-                    </div>
+                  <div className="text-sm font-bold text-[#eaecef] mt-0.5">${formatPrice(currentPivots.S2)}</div>
+                  <div className="text-[10px] text-[#848e9c]">
+                    {((currentPivots.S2 - price) / price * 100).toFixed(2)}%
                   </div>
                 </div>
 
-                <div className="mt-2.5 pt-2 border-t border-[#2b313a] flex items-center justify-between text-[11px] text-[#848e9c] flex-wrap gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <span>Sedang berada di area:</span>
-                    <span className="font-bold text-[#f0b90b]">{currentStatus.label}</span>
+                {/* S1 */}
+                <div className="bg-[#181a20] border border-[#f6465d]/20 rounded-xs p-2">
+                  <div className="flex items-center justify-between text-[10px] text-[#f6465d] font-bold">
+                    <span>Support 1 (S1)</span>
+                    {Math.abs((currentPivots.S1 - price) / price * 100) < 0.8 && (
+                      <span className="text-[9px] px-1 bg-[#f6465d]/20 rounded-xs">DEKAT</span>
+                    )}
                   </div>
-                  <div className="text-[10px] text-[#474d57]">
-                    Tipe Pivot: Traditional Classic (H+L+C)/3 • Sumber Data: Binance Live Futures
+                  <div className="text-sm font-bold text-[#eaecef] mt-0.5">${formatPrice(currentPivots.S1)}</div>
+                  <div className="text-[10px] text-[#848e9c]">
+                    {((currentPivots.S1 - price) / price * 100).toFixed(2)}%
+                  </div>
+                </div>
+
+                {/* Pivot Center P */}
+                <div className="bg-[#181a20] border border-[#f0b90b]/40 rounded-xs p-2 bg-[#f0b90b]/[0.03]">
+                  <div className="flex items-center justify-between text-[10px] text-[#f0b90b] font-bold">
+                    <span>Pivot Center (P)</span>
+                    {Math.abs(liveDistP) < 0.8 && (
+                      <span className="text-[9px] px-1 bg-[#f0b90b]/20 rounded-xs">DEKAT</span>
+                    )}
+                  </div>
+                  <div className="text-sm font-bold text-[#f0b90b] mt-0.5">${formatPrice(currentPivots.P)}</div>
+                  <div className="text-[10px] font-bold text-[#f0b90b]">
+                    {liveDistP > 0 ? `+${liveDistP}%` : `${liveDistP}%`}
+                  </div>
+                </div>
+
+                {/* R1 */}
+                <div className="bg-[#181a20] border border-[#0ecb81]/20 rounded-xs p-2">
+                  <div className="flex items-center justify-between text-[10px] text-[#0ecb81] font-bold">
+                    <span>Resistance 1 (R1)</span>
+                    {Math.abs((currentPivots.R1 - price) / price * 100) < 0.8 && (
+                      <span className="text-[9px] px-1 bg-[#0ecb81]/20 rounded-xs">DEKAT</span>
+                    )}
+                  </div>
+                  <div className="text-sm font-bold text-[#eaecef] mt-0.5">${formatPrice(currentPivots.R1)}</div>
+                  <div className="text-[10px] text-[#848e9c]">
+                    +{((currentPivots.R1 - price) / price * 100).toFixed(2)}%
+                  </div>
+                </div>
+
+                {/* R2 */}
+                <div className="bg-[#181a20] border border-[#2b313a] rounded-xs p-2 col-span-2 sm:col-span-1">
+                  <div className="flex items-center justify-between text-[10px] text-[#0ecb81] font-bold">
+                    <span>Resistance 2 (R2)</span>
+                  </div>
+                  <div className="text-sm font-bold text-[#eaecef] mt-0.5">${formatPrice(currentPivots.R2)}</div>
+                  <div className="text-[10px] text-[#848e9c]">
+                    +{((currentPivots.R2 - price) / price * 100).toFixed(2)}%
                   </div>
                 </div>
               </div>
+
+              <div className="mt-2.5 pt-2 border-t border-[#2b313a] flex items-center justify-between text-[11px] text-[#848e9c] flex-wrap gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span>Sedang berada di area:</span>
+                  <span className="font-bold text-[#f0b90b]">{currentStatus.label}</span>
+                </div>
+                <div className="text-[10px] text-[#474d57]">
+                  Tipe Pivot: Traditional Classic (H+L+C)/3 • Sumber Data: Binance Live Futures
+                </div>
+              </div>
             </div>
-          ) : (
-            /* TAB 2: DETAILED TABLE VIEW (CARDS 1, 2, 3) */
-            <div className="space-y-4">
+          </div>
+
+          {/* TAB 2: DETAILED TABLE VIEW (CARDS 1, 2, 3) */}
+          <div className={activeTab === 'table' ? 'space-y-4' : 'hidden'}>
               {/* Card 1: Ringkasan Harga & Status Pivot Terkini */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-[#12151a] border border-[#2b313a] rounded-xs p-3">
             <div>
@@ -607,8 +606,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
             </div>
           </div>
         </div>
-      )}
-    </div>
+      </div>
 
         {/* Footer Modal */}
         <div className="p-3.5 sm:p-4 border-t border-[#2b313a] bg-[#181a20] flex items-center justify-between text-xs text-[#848e9c]">
