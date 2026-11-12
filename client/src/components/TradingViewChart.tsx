@@ -96,7 +96,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       calendar: false,
       studies: [
         'PivotPointsStandard@tv-basicstudies',
-        'MACD@tv-basicstudies',
+        'STD;MACD',
         'RSI@tv-basicstudies'
       ],
       support_host: 'https://www.tradingview.com'
