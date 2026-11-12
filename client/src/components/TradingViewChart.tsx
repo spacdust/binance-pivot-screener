@@ -83,6 +83,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       allow_symbol_change: true,
       save_image: false,
       calendar: false,
+      hide_volume: true,
       studies: [
         'PivotPointsStandard@tv-basicstudies',
         'STD;MACD',
