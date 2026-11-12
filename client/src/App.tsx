@@ -23,7 +23,13 @@ import {
   checkBreakoutConfluence,
   getCoinPivotCondition,
   getPivotCode,
-  getConditionBadgeStyle
+  getConditionBadgeStyle,
+  isCoinMatchingPivotCondition,
+  isPriceInAreaR1,
+  isPriceInAreaR2,
+  isPriceInAreaS1,
+  isPriceInAreaS2,
+  getCoinPivots
 } from './utils/pivotConfluence';
 import { Loader2 } from 'lucide-react';
 
@@ -353,15 +359,15 @@ export const App: React.FC = () => {
         }
       }
 
-      // 3. Detect Pivot Condition (when a specific condition is selected, e.g. R1_TO_R2, S1_TO_S2, etc.)
+      // 3. Detect Pivot Condition (when a specific condition is selected, e.g. R1_TO_R2, S1_TO_S2, AREA_R1, etc.)
       if (
         currentPivotCond !== 'ALL' &&
         Boolean(alertSettings.alertPivotCondition)
       ) {
-        const pCond = getCoinPivotCondition(coin, currentPivotTf, pivotMode);
+        const matches = isCoinMatchingPivotCondition(coin, currentPivotCond, currentPivotTf, pivotMode);
         let pTracked = pMap.get(coin.symbol);
 
-        if (pCond === currentPivotCond) {
+        if (matches) {
           if (!pTracked) {
             pTracked = {
               activeZone: null,
@@ -372,7 +378,7 @@ export const App: React.FC = () => {
             pMap.set(coin.symbol, pTracked);
           }
 
-          const isNewZone = pTracked.lastAlertedZone !== pCond;
+          const isNewZone = pTracked.lastAlertedZone !== currentPivotCond;
           const isReEntry = pTracked.exitedAt > 0 && now - pTracked.exitedAt >= 15000;
           const cooldownElapsed = now - pTracked.lastAlertTime >= cooldownMs;
 
@@ -381,16 +387,16 @@ export const App: React.FC = () => {
               currentPivotTf === '5m' ? '5M' : currentPivotTf === '1h' ? '1H' : 'Daily';
             newlyEntered.push({
               coin,
-              type: `PIVOT_${pCond}`,
-              badgeText: `${tfLabel}: ${getPivotCode(pCond)}`,
-              badgeStyle: getConditionBadgeStyle(pCond),
+              type: `PIVOT_${currentPivotCond}`,
+              badgeText: `${tfLabel}: ${getPivotCode(currentPivotCond)}`,
+              badgeStyle: getConditionBadgeStyle(currentPivotCond),
               alertTitle: `Pivot ${tfLabel}`,
             });
-            pTracked.lastAlertedZone = pCond;
+            pTracked.lastAlertedZone = currentPivotCond;
             pTracked.lastAlertTime = now;
           }
 
-          pTracked.activeZone = pCond;
+          pTracked.activeZone = currentPivotCond;
           pTracked.exitedAt = 0;
         } else {
           if (pTracked && pTracked.activeZone !== null) {
@@ -495,8 +501,7 @@ export const App: React.FC = () => {
       // 4. Pivot Point condition filter (Live calculated from current price & selected timeframe: 5M, 1H, or Daily)
       if (filters.pivotCondition !== 'ALL') {
         const tf = filters.pivotConditionTimeframe || '5m';
-        const liveCond = getCoinPivotCondition(coin, tf, pivotMode);
-        if (liveCond !== filters.pivotCondition) {
+        if (!isCoinMatchingPivotCondition(coin, filters.pivotCondition, tf, pivotMode)) {
           return false;
         }
       }
@@ -548,6 +553,13 @@ export const App: React.FC = () => {
       const cond = getCoinPivotCondition(c, tf, pivotMode);
       if (cond) {
         counts[cond] = (counts[cond] || 0) + 1;
+      }
+      const targetPivots = getCoinPivots(c, tf, pivotMode);
+      if (targetPivots && !isNaN(c.price)) {
+        if (isPriceInAreaR1(c.price, targetPivots)) counts['AREA_R1'] = (counts['AREA_R1'] || 0) + 1;
+        if (isPriceInAreaR2(c.price, targetPivots)) counts['AREA_R2'] = (counts['AREA_R2'] || 0) + 1;
+        if (isPriceInAreaS1(c.price, targetPivots)) counts['AREA_S1'] = (counts['AREA_S1'] || 0) + 1;
+        if (isPriceInAreaS2(c.price, targetPivots)) counts['AREA_S2'] = (counts['AREA_S2'] || 0) + 1;
       }
     });
     return counts;

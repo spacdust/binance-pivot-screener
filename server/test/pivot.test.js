@@ -1,6 +1,13 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateDailyPivots, classifyPivotCondition } from '../src/services/pivot.js';
+import {
+  calculateDailyPivots,
+  classifyPivotCondition,
+  isPriceInAreaR1,
+  isPriceInAreaR2,
+  isPriceInAreaS1,
+  isPriceInAreaS2
+} from '../src/services/pivot.js';
 
 describe('Daily Pivot Points Calculations', () => {
   test('correctly calculates standard classic pivot levels', () => {
@@ -122,5 +129,34 @@ describe('Pivot Condition Classification', () => {
     // Price = 100.01 (within 35% of P towards R1=100.1): must be AREA_P
     const resP = classifyPivotCondition(100.01, m5Pivots, 0);
     assert.equal(resP.condition, 'AREA_P');
+  });
+
+  test('correctly identifies price consolidating in Area R1, R2, S1, S2', () => {
+    // Pivots: P=90, R1=100, R2=110, R3=120, S1=80, S2=70, S3=60
+    // R1 tolerance: lower = (100-90)*0.25 = 2.5, upper = (110-100)*0.25 = 2.5 -> [97.5, 102.5]
+    assert.equal(isPriceInAreaR1(100, pivots), true);
+    assert.equal(isPriceInAreaR1(99, pivots), true);
+    assert.equal(isPriceInAreaR1(101.5, pivots), true);
+    assert.equal(isPriceInAreaR1(104, pivots), false);
+    assert.equal(isPriceInAreaR1(95, pivots), false);
+
+    // R2 tolerance: lower = (110-100)*0.25 = 2.5, upper = (120-110)*0.25 = 2.5 -> [107.5, 112.5]
+    assert.equal(isPriceInAreaR2(110, pivots), true);
+    assert.equal(isPriceInAreaR2(109, pivots), true);
+    assert.equal(isPriceInAreaR2(112, pivots), true);
+    assert.equal(isPriceInAreaR2(115, pivots), false);
+
+    // S1 tolerance: lower = (80-70)*0.25 = 2.5, upper = (90-80)*0.25 = 2.5 -> [77.5, 82.5]
+    assert.equal(isPriceInAreaS1(80, pivots), true);
+    assert.equal(isPriceInAreaS1(81, pivots), true);
+    assert.equal(isPriceInAreaS1(78, pivots), true);
+    assert.equal(isPriceInAreaS1(85, pivots), false);
+    assert.equal(isPriceInAreaS1(75, pivots), false);
+
+    // S2 tolerance: lower = (70-60)*0.25 = 2.5, upper = (80-70)*0.25 = 2.5 -> [67.5, 72.5]
+    assert.equal(isPriceInAreaS2(70, pivots), true);
+    assert.equal(isPriceInAreaS2(71, pivots), true);
+    assert.equal(isPriceInAreaS2(68.5, pivots), true);
+    assert.equal(isPriceInAreaS2(65, pivots), false);
   });
 });

@@ -104,6 +104,8 @@ const BULLISH_GROUP: {
   iconColor: string;
   selectedClass: string;
 }[] = [
+  { value: 'AREA_R1', code: 'Area R1', label: 'Area R1', desc: 'Konsolidasi', icon: Target, iconColor: 'text-[#0ecb81]', selectedClass: 'bg-[#0ecb81] text-[#181a20] font-bold border-[#0ecb81]' },
+  { value: 'AREA_R2', code: 'Area R2', label: 'Area R2', desc: 'Konsolidasi', icon: Target, iconColor: 'text-[#0ecb81]', selectedClass: 'bg-[#0ecb81] text-[#181a20] font-bold border-[#0ecb81]' },
   { value: 'R1_TO_R2', code: 'R1 ➔ R2', label: 'Tembus R1 ➔ R2', desc: 'Breakout', icon: ChevronsUp, iconColor: 'text-[#0ecb81]', selectedClass: 'bg-[#0ecb81] text-[#181a20] font-bold border-[#0ecb81]' },
   { value: 'R2_TO_R3', code: 'R2 ➔ R3', label: 'Tembus R2 ➔ R3', desc: 'Super Bullish', icon: Rocket, iconColor: 'text-[#0ecb81]', selectedClass: 'bg-[#0ecb81] text-[#181a20] font-bold border-[#0ecb81]' },
   { value: 'R3_TO_R4', code: 'R3 ➔ R4', label: 'Tembus R3 ➔ R4', desc: 'Hyper Pump', icon: Flame, iconColor: 'text-[#0ecb81]', selectedClass: 'bg-[#0ecb81] text-[#181a20] font-bold border-[#0ecb81]' },
@@ -133,6 +135,8 @@ const BEARISH_GROUP: {
   iconColor: string;
   selectedClass: string;
 }[] = [
+  { value: 'AREA_S1', code: 'Area S1', label: 'Area S1', desc: 'Konsolidasi', icon: Target, iconColor: 'text-[#f6465d]', selectedClass: 'bg-[#f6465d] text-white font-bold border-[#f6465d]' },
+  { value: 'AREA_S2', code: 'Area S2', label: 'Area S2', desc: 'Konsolidasi', icon: Target, iconColor: 'text-[#f6465d]', selectedClass: 'bg-[#f6465d] text-white font-bold border-[#f6465d]' },
   { value: 'S1_TO_S2', code: 'S1 ➔ S2', label: 'Tembus S1 ➔ S2', desc: 'Breakdown', icon: ChevronsDown, iconColor: 'text-[#f6465d]', selectedClass: 'bg-[#f6465d] text-white font-bold border-[#f6465d]' },
   { value: 'S2_TO_S3', code: 'S2 ➔ S3', label: 'Tembus S2 ➔ S3', desc: 'Diskon Ekstrem', icon: ShieldAlert, iconColor: 'text-[#f6465d]', selectedClass: 'bg-[#f6465d] text-white font-bold border-[#f6465d]' },
   { value: 'S3_TO_S4', code: 'S3 ➔ S4', label: 'Tembus S3 ➔ S4', desc: 'Kapitulasi Berat', icon: AlertTriangle, iconColor: 'text-[#f6465d]', selectedClass: 'bg-[#f6465d] text-white font-bold border-[#f6465d]' },

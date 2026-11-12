@@ -197,3 +197,47 @@ export function classifyPivotCondition(currentPrice, pivots, momentum1h = 0) {
     rangePercent
   };
 }
+
+/**
+ * Checks if price is consolidating around Resistance 1 (R1).
+ */
+export function isPriceInAreaR1(price, pivots) {
+  if (!pivots || isNaN(price)) return false;
+  const { P, R1, R2 } = pivots;
+  const lowerTol = (R1 - P) * 0.25;
+  const upperTol = (R2 - R1) * 0.25;
+  return price >= (R1 - lowerTol) && price <= (R1 + upperTol);
+}
+
+/**
+ * Checks if price is consolidating around Resistance 2 (R2).
+ */
+export function isPriceInAreaR2(price, pivots) {
+  if (!pivots || isNaN(price)) return false;
+  const { R1, R2, R3 } = pivots;
+  const lowerTol = (R2 - R1) * 0.25;
+  const upperTol = (R3 - R2) * 0.25;
+  return price >= (R2 - lowerTol) && price <= (R2 + upperTol);
+}
+
+/**
+ * Checks if price is consolidating around Support 1 (S1).
+ */
+export function isPriceInAreaS1(price, pivots) {
+  if (!pivots || isNaN(price)) return false;
+  const { P, S1, S2 } = pivots;
+  const upperTol = (P - S1) * 0.25;
+  const lowerTol = (S1 - S2) * 0.25;
+  return price >= (S1 - lowerTol) && price <= (S1 + upperTol);
+}
+
+/**
+ * Checks if price is consolidating around Support 2 (S2).
+ */
+export function isPriceInAreaS2(price, pivots) {
+  if (!pivots || isNaN(price)) return false;
+  const { S1, S2, S3 } = pivots;
+  const upperTol = (S1 - S2) * 0.25;
+  const lowerTol = (S2 - S3) * 0.25;
+  return price >= (S2 - lowerTol) && price <= (S2 + upperTol);
+}

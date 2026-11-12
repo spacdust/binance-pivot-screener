@@ -84,6 +84,10 @@ export function getPivotCode(cond?: PivotConditionType | null): string {
   if (!cond) return '';
   switch (cond) {
     case 'AREA_P': return 'AREA P';
+    case 'AREA_R1': return 'AREA R1';
+    case 'AREA_R2': return 'AREA R2';
+    case 'AREA_S1': return 'AREA S1';
+    case 'AREA_S2': return 'AREA S2';
     case 'S1_TO_P': return 'S1-P';
     case 'R1_TO_P': return 'R1-P';
     case 'R1_TO_R2': return 'R1-R2';
@@ -106,6 +110,10 @@ export function getConditionLabel(cond?: PivotConditionType | null): string {
   if (!cond) return 'Unknown';
   switch (cond) {
     case 'AREA_P': return 'Area P (Pivot)';
+    case 'AREA_R1': return 'Area R1 (Konsolidasi R1)';
+    case 'AREA_R2': return 'Area R2 (Konsolidasi R2)';
+    case 'AREA_S1': return 'Area S1 (Konsolidasi S1)';
+    case 'AREA_S2': return 'Area S2 (Konsolidasi S2)';
     case 'R1_TO_R2': return 'Tembus R1 ➔ R2';
     case 'R2_TO_R3': return 'Tembus R2 ➔ R3';
     case 'R3_TO_R4': return 'Tembus R3 ➔ R4';
@@ -124,6 +132,10 @@ export function getConditionTagColor(cond?: PivotConditionType | null): string {
   if (!cond) return 'zinc';
   switch (cond) {
     case 'AREA_P': return 'cyan';
+    case 'AREA_R1': return 'emerald';
+    case 'AREA_R2': return 'emerald';
+    case 'AREA_S1': return 'rose';
+    case 'AREA_S2': return 'red';
     case 'R1_TO_R2': return 'emerald';
     case 'R2_TO_R3': return 'purple';
     case 'R3_TO_R4': return 'fuchsia';
@@ -140,10 +152,10 @@ export function getConditionTagColor(cond?: PivotConditionType | null): string {
 
 export function getConditionBadgeStyle(cond?: PivotConditionType | null): string {
   if (!cond) return 'bg-[#2b313a] text-[#848e9c] border border-[#2b313a]';
-  if (['R1_TO_R2', 'R2_TO_R3', 'R3_TO_R4', 'ABOVE_R4'].includes(cond)) {
+  if (['R1_TO_R2', 'R2_TO_R3', 'R3_TO_R4', 'ABOVE_R4', 'AREA_R1', 'AREA_R2'].includes(cond)) {
     return 'bg-[#0ecb81]/15 text-[#0ecb81] border border-[#0ecb81]/40 font-bold';
   }
-  if (['S1_TO_S2', 'S2_TO_S3', 'S3_TO_S4', 'BELOW_S4'].includes(cond)) {
+  if (['S1_TO_S2', 'S2_TO_S3', 'S3_TO_S4', 'BELOW_S4', 'AREA_S1', 'AREA_S2'].includes(cond)) {
     return 'bg-[#f6465d]/15 text-[#f6465d] border border-[#f6465d]/40 font-bold';
   }
   return 'bg-[#f0b90b]/15 text-[#f0b90b] border border-[#f0b90b]/40 font-bold';
@@ -551,5 +563,76 @@ export function getCoinPivotCondition(
     ? (coin.pivotStatusMonthly?.condition || coin.pivotStatus?.condition)
     : coin.pivotStatus?.condition;
 }
+
+/**
+ * Checks if price is consolidating around Resistance 1 (R1).
+ * Range: within 25% zone span above or below R1.
+ */
+export function isPriceInAreaR1(price: number, pivots?: Pivots | null): boolean {
+  if (!pivots || isNaN(price)) return false;
+  const { P, R1, R2 } = pivots;
+  const lowerTol = (R1 - P) * 0.25;
+  const upperTol = (R2 - R1) * 0.25;
+  return price >= (R1 - lowerTol) && price <= (R1 + upperTol);
+}
+
+/**
+ * Checks if price is consolidating around Resistance 2 (R2).
+ * Range: within 25% zone span above or below R2.
+ */
+export function isPriceInAreaR2(price: number, pivots?: Pivots | null): boolean {
+  if (!pivots || isNaN(price)) return false;
+  const { R1, R2, R3 } = pivots;
+  const lowerTol = (R2 - R1) * 0.25;
+  const upperTol = (R3 - R2) * 0.25;
+  return price >= (R2 - lowerTol) && price <= (R2 + upperTol);
+}
+
+/**
+ * Checks if price is consolidating around Support 1 (S1).
+ * Range: within 25% zone span above or below S1.
+ */
+export function isPriceInAreaS1(price: number, pivots?: Pivots | null): boolean {
+  if (!pivots || isNaN(price)) return false;
+  const { P, S1, S2 } = pivots;
+  const upperTol = (P - S1) * 0.25;
+  const lowerTol = (S1 - S2) * 0.25;
+  return price >= (S1 - lowerTol) && price <= (S1 + upperTol);
+}
+
+/**
+ * Checks if price is consolidating around Support 2 (S2).
+ * Range: within 25% zone span above or below S2.
+ */
+export function isPriceInAreaS2(price: number, pivots?: Pivots | null): boolean {
+  if (!pivots || isNaN(price)) return false;
+  const { S1, S2, S3 } = pivots;
+  const upperTol = (S1 - S2) * 0.25;
+  const lowerTol = (S2 - S3) * 0.25;
+  return price >= (S2 - lowerTol) && price <= (S2 + upperTol);
+}
+
+/**
+ * Evaluates whether a coin matches a selected Pivot condition on the chosen timeframe.
+ */
+export function isCoinMatchingPivotCondition(
+  coin: CoinData,
+  cond: PivotConditionType,
+  timeframe: PivotConditionTimeframe = '5m',
+  mode: 'tradingview' | 'micro' = 'tradingview'
+): boolean {
+  if (cond === 'ALL') return true;
+  const targetPivots = getCoinPivots(coin, timeframe, mode);
+  if (!targetPivots || isNaN(coin.price)) return false;
+
+  if (cond === 'AREA_R1') return isPriceInAreaR1(coin.price, targetPivots);
+  if (cond === 'AREA_R2') return isPriceInAreaR2(coin.price, targetPivots);
+  if (cond === 'AREA_S1') return isPriceInAreaS1(coin.price, targetPivots);
+  if (cond === 'AREA_S2') return isPriceInAreaS2(coin.price, targetPivots);
+
+  const liveCond = getCoinPivotCondition(coin, timeframe, mode);
+  return liveCond === cond;
+}
+
 
 

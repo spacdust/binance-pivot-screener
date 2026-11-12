@@ -16,6 +16,10 @@ export interface Pivots {
 export type PivotConditionType =
   | 'ALL'
   | 'AREA_P'
+  | 'AREA_R1'
+  | 'AREA_R2'
+  | 'AREA_S1'
+  | 'AREA_S2'
   | 'S1_TO_S2'
   | 'S2_TO_S3'
   | 'S3_TO_S4'
