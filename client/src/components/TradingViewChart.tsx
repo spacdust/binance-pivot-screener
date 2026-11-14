@@ -15,7 +15,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const [reloadKey, setReloadKey] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isChartFullscreen, setIsChartFullscreen] = useState<boolean>(false);
-  const [showPivotLines, setShowPivotLines] = useState<boolean>(false);
+  const [showPivotLines, setShowPivotLines] = useState<boolean>(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Normalize symbol: ensure standard BINANCE:SYMBOL.P for Perpetual Futures
@@ -35,8 +35,8 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   }, [isChartFullscreen]);
 
   // Inject official TradingView Advanced Chart widget
-  // Default: Chart Normal (proportional candles with MACD + RSI), no extreme S5/R5 scale squishing
-  // User drawings are preserved across timeframe changes by using chart's native toolbar (5m ▾)
+  // Scales Price Chart Only (scalesProperties.scaleSeriesOnly: true) so candlesticks stay normal & proportional (never gepeng)
+  // while keeping Pivot Points Standard, MACD, and RSI active by default.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -65,16 +65,11 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       setIsLoading(false);
     }, 1800);
 
-    const studiesList = showPivotLines
-      ? [
-          'PivotPointsStandard@tv-basicstudies',
-          'STD;MACD',
-          'RSI@tv-basicstudies'
-        ]
-      : [
-          'STD;MACD',
-          'RSI@tv-basicstudies'
-        ];
+    const studiesList: string[] = [];
+    if (showPivotLines) {
+      studiesList.push('PivotPointsStandard@tv-basicstudies');
+    }
+    studiesList.push('STD;MACD', 'RSI@tv-basicstudies');
 
     // Create script element with official configuration
     const script = document.createElement('script');
@@ -98,7 +93,12 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       calendar: false,
       hide_volume: true,
       studies: studiesList,
+      studies_overrides: {
+        "pivot points standard.number of pivots back": 1,
+        "pivot points standard.show historical pivots": false
+      },
       overrides: {
+        "scalesProperties.scaleSeriesOnly": true,
         "paneProperties.background": "#12151a",
         "paneProperties.backgroundType": "solid",
         "paneProperties.vertGridProperties.color": "rgba(43, 49, 58, 0.35)",
@@ -154,10 +154,10 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
         {/* Right Info & Actions */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Pivot Lines Toggle (Defaults to OFF so candles render normal & proportional) */}
+          {/* Pivot Lines Toggle */}
           <button
             onClick={() => setShowPivotLines((prev) => !prev)}
-            title={showPivotLines ? 'Kembali ke Chart Normal (Candle proporsional tanpa garis ekstrem)' : 'Tampilkan garis pivot bawaan TradingView'}
+            title={showPivotLines ? 'Sembunyikan Garis Pivot TV' : 'Tampilkan Garis Pivot TV'}
             className={`flex items-center gap-1.5 px-2 py-0.5 rounded-xs text-[11px] font-mono border transition-colors cursor-pointer ${
               showPivotLines
                 ? 'bg-[#f0b90b]/20 border-[#f0b90b] text-[#f0b90b] font-bold'
@@ -165,13 +165,13 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
             }`}
           >
             <Layers className="w-3 h-3 text-[#f0b90b]" />
-            <span>Garis Pivot TV: {showPivotLines ? 'ON' : 'OFF (Normal)'}</span>
+            <span>Garis Pivot TV: {showPivotLines ? 'ON' : 'OFF'}</span>
           </button>
 
           {/* Active Indicator Badge */}
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-xs text-[10px] font-mono bg-[#22262e] border border-[#2b313a] text-[#0ecb81]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0ecb81]" />
-            <span className="font-semibold">{showPivotLines ? 'Pivot + MACD + RSI' : 'MACD + RSI (Normal)'}</span>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-xs text-[10px] font-mono bg-[#22262e] border border-[#2b313a] text-[#f0b90b]">
+            <Layers className="w-3 h-3 text-[#f0b90b]" />
+            <span className="font-semibold">{showPivotLines ? 'Pivot + MACD + RSI' : 'MACD + RSI'}</span>
           </div>
 
           {/* Refresh Chart Button */}
