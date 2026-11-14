@@ -93,24 +93,6 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       calendar: false,
       hide_volume: true,
       studies: studiesList,
-      studies_overrides: {
-        "pivot points standard.number of pivots back": 1,
-        "pivot points standard.show historical pivots": false
-      },
-      overrides: {
-        "scalesProperties.scaleSeriesOnly": true,
-        "paneProperties.background": "#12151a",
-        "paneProperties.backgroundType": "solid",
-        "paneProperties.vertGridProperties.color": "rgba(43, 49, 58, 0.35)",
-        "paneProperties.horzGridProperties.color": "rgba(43, 49, 58, 0.35)",
-        "scalesProperties.textColor": "#848e9c",
-        "mainSeriesProperties.candleStyle.upColor": "#0ecb81",
-        "mainSeriesProperties.candleStyle.downColor": "#f6465d",
-        "mainSeriesProperties.candleStyle.borderUpColor": "#0ecb81",
-        "mainSeriesProperties.candleStyle.borderDownColor": "#f6465d",
-        "mainSeriesProperties.candleStyle.wickUpColor": "#0ecb81",
-        "mainSeriesProperties.candleStyle.wickDownColor": "#f6465d"
-      },
       support_host: 'https://www.tradingview.com'
     });
 

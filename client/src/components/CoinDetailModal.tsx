@@ -188,7 +188,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
             <TradingViewChart
               symbol={symbol}
               initialInterval="5"
-              height={isMaximized ? "calc(100vh - 240px)" : "calc(96vh - 270px)"}
+              height={isMaximized ? "calc(100vh - 190px)" : "calc(96vh - 200px)"}
             />
 
             {/* Pivot Levels Quick Reference Strip */}
