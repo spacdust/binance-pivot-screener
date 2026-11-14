@@ -15,6 +15,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const [reloadKey, setReloadKey] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isChartFullscreen, setIsChartFullscreen] = useState<boolean>(false);
+  const [showPivotLines, setShowPivotLines] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Normalize symbol: ensure standard BINANCE:SYMBOL.P for Perpetual Futures
@@ -33,8 +34,9 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isChartFullscreen]);
 
-  // Inject official TradingView Advanced Chart widget with Pivot Points Standard study
-  // Dependencies are strictly tvSymbol and reloadKey so user drawings are NEVER erased when changing timeframes
+  // Inject official TradingView Advanced Chart widget
+  // Default: Chart Normal (proportional candles with MACD + RSI), no extreme S5/R5 scale squishing
+  // User drawings are preserved across timeframe changes by using chart's native toolbar (5m ▾)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -63,6 +65,17 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       setIsLoading(false);
     }, 1800);
 
+    const studiesList = showPivotLines
+      ? [
+          'PivotPointsStandard@tv-basicstudies',
+          'STD;MACD',
+          'RSI@tv-basicstudies'
+        ]
+      : [
+          'STD;MACD',
+          'RSI@tv-basicstudies'
+        ];
+
     // Create script element with official configuration
     const script = document.createElement('script');
     script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
@@ -84,11 +97,20 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       save_image: false,
       calendar: false,
       hide_volume: true,
-      studies: [
-        'PivotPointsStandard@tv-basicstudies',
-        'STD;MACD',
-        'RSI@tv-basicstudies'
-      ],
+      studies: studiesList,
+      overrides: {
+        "paneProperties.background": "#12151a",
+        "paneProperties.backgroundType": "solid",
+        "paneProperties.vertGridProperties.color": "rgba(43, 49, 58, 0.35)",
+        "paneProperties.horzGridProperties.color": "rgba(43, 49, 58, 0.35)",
+        "scalesProperties.textColor": "#848e9c",
+        "mainSeriesProperties.candleStyle.upColor": "#0ecb81",
+        "mainSeriesProperties.candleStyle.downColor": "#f6465d",
+        "mainSeriesProperties.candleStyle.borderUpColor": "#0ecb81",
+        "mainSeriesProperties.candleStyle.borderDownColor": "#f6465d",
+        "mainSeriesProperties.candleStyle.wickUpColor": "#0ecb81",
+        "mainSeriesProperties.candleStyle.wickDownColor": "#f6465d"
+      },
       support_host: 'https://www.tradingview.com'
     });
 
@@ -99,7 +121,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       clearTimeout(fallbackTimer);
       container.innerHTML = '';
     };
-  }, [tvSymbol, reloadKey, initialInterval]);
+  }, [tvSymbol, reloadKey, initialInterval, showPivotLines]);
 
   return (
     <div
@@ -132,10 +154,24 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
         {/* Right Info & Actions */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Active Indicator Badge */}
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-xs text-[10px] font-mono bg-[#22262e] border border-[#2b313a] text-[#f0b90b]">
+          {/* Pivot Lines Toggle (Defaults to OFF so candles render normal & proportional) */}
+          <button
+            onClick={() => setShowPivotLines((prev) => !prev)}
+            title={showPivotLines ? 'Kembali ke Chart Normal (Candle proporsional tanpa garis ekstrem)' : 'Tampilkan garis pivot bawaan TradingView'}
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-xs text-[11px] font-mono border transition-colors cursor-pointer ${
+              showPivotLines
+                ? 'bg-[#f0b90b]/20 border-[#f0b90b] text-[#f0b90b] font-bold'
+                : 'bg-[#22262e] border-[#2b313a] text-[#848e9c] hover:text-[#eaecef] hover:bg-[#2b313a]'
+            }`}
+          >
             <Layers className="w-3 h-3 text-[#f0b90b]" />
-            <span className="font-semibold">Pivot + MACD + RSI</span>
+            <span>Garis Pivot TV: {showPivotLines ? 'ON' : 'OFF (Normal)'}</span>
+          </button>
+
+          {/* Active Indicator Badge */}
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-xs text-[10px] font-mono bg-[#22262e] border border-[#2b313a] text-[#0ecb81]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0ecb81]" />
+            <span className="font-semibold">{showPivotLines ? 'Pivot + MACD + RSI' : 'MACD + RSI (Normal)'}</span>
           </div>
 
           {/* Refresh Chart Button */}

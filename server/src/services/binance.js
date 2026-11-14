@@ -113,18 +113,114 @@ export class BinanceService {
   // Fetch official Binance asset logos for 100% token logo coverage
   async fetchAssetLogos() {
     try {
-      console.log('[BinanceService] Fetching official Binance asset logos...');
-      const res = await dohFetch('https://www.binance.com/bapi/asset/v2/public/asset/asset/get-all-asset', { timeout: 5000 });
-      if (res.ok) {
-        const json = await res.json();
-        if (json && Array.isArray(json.data)) {
-          for (const item of json.data) {
-            if (item.assetCode && item.logoUrl) {
-              this.assetLogos.set(item.assetCode.toUpperCase(), item.logoUrl);
+      console.log('[BinanceService] Fetching official Binance asset logos & market listings...');
+
+      // 1. Official spot crypto assets
+      try {
+        const res = await dohFetch('https://www.binance.com/bapi/asset/v2/public/asset/asset/get-all-asset', { timeout: 6000 });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && Array.isArray(json.data)) {
+            for (const item of json.data) {
+              if (item.assetCode && item.logoUrl) {
+                this.assetLogos.set(item.assetCode.toUpperCase(), item.logoUrl);
+              }
             }
           }
-          console.log(`[BinanceService] Successfully cached ${this.assetLogos.size} official Binance asset logos.`);
         }
+      } catch (e) {
+        console.warn('[BinanceService] Failed get-all-asset:', e.message);
+      }
+
+      // 2. Tokenized stocks / bStocks / ETFs / pre-market listings
+      try {
+        const resMarketing = await dohFetch('https://www.binance.com/bapi/composite/v1/public/marketing/symbol/list', { timeout: 6000 });
+        if (resMarketing.ok) {
+          const jm = await resMarketing.json();
+          for (const item of (jm.data || [])) {
+            if (!item.logo) continue;
+            if (item.baseAsset) {
+              const b = item.baseAsset.toUpperCase();
+              this.assetLogos.set(b, item.logo);
+              if (b.endsWith('B')) this.assetLogos.set(b.slice(0, -1), item.logo);
+            }
+            if (item.name) {
+              const n = item.name.toUpperCase();
+              this.assetLogos.set(n, item.logo);
+              if (n.endsWith('B')) this.assetLogos.set(n.slice(0, -1), item.logo);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[BinanceService] Failed marketing/symbol/list:', e.message);
+      }
+
+      // 3. Newly listed futures & meme tokens from CMC listings
+      try {
+        const resCmc = await dohFetch('https://www.binance.com/bapi/composite/v1/public/promo/cmc/cryptocurrency/listings/latest?limit=1000', { timeout: 6000 });
+        if (resCmc.ok) {
+          const jc = await resCmc.json();
+          for (const item of (jc.data?.body?.data || [])) {
+            if (item.symbol && item.id) {
+              const sym = item.symbol.toUpperCase();
+              if (!this.assetLogos.has(sym)) {
+                this.assetLogos.set(sym, `https://s2.coinmarketcap.com/static/img/coins/64x64/${item.id}.png`);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[BinanceService] Failed CMC listings:', e.message);
+      }
+
+      // 4. Commodities, pre-market AI, and specialized contracts fallback
+      const fallbackMap = {
+        'XAU': 'https://coin-images.coingecko.com/coins/images/10481/large/logo.png',
+        'XAG': 'https://coin-images.coingecko.com/coins/images/102172552/large/XAGM_icon.png',
+        'CL': 'https://cdn-icons-png.flaticon.com/128/2933/2933884.png',
+        'BZ': 'https://cdn-icons-png.flaticon.com/128/2933/2933884.png',
+        'NATGAS': 'https://cdn-icons-png.flaticon.com/128/2933/2933979.png',
+        'OPENAI': 'https://coin-images.coingecko.com/coins/images/102173503/large/preopaireal.png',
+        'ANTHROPIC': 'https://coin-images.coingecko.com/coins/images/69479/large/anthropic.png',
+        'SAMSUNG': 'https://coin-images.coingecko.com/coins/images/102179228/large/smsdiss.png',
+        'SKHYNIX': 'https://coin-images.coingecko.com/coins/images/102179054/large/skhynixs.png',
+        'CSOPSKHYNIX2L': 'https://coin-images.coingecko.com/coins/images/102179054/large/skhynixs.png',
+        'NVDL': this.assetLogos.get('NVDA') || 'https://bin.bnbstatic.com/image/admin_mgs_image_upload/20260609/1a7dd0c6-e431-4ef3-a19f-4f9b8940712e.png',
+        'DODOX': this.assetLogos.get('DODO') || 'https://s2.coinmarketcap.com/static/img/coins/64x64/7224.png',
+        'TAC': 'https://s2.coinmarketcap.com/static/img/coins/64x64/34689.png',
+        'RAM': 'https://s2.coinmarketcap.com/static/img/coins/64x64/29815.png',
+        'UNITREE': 'https://s2.coinmarketcap.com/static/img/coins/64x64/35794.png',
+        'ZHIPU': 'https://cdn-icons-png.flaticon.com/128/11865/11865326.png',
+        'MINIMAX': 'https://cdn-icons-png.flaticon.com/128/11865/11865326.png',
+        'ZHONGJI': 'https://cdn-icons-png.flaticon.com/128/681/681682.png',
+        'CXMT': 'https://cdn-icons-png.flaticon.com/128/2933/2933887.png'
+      };
+
+      for (const [k, v] of Object.entries(fallbackMap)) {
+        if (!this.assetLogos.has(k) || !this.assetLogos.get(k)) {
+          this.assetLogos.set(k, v);
+        }
+      }
+
+      // 5. Also ensure 1000xxx symbols are mapped
+      for (const [k, v] of Array.from(this.assetLogos.entries())) {
+        if (!k.startsWith('1000')) {
+          const scaledKey = '1000' + k;
+          if (!this.assetLogos.has(scaledKey)) {
+            this.assetLogos.set(scaledKey, v);
+          }
+        }
+      }
+
+      console.log(`[BinanceService] Successfully cached ${this.assetLogos.size} official Binance & partner asset logos.`);
+
+      // Persist to disk for instant 0ms offline availability
+      try {
+        const logosPath = path.resolve(__dirname, '../data/binance-asset-logos.json');
+        const outObj = Object.fromEntries(this.assetLogos);
+        fs.writeFileSync(logosPath, JSON.stringify(outObj, null, 2), 'utf8');
+      } catch (errPersist) {
+        // Non-critical
       }
     } catch (err) {
       console.warn('[BinanceService] Failed to fetch Binance asset logos via DoH:', err.message);

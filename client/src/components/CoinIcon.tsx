@@ -87,18 +87,19 @@ export const CoinIcon: React.FC<CoinIconProps> = ({
   }, [cleanSymbol, logoUrl]);
 
   // Construct priority source list:
-  // 1. Local backend proxy /api/logo/:symbol (100% bypasses referer/hotlink blocks, instant RAM cache)
-  // 2. Direct official Binance logoUrl with referrerpolicy="no-referrer"
+  // 1. Direct official logoUrl if provided (instant direct CDN load without local proxy hop)
+  // 2. Local backend proxy /api/logo/:symbol (100% bypasses referer/hotlink blocks, instant RAM cache)
   // 3. Preloaded official Binance CDN URL
-  const sources: string[] = [
-    `/api/logo/${cleanSymbol}`
-  ];
-  if (unscaledSymbol !== cleanSymbol) {
-    sources.push(`/api/logo/${unscaledSymbol}`);
+  // 4. Direct public CDN fallbacks
+  const sources: string[] = [];
+
+  if (logoUrl) {
+    sources.push(logoUrl);
   }
 
-  if (logoUrl && !sources.includes(logoUrl)) {
-    sources.push(logoUrl);
+  sources.push(`/api/logo/${cleanSymbol}`);
+  if (unscaledSymbol !== cleanSymbol) {
+    sources.push(`/api/logo/${unscaledSymbol}`);
   }
 
   const cachedOfficialUrl = binanceLogoCache.get(cleanSymbol) || binanceLogoCache.get(unscaledSymbol);
