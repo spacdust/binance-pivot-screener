@@ -17,7 +17,8 @@ import {
   Lock,
   Activity,
   RotateCw,
-  Crosshair
+  Crosshair,
+  Star
 } from 'lucide-react';
 import {
   checkPivotConfluence,
@@ -85,6 +86,56 @@ type SortField =
 
 export type TimeMode = 'standard' | 'minutes15' | 'detailed';
 
+export const ASSET_DESCRIPTIONS: Record<string, string> = {
+  // Commodities
+  XAU: 'Gold',
+  XAG: 'Silver',
+  XAUT: 'Tether Gold',
+  CL: 'Crude Oil',
+  BZ: 'Brent Oil',
+  NATGAS: 'Natural Gas',
+
+  // Equities & ETFs (bStocks)
+  NVDA: 'Nvidia',
+  TSLA: 'Tesla',
+  AAPL: 'Apple',
+  MSFT: 'Microsoft',
+  GOOGL: 'Alphabet (Google)',
+  AMZN: 'Amazon',
+  META: 'Meta',
+  SNDK: 'Sandisk',
+  SOXL: 'Direxion Semiconductor Bull',
+  SOXS: 'Direxion Semiconductor Bear',
+  SPCX: 'Space Exploration Technologies',
+  QQQ: 'Invesco QQQ Trust',
+  SPY: 'SPDR S&P 500 ETF',
+  COIN: 'Coinbase',
+
+  // AI & Tech Pre-market
+  OPENAI: 'OpenAI',
+  ANTHROPIC: 'Anthropic',
+  SAMSUNG: 'Samsung Electronics',
+  SKHYNIX: 'SK Hynix',
+  UNITREE: 'Unitree Robotics',
+  ZHIPU: 'Zhipu AI',
+  MINIMAX: 'MiniMax',
+  CXMT: 'ChangXin Memory Tech',
+};
+
+export const formatVolume = (val: number): string => {
+  if (!val || isNaN(val)) return '0,00';
+  if (val >= 1e9) {
+    return (val / 1e9).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'B';
+  }
+  if (val >= 1e6) {
+    return (val / 1e6).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'M';
+  }
+  if (val >= 1e3) {
+    return (val / 1e3).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'K';
+  }
+  return val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   coins,
   selectedTimeframe,
@@ -139,6 +190,28 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
   };
   const [autoResort, setAutoResort] = useState<boolean>(false);
   const [orderedSymbols, setOrderedSymbols] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('binance_favorites');
+      if (saved) return new Set(JSON.parse(saved));
+    } catch (e) {}
+    return new Set<string>();
+  });
+
+  const toggleFavorite = useCallback((sym: string) => {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(sym)) {
+        next.delete(sym);
+      } else {
+        next.add(sym);
+      }
+      try {
+        localStorage.setItem('binance_favorites', JSON.stringify(Array.from(next)));
+      } catch (e) {}
+      return next;
+    });
+  }, []);
 
   // Robust coin comparator across all sortable metrics
   const compareCoins = useCallback(
@@ -522,11 +595,24 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
     return pills;
   }, [filters, onFilterChange]);
 
-  const formatPrice = (val: number) => {
-    if (val >= 1000) return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    if (val >= 1) return val.toFixed(4);
-    if (val >= 0.0001) return val.toFixed(6);
-    return val.toFixed(8);
+  const formatPrice = (val: number): string => {
+    if (val === undefined || val === null || isNaN(val)) return '-';
+    if (val >= 1000) {
+      return val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (val >= 50) {
+      return val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (val >= 1) {
+      return val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    }
+    if (val >= 0.01) {
+      return val.toLocaleString('id-ID', { minimumFractionDigits: 4, maximumFractionDigits: 5 });
+    }
+    if (val >= 0.0001) {
+      return val.toLocaleString('id-ID', { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+    }
+    return val.toLocaleString('id-ID', { minimumFractionDigits: 4, maximumFractionDigits: 8 });
   };
 
   const renderSortIcon = (field: SortField) => {
@@ -891,22 +977,22 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
           style={{
             minWidth: showPivotVisualizers
               ? timeMode === 'standard'
-                ? '1513px'
+                ? '1538px'
                 : timeMode === 'minutes15'
-                ? '1669px'
-                : '1621px'
+                ? '1694px'
+                : '1646px'
               : timeMode === 'standard'
-              ? '973px'
+              ? '998px'
               : timeMode === 'minutes15'
-              ? '1129px'
-              : '1081px',
+              ? '1154px'
+              : '1106px',
           }}
         >
           {/* Rigid colgroup definitions to lock column widths in concrete */}
           <colgroup>
             <col className="w-[42px]" />
-            <col className="w-[180px]" />
-            <col className="w-[105px]" />
+            <col className="w-[195px]" />
+            <col className="w-[115px]" />
             {timeMode === 'standard' ? (
               <>
                 <col className="w-[66px]" />
@@ -971,20 +1057,40 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 #
               </th>
 
-              {/* Frozen Column 2: Symbol & Volume */}
+              {/* Frozen Column 2: Kontrak / Vol */}
               <th
-                onClick={() => handleSort('symbol')}
-                className="py-2 px-2.5 w-[180px] min-w-[180px] max-w-[180px] cursor-pointer hover:text-[#eaecef] transition-colors sticky left-[42px] z-30 bg-[#181a20] border-r border-[#2b313a] overflow-hidden"
+                className="py-2 px-2.5 w-[195px] min-w-[195px] max-w-[195px] sticky left-[42px] z-30 bg-[#181a20] border-r border-[#2b313a] overflow-hidden"
               >
-                Kontrak PERP {renderSortIcon('symbol')}
+                <div className="flex items-center gap-1.5 select-none text-[#848e9c]">
+                  <span
+                    onClick={() => handleSort('symbol')}
+                    className={`cursor-pointer hover:text-[#eaecef] transition-colors flex items-center gap-0.5 ${
+                      sortField === 'symbol' ? 'text-[#eaecef] font-bold' : ''
+                    }`}
+                    title="Urutkan berdasarkan nama kontrak"
+                  >
+                    Kontrak {renderSortIcon('symbol')}
+                  </span>
+                  <span className="text-[#474d57]">/</span>
+                  <span
+                    onClick={() => handleSort('volume24h')}
+                    className={`cursor-pointer hover:text-[#eaecef] transition-colors flex items-center gap-0.5 ${
+                      sortField === 'volume24h' ? 'text-[#eaecef] font-bold' : ''
+                    }`}
+                    title="Urutkan berdasarkan volume 24 jam"
+                  >
+                    Vol {renderSortIcon('volume24h')}
+                  </span>
+                </div>
               </th>
 
-              {/* Unfrozen Table Columns */}
+              {/* Unfrozen Column 3: Harga Terakhir */}
               <th
                 onClick={() => handleSort('price')}
-                className="py-2 px-2 w-[105px] min-w-[105px] max-w-[105px] text-right cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
+                className="py-2 px-2 w-[115px] min-w-[115px] max-w-[115px] text-right cursor-pointer hover:text-[#eaecef] transition-colors overflow-hidden"
+                title="Urutkan berdasarkan harga terakhir"
               >
-                Harga {renderSortIcon('price')}
+                Harga terakhir {renderSortIcon('price')}
               </th>
 
               {/* Timeframe Percentage Headers */}
@@ -1202,6 +1308,10 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                 const range1h = calculateRangePercent(coin.price, targetPivots1h);
                 const rangeDaily = calculateRangePercent(coin.price, targetPivotsDaily);
                 const displayName = coin.baseAsset || coin.symbol.replace(/USDT$/, '');
+                const baseAsset = coin.baseAsset || coin.symbol.replace(/(USDT|USDC)$/, '');
+                const assetDesc = ASSET_DESCRIPTIONS[baseAsset];
+                const formattedVol = formatVolume(coin.volume24h);
+                const isFavorite = favorites.has(coin.symbol);
 
                 return (
                   <tr
@@ -1222,27 +1332,48 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                       {rank}
                     </td>
 
-                    {/* Frozen Column 2: Symbol & Volume */}
-                    <td className={`${pyRow} px-2.5 w-[180px] min-w-[180px] max-w-[180px] sticky left-[42px] z-10 bg-[#181a20] group-hover:bg-[#1e2329] border-r border-[#2b313a] overflow-hidden`}>
-                      <div className="flex items-center gap-2 min-w-0">
+                    {/* Frozen Column 2: Kontrak / Vol */}
+                    <td className={`${pyRow} px-2.5 w-[195px] min-w-[195px] max-w-[195px] sticky left-[42px] z-10 bg-[#181a20] group-hover:bg-[#1e2329] border-r border-[#2b313a] overflow-hidden`}>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {/* Favorite Star Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(coin.symbol);
+                          }}
+                          className="p-0.5 shrink-0 hover:scale-110 transition-transform focus:outline-none cursor-pointer"
+                          title={isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit'}
+                        >
+                          <Star
+                            className={`w-3.5 h-3.5 ${
+                              isFavorite
+                                ? 'fill-[#f0b90b] text-[#f0b90b]'
+                                : 'text-[#474d57] hover:text-[#f0b90b]'
+                            }`}
+                          />
+                        </button>
+
                         <div className="shrink-0">
                           <CoinIcon symbol={displayName} logoUrl={coin.logoUrl} size={density === 'compact' ? 'sm' : 'md'} />
                         </div>
                         <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
-                          {/* Line 1: Coin Name (Bold, Always Visible) + /USDT + PERP Badge */}
+                          {/* Line 1: Coin Name + Perp Badge */}
                           <div className="flex items-center gap-1 min-w-0 whitespace-nowrap overflow-hidden">
                             <span className={`font-bold text-[#eaecef] group-hover:text-[#f0b90b] transition-colors shrink-0 ${density === 'compact' ? 'text-xs' : 'text-sm'}`}>
-                              {displayName}
+                              {coin.symbol}
                             </span>
-                            <span className="text-[10px] text-[#848e9c] font-mono shrink-0">/USDT</span>
-                            <span className="px-1 py-0.2 rounded-xs text-[9px] font-mono font-semibold bg-[#22262e] border border-[#2b313a] text-[#f0b90b]/90 shrink-0">
-                              PERP
+                            <span className="px-1 py-0.2 rounded-xs text-[9px] font-sans font-medium bg-[#2b313a] text-[#848e9c] shrink-0">
+                              Perp
                             </span>
                           </div>
-                          {/* Line 2: 24h Volume + 3TF Confluence Badge */}
+                          {/* Line 2: Asset Name (if stock/commodity) | 24h Volume + Confluence Badges */}
                           <div className="flex items-center gap-1.5 min-w-0 whitespace-nowrap overflow-hidden leading-tight mt-0.5">
-                            <span className="text-[10px] text-[#848e9c] font-mono tabular-nums shrink-0">
-                              ${(coin.volume24h / 1e6).toFixed(2)}M
+                            <span
+                              className="text-[10px] text-[#848e9c] font-mono tabular-nums shrink-0 truncate max-w-full"
+                              title={assetDesc ? `${assetDesc} | ${formattedVol}` : formattedVol}
+                            >
+                              {assetDesc ? `${assetDesc} | ${formattedVol}` : formattedVol}
                             </span>
                             {confluence.hasConfluence && (
                               <span
@@ -1277,7 +1408,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                     </td>
 
                     {/* Live Price with Solid Fixed Alignment & Color Flash */}
-                    <td className={`${pyRow} px-2 w-[105px] min-w-[105px] max-w-[105px] text-right overflow-hidden`}>
+                    <td className={`${pyRow} px-2 w-[115px] min-w-[115px] max-w-[115px] text-right overflow-hidden`}>
                       <div
                         className={`font-mono tabular-nums font-semibold transition-colors duration-200 inline-block w-full text-right px-1 py-0.5 rounded-xs ${
                           density === 'compact' ? 'text-xs' : 'text-sm'
@@ -1289,7 +1420,7 @@ export const ScreenerTable: React.FC<ScreenerTableProps> = ({
                             : 'text-[#eaecef]'
                         }`}
                       >
-                        ${formatPrice(coin.price)}
+                        {formatPrice(coin.price)}
                       </div>
                     </td>
 

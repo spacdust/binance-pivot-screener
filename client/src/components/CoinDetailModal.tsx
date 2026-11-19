@@ -4,6 +4,7 @@ import { X, ExternalLink, Target, Layers, BarChart2, TrendingUp, Info, Maximize2
 import { classifyPriceZone, getConditionLabel } from '../utils/pivotConfluence';
 import { CoinIcon } from './CoinIcon';
 import { TradingViewChart } from './TradingViewChart';
+import { formatVolume } from './ScreenerTable';
 
 interface CoinDetailModalProps {
   coin: CoinData | null;
@@ -109,7 +110,7 @@ export const CoinDetailModal: React.FC<CoinDetailModalProps> = ({ coin, onClose 
                 </span>
               </div>
               <p className="text-[11px] text-[#848e9c] font-mono">
-                Volume 24j: ${(volume24h / 1e6).toFixed(2)}M USDT
+                Volume 24j: {formatVolume(volume24h)} USDT
               </p>
             </div>
           </div>

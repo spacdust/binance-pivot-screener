@@ -3526,5 +3526,9 @@
   "1000ZHIPU": "https://cdn-icons-png.flaticon.com/128/11865/11865326.png",
   "1000MINIMAX": "https://cdn-icons-png.flaticon.com/128/11865/11865326.png",
   "1000ZHONGJI": "https://cdn-icons-png.flaticon.com/128/681/681682.png",
-  "1000CXMT": "https://cdn-icons-png.flaticon.com/128/2933/2933887.png"
+  "1000CXMT": "https://cdn-icons-png.flaticon.com/128/2933/2933887.png",
+  "ESIM": "https://s2.coinmarketcap.com/static/img/coins/64x64/39203.png",
+  "WECAN": "https://s2.coinmarketcap.com/static/img/coins/64x64/26833.png",
+  "1000ESIM": "https://s2.coinmarketcap.com/static/img/coins/64x64/39203.png",
+  "1000WECAN": "https://s2.coinmarketcap.com/static/img/coins/64x64/26833.png"
 }
